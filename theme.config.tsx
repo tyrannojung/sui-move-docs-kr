@@ -4,8 +4,8 @@ import { DocsThemeConfig } from 'nextra-theme-docs'
 const config: DocsThemeConfig = {
   logo: (
     <>
-      <img src="/sui-logo.svg" alt="Sui" style={{ height: 24, marginRight: 8 }} />
-      <span>Sui Move 한국어 문서</span>
+      <img src="/sui-logo.png" alt="Sui" style={{ height: 32, marginRight: 12 }} />
+      <span style={{ fontSize: 18, fontWeight: 600 }}>Sui Move 한국어 문서</span>
     </>
   ),
   project: {
@@ -15,9 +15,17 @@ const config: DocsThemeConfig = {
   footer: {
     content: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span>공식 후원사</span>
-          <img src="/orakle-logo.svg" alt="Orakle" style={{ height: 20 }} />
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '1rem',
+          padding: '0.75rem 1.5rem',
+          backgroundColor: '#1a3a52',
+          borderRadius: '8px',
+          width: 'fit-content'
+        }}>
+          <span style={{ color: '#C0E6FF', fontSize: '0.875rem' }}>공식 후원사</span>
+          <img src="/orakle-logo.webp" alt="Orakle" style={{ height: 28 }} />
         </div>
         <div style={{ fontSize: '0.875rem', color: '#666' }}>
           <p>© 2025 Sui Move 한국어 문서 기여자들 | 문서는 CC BY 4.0 라이선스를 따릅니다</p>
