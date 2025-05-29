@@ -1,0 +1,46 @@
+/* Sui 브랜드 컬러 변수 */
+:root {
+  --sui-sea: #4DA2FF;      /* 메인 블루 */
+  --sui-ocean: #011829;    /* 다크 네이비 */
+  --sui-aqua: #C0E6FF;     /* 연한 하늘색 */
+  --sui-deep-ocean: #030F1C; /* 아주 진한 네이비 */
+}
+
+/* 다크모드 컬러 */
+.dark {
+  --sui-bg: var(--sui-deep-ocean);
+  --sui-text: #FFFFFF;
+}
+
+/* 라이트모드 컬러 */
+.light {
+  --sui-bg: #FFFFFF;
+  --sui-text: var(--sui-ocean);
+}
+
+/* Nextra 테마 커스터마이징 */
+.nx-text-primary-600 {
+  color: var(--sui-sea) !important;
+}
+
+.dark .nx-bg-primary-700\/5 {
+  background-color: rgba(77, 162, 255, 0.05) !important;
+}
+
+/* 링크 스타일 */
+a {
+  color: var(--sui-sea);
+}
+
+a:hover {
+  color: var(--sui-aqua);
+}
+
+/* 코드 블록 복사 버튼 스타일 */
+.nx-copy-code-button {
+  background-color: var(--sui-sea);
+}
+
+.nx-copy-code-button:hover {
+  background-color: var(--sui-aqua);
+}
