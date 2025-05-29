@@ -19,12 +19,27 @@
 }
 
 /* Nextra 테마 커스터마이징 */
+:root {
+  --nextra-primary-hue: 210deg;
+  --nextra-primary-saturation: 100%;
+}
+
 .nx-text-primary-600 {
   color: var(--sui-sea) !important;
 }
 
 .dark .nx-bg-primary-700\/5 {
   background-color: rgba(77, 162, 255, 0.05) !important;
+}
+
+/* 선택된 항목 색상 */
+.nextra-sidebar-menu .nx-text-primary-600 {
+  color: var(--sui-sea) !important;
+}
+
+/* 사이드바 호버 색상 */
+.nextra-sidebar-menu button:hover {
+  color: var(--sui-sea) !important;
 }
 
 /* 링크 스타일 */

@@ -12,7 +12,7 @@ Sui Move 공식 문서의 한국어 번역 프로젝트입니다.
 
 1. 저장소 클론
 ```bash
-git clone https://github.com/yourusername/sui-move-docs-kr.git
+git clone https://github.com/tyrannojung/sui-move-docs-kr.git
 cd sui-move-docs-kr
 ```
 
