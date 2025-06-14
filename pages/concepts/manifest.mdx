@@ -1,0 +1,95 @@
+# 패키지 매니페스트
+
+`Move.toml`은 [패키지](./packages)와 그 의존성을 설명하는 매니페스트 파일입니다.
+[TOML](https://toml.io/en/) 형식으로 작성되며 여러 섹션을 포함하는데, 가장 중요한 것은 `[package]`, `[dependencies]`, `[addresses]`입니다.
+
+```toml
+[package]
+name = "my_project"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+Example = { git = "https://github.com/example/example.git", subdir = "path/to/package", rev = "framework/testnet" }
+
+[addresses]
+std =  "0x1"
+alice = "0xA11CE"
+
+[dev-addresses]
+alice = "0xB0B"
+```
+
+## 섹션
+
+### Package
+
+`[package]` 섹션은 패키지를 설명하는 데 사용됩니다. 이 섹션의 어떤 필드도 체인에 게시되지 않지만, 도구와 릴리스 관리에 사용됩니다. 또한 컴파일러를 위한 Move 에디션을 지정합니다.
+
+- `name` - 패키지를 가져올 때의 이름
+- `version` - 패키지의 버전, 릴리스 관리에 사용될 수 있음
+- `edition` - Move 언어의 에디션; 현재 유일하게 유효한 값은 `2024`입니다.
+
+### Dependencies
+
+`[dependencies]` 섹션은 프로젝트의 의존성을 지정하는 데 사용됩니다. 각 의존성은 키-값 쌍으로 지정되며, 키는 의존성의 이름이고 값은 의존성 명세입니다. 의존성 명세는 git 저장소 URL이나 로컬 디렉토리 경로가 될 수 있습니다.
+
+```toml
+# git 저장소
+Example = { git = "https://github.com/example/example.git", subdir = "path/to/package", rev = "framework/testnet" }
+
+# 로컬 디렉토리
+MyPackage = { local = "../my-package" }
+```
+
+패키지는 다른 패키지로부터 주소도 가져옵니다. 예를 들어, Sui 의존성은 프로젝트에 `std`와 `sui` 주소를 추가합니다. 이러한 주소는 코드에서 주소의 별칭으로 사용할 수 있습니다.
+
+Sui CLI 버전 1.45부터 Sui 시스템 패키지(`std`, `sui`, `system`, `bridge`, `deepbook`)는 명시적으로 나열되지 않은 경우 자동으로 의존성으로 추가됩니다.
+
+### Override로 버전 충돌 해결하기
+
+때때로 의존성들이 동일한 패키지의 다른 버전을 사용하여 충돌할 수 있습니다. 예를 들어, Example 패키지의 다른 버전을 사용하는 두 개의 의존성이 있는 경우, `[dependencies]` 섹션에서 의존성을 재정의할 수 있습니다. 그렇게 하려면 의존성에 `override` 필드를 추가하세요. `[dependencies]` 섹션에 지정된 의존성 버전이 의존성 자체에 지정된 버전 대신 사용됩니다.
+
+```toml
+[dependencies]
+Example = { override = true, git = "https://github.com/example/example.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+```
+
+### Dev-dependencies
+
+매니페스트에 `[dev-dependencies]` 섹션을 추가할 수 있습니다. 이는 dev 및 test 모드에서 의존성을 재정의하는 데 사용됩니다. 예를 들어, dev 모드에서 다른 버전의 Sui 패키지를 사용하려면 `[dev-dependencies]` 섹션에 사용자 정의 의존성 명세를 추가할 수 있습니다.
+
+### Addresses
+
+`[addresses]` 섹션은 주소에 대한 별칭을 추가하는 데 사용됩니다. 이 섹션에 어떤 주소든 지정할 수 있으며, 코드에서 별칭으로 사용할 수 있습니다. 예를 들어, 이 섹션에 `alice = "0xA11CE"`를 추가하면 코드에서 `alice`를 `0xA11CE`로 사용할 수 있습니다.
+
+### Dev-addresses
+
+`[dev-addresses]` 섹션은 `[addresses]`와 동일하지만, test 및 dev 모드에서만 작동합니다. 중요한 점은 이 섹션에서 새로운 별칭을 도입할 수 없고, 기존 별칭만 재정의할 수 있다는 것입니다. 따라서 위의 예에서 이 섹션에 `alice = "0xB0B"`를 추가하면, `alice` 주소는 test 및 dev 모드에서는 `0xB0B`가 되고, 일반 빌드에서는 `0xA11CE`가 됩니다.
+
+## TOML 스타일
+
+TOML 형식은 테이블에 대해 인라인과 멀티라인 두 가지 스타일을 지원합니다. 위의 예제들은 인라인 스타일을 사용하고 있지만, 멀티라인 스타일을 사용하는 것도 가능합니다. `[package]` 섹션에는 사용하지 않겠지만, 의존성에는 유용할 수 있습니다.
+
+```toml
+# 인라인 스타일
+[dependencies]
+Example = { override = true, git = "https://github.com/example/example.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+MyPackage = { local = "../my-package" }
+```
+
+```toml
+# 멀티라인 스타일
+[dependencies.Example]
+override = true
+git = "https://github.com/example/example.git"
+subdir = "crates/sui-framework/packages/sui-framework"
+rev = "framework/testnet"
+
+[dependencies.MyPackage]
+local = "../my-package"
+```
+
+## 더 읽어보기
+
+- Move 레퍼런스의 [패키지](/reference/packages.html)
