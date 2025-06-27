@@ -1,21 +1,20 @@
-# Appendix A: Glossary
+# 부록 A: 용어집
 
-- Fast Path - term used to describe a transaction that does not involve shared objects, and can be
-  executed without the need for consensus.
-- Parallel Execution - term used to describe the ability of the Sui runtime to execute transactions
-  in parallel, including the ones that involve shared objects.
-- Internal Type - type that is defined within the module. Fields of this type can not be accessed
-  from outside the module, and, in case of "key"-only abilities, can not be used in `public_*`
-  transfer functions.
+- Fast Path (빠른 경로) - 공유 object가 포함되지 않은 트랜잭션을 설명하는 용어로,
+  합의 없이 실행될 수 있습니다.
+- Parallel Execution (병렬 실행) - 공유 object를 포함한 트랜잭션을 포함하여 Sui 런타임이
+  트랜잭션을 병렬로 실행할 수 있는 능력을 설명하는 용어입니다.
+- Internal Type (내부 타입) - module 내에서 정의된 타입입니다. 이 타입의 필드는 module 외부에서
+  접근할 수 없으며, "key" 능력만 있는 경우 `public_*` 전송 함수에서 사용할 수 없습니다.
 
-## Abilities
+## Abilities (능력)
 
-- key - ability that allows the struct to be used as a key in the storage. On Sui, the key ability
-  marks an object and requires the first field to be a `id: UID`.
-- store - ability that allows the struct to be stored inside other objects. This ability relaxes
-  restrictions applied to internal structs, allowing `public_*` transfer functions to accept them as
-  arguments. It also enables the object to be stored as a dynamic field.
-- copy - ability that allows the struct to be copied. On Sui, the `copy` ability conflicts with the
-  `key` ability, and can not be used together with it.
-- drop - ability that allows the struct to be ignored or discarded. On Sui, the `drop` ability
-  cannot be used together with the `key` ability, as objects are not allowed to be ignored.
+- key - 구조체가 스토리지에서 키로 사용될 수 있도록 하는 ability입니다. Sui에서 key ability는
+  object를 표시하며 첫 번째 필드가 `id: UID`여야 합니다.
+- store - 구조체가 다른 object 내부에 저장될 수 있도록 하는 ability입니다. 이 ability는
+  내부 구조체에 적용된 제한을 완화하여 `public_*` 전송 함수가 이를 인자로 받을 수 있도록 합니다.
+  또한 object를 동적 필드로 저장할 수 있게 합니다.
+- copy - 구조체를 복사할 수 있도록 하는 ability입니다. Sui에서 `copy` ability는
+  `key` ability와 충돌하며 함께 사용할 수 없습니다.
+- drop - 구조체를 무시하거나 폐기할 수 있도록 하는 ability입니다. Sui에서 `drop` ability는
+  object가 무시되는 것이 허용되지 않으므로 `key` ability와 함께 사용할 수 없습니다.
