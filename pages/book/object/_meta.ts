@@ -1,8 +1,8 @@
 export default {
   index: "Object Model",
-  "digital-assets": "Language for Digital Assets",
-  "evolution-of-move": "Evolution of Move",
-  "object-model": "What is an Object?",
-  ownership: "Ownership",
-  "fast-path-and-consensus": "Fast Path & Consensus"
+  "digital-assets": "디지털 자산을 위한 언어",
+  "evolution-of-move": "Move의 진화",
+  "object-model": "Object란 무엇인가?",
+  ownership: "소유권",
+  "fast-path-and-consensus": "Fast Path와 합의"
 }

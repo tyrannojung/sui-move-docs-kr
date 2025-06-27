@@ -1,54 +1,54 @@
-# Fast Path & Consensus
+# Fast Path와 합의
 
-The Object Model allows for variable transaction execution paths, depending on the object's
-ownership type. The transaction execution path determines how the transaction is processed and
-validated by the network. In this section, we'll explore the different transaction execution paths
-in Sui and how they interact with the consensus mechanism.
+Object Model은 object의 소유권 타입에 따라 가변적인 트랜잭션 실행 경로를 허용합니다.
+트랜잭션 실행 경로는 네트워크에서 트랜잭션이 처리되고 검증되는 방법을 결정합니다.
+이 섹션에서는 Sui의 다양한 트랜잭션 실행 경로와 합의 메커니즘과의 상호작용을
+살펴보겠습니다.
 
-## Concurrency Challenge
+## 동시성 문제
 
-At its core, blockchain technology faces a fundamental concurrency challenge: multiple parties may
-try to modify or access the same data simultaneously in a decentralized environment. This requires a
-system for sequencing and validating transactions to support the network's consistency. Sui
-addresses this challenge through a consensus mechanism, ensuring all nodes agree on the
-transactions' sequence and state.
+본질적으로 블록체인 기술은 근본적인 동시성 문제에 직면합니다: 탈중앙화 환경에서
+여러 당사자가 동시에 동일한 데이터를 수정하거나 접근하려고 할 수 있습니다. 이를 위해서는
+네트워크의 일관성을 지원하기 위해 트랜잭션을 순서화하고 검증하는 시스템이 필요합니다. Sui는
+합의 메커니즘을 통해 이 문제를 해결하여 모든 노드가 트랜잭션의 순서와 상태에
+동의하도록 보장합니다.
 
-Consider a marketplace scenario where Alice and Bob simultaneously attempt to purchase the same
-asset. The network must resolve this conflict to prevent double-spending, ensuring that at most one
-transaction succeeds while the other is rightfully rejected.
+Alice와 Bob이 동시에 동일한 자산을 구매하려고 시도하는 마켓플레이스 시나리오를 생각해보세요.
+네트워크는 이중 지출을 방지하기 위해 이 충돌을 해결해야 하며, 최대 하나의
+트랜잭션만 성공하고 다른 하나는 정당하게 거부되도록 보장해야 합니다.
 
 ## Fast Path
 
-However, not all transactions require the same level of validation and consensus. For example, if
-Alice wants to transfer an object that she owns to Bob, the network can process this transaction
-without sequencing it with respect to all other transactions in the network, as only Alice has the
-authority to access the object. This is known as the _fast path_ execution, where transactions
-accessing account-owned objects are processed quickly without the need for extensive consensus. No
-concurrent data access -> simpler challenge -> fast path.
+그러나 모든 트랜잭션이 동일한 수준의 검증과 합의를 필요로 하는 것은 아닙니다. 예를 들어,
+Alice가 자신이 소유한 object를 Bob에게 전송하려는 경우, Alice만이
+object에 접근할 권한을 가지므로 네트워크는 이 트랜잭션을 네트워크의 다른 모든 트랜잭션과
+관련하여 순서화할 필요 없이 처리할 수 있습니다. 이것을 _fast path_ 실행이라고 하며,
+계정 소유 object에 접근하는 트랜잭션은 광범위한 합의 없이 빠르게 처리됩니다.
+동시 데이터 접근 없음 -> 더 간단한 문제 -> fast path.
 
-Another ownership model that allows for fast path execution is the _immutable state_. Since
-immutable objects cannot change, transactions involving them can be processed quickly without the
-need to sequence them.
+Fast path 실행을 허용하는 또 다른 소유권 모델은 _불변 상태_입니다. 불변
+object는 변경할 수 없으므로, 이와 관련된 트랜잭션은 순서화할 필요 없이
+빠르게 처리될 수 있습니다.
 
-## Consensus Path
+## 합의 경로
 
-Transactions that do access shared state - on Sui it is represented with shared objects - require
-sequencing to ensure that the state is updated and consistent across all nodes. This is known as the
-execution through _consensus_, where transactions accessing shared objects are subject to the
-agreement process to maintain network consistency.
+공유 상태에 접근하는 트랜잭션 - Sui에서는 공유 object로 표현됨 - 은
+모든 노드에서 상태가 업데이트되고 일관되도록 보장하기 위해 순서화가 필요합니다. 이것을
+_합의_를 통한 실행이라고 하며, 공유 object에 접근하는 트랜잭션은 네트워크 일관성을
+유지하기 위해 합의 프로세스를 거쳐야 합니다.
 
-{/* On Sui consensus is per-object - mention!!! */}
+{/* Sui에서 합의는 object별로 이루어짐 - 언급!!! */}
 
-## Objects owned by Objects
+## Object가 소유한 Object
 
-Lastly, it is important to mention that objects owned by other objects are subject to the same rules
-as the parent object. If the parent object is _shared_, the child object is also transitively
-shared. If the parent object is immutable, the child object is also immutable.
+마지막으로, 다른 object가 소유한 object는 부모 object와 동일한 규칙을 따른다는 점을
+언급하는 것이 중요합니다. 부모 object가 _공유_되면 자식 object도 전이적으로
+공유됩니다. 부모 object가 불변이면 자식 object도 불변입니다.
 
-## Summary
+## 요약
 
-- **Fast Path:** Transactions involving account-owned objects or immutable shared state are
-  processed quickly without the need for extensive consensus.
-- **Consensus Path:** Transactions involving shared objects require sequencing and consensus to
-  ensure network integrity.
-- **Objects owned by Objects:** Child objects inherit the ownership model of the parent object.
+- **Fast Path:** 계정 소유 object나 불변 공유 상태와 관련된 트랜잭션은
+  광범위한 합의 없이 빠르게 처리됩니다.
+- **합의 경로:** 공유 object와 관련된 트랜잭션은 네트워크 무결성을 보장하기 위해
+  순서화와 합의가 필요합니다.
+- **Object가 소유한 Object:** 자식 object는 부모 object의 소유권 모델을 상속합니다.

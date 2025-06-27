@@ -1,49 +1,49 @@
-# What is an Object?
+# Object란 무엇인가?
 
-The Object Model in Sui can be viewed as a high-level abstraction representing digital assets as
-_objects_. These objects have their own type and associated behaviors, a unique identifier, and
-support native storage operations like _transfer_ and _share_. Designed to be intuitive and easy to
-use, the Object Model enables a wide range of use cases to be implemented with ease.
+Sui의 Object Model은 디지털 자산을 _object_로 표현하는 고수준 추상화로 볼 수 있습니다.
+이러한 object들은 고유한 타입과 관련 동작, 고유 식별자를 가지며,
+_전송_과 _공유_ 같은 네이티브 스토리지 작업을 지원합니다. 직관적이고 사용하기 쉽게 설계된
+Object Model은 다양한 사용 사례를 쉽게 구현할 수 있게 합니다.
 
-Objects in Sui have the following properties:
+Sui의 object는 다음과 같은 속성을 가집니다:
 
-- **Type:** Every object has a type, defining the structure and behavior of the object. Objects of
-  different types cannot be mixed or used interchangeably, ensuring objects are used correctly
-  according to their type system.
+- **타입(Type):** 모든 object는 타입을 가지며, 이는 object의 구조와 동작을 정의합니다. 서로 다른
+  타입의 object는 혼합되거나 상호 교환해서 사용할 수 없으며, 이는 object가 타입 시스템에 따라
+  올바르게 사용되도록 보장합니다.
 
-- **Unique ID:** Each object has a unique identifier, distinguishing it from other objects. This ID
-  is generated upon the object's creation and is immutable. It's used to track and identify objects
-  within the system.
+- **고유 ID(Unique ID):** 각 object는 다른 object와 구별되는 고유 식별자를 가집니다. 이 ID는
+  object가 생성될 때 생성되며 불변입니다. 시스템 내에서 object를 추적하고 식별하는 데
+  사용됩니다.
 
 {/* Note: consider "shared across many entities" */}
 
-- **Owner:** Every object is associated with an owner, who has control over changes to the object.
-  Ownership on Sui can be exclusive to an account, shared across the network, or frozen, allowing
-  read-only access without modification or transfer capabilities. We will discuss ownership in more
-  detail in the following sections.
+- **소유자(Owner):** 모든 object는 object에 대한 변경을 제어할 수 있는 소유자와 연결됩니다.
+  Sui에서 소유권은 계정에 대해 독점적이거나, 네트워크 전체에 공유되거나, 동결되어
+  수정이나 전송 기능 없이 읽기 전용 접근만 허용할 수 있습니다. 소유권에 대해서는
+  다음 섹션에서 더 자세히 다룰 것입니다.
 
-  Note that ownership does not control the confidentiality of an object &mdash; it is always
-  possible to read the contents of an on-chain object from outside of Move. You should never store
-  unencrypted secrets inside of objects.
+  소유권은 object의 기밀성을 제어하지 않는다는 점에 유의하세요 &mdash; Move 외부에서
+  온체인 object의 내용을 읽는 것은 항상 가능합니다. object 내부에 암호화되지 않은
+  비밀을 저장해서는 안 됩니다.
 
-- **Data:** Objects encapsulate their data, simplifying management and manipulation. The data
-  structure and operations are defined by the object's type.
+- **데이터(Data):** object는 데이터를 캡슐화하여 관리와 조작을 단순화합니다. 데이터
+  구조와 작업은 object의 타입에 의해 정의됩니다.
 
-- **Version:** The transition from accounts to objects is facilitated by object versioning.
-  Traditionally, blockchains use a _nonce_ to prevent replay attacks. In Sui, the object's version
-  acts as a nonce, preventing replay attacks for each object.
+- **버전(Version):** 계정에서 object로의 전환은 object 버전 관리를 통해 이루어집니다.
+  전통적으로 블록체인은 재생 공격을 방지하기 위해 _nonce_를 사용합니다. Sui에서는 object의 버전이
+  nonce 역할을 하여 각 object에 대한 재생 공격을 방지합니다.
 
-- **Digest:** Every object has a digest, which is a hash of the object's data. The digest is used to
-  cryptographically verify the integrity of the object's data and ensures that it has not been
-  tampered with. The digest is calculated when the object is created and is updated whenever the
-  object's data changes.
+- **다이제스트(Digest):** 모든 object는 object 데이터의 해시인 다이제스트를 가집니다. 다이제스트는
+  object 데이터의 무결성을 암호학적으로 검증하는 데 사용되며 변조되지 않았음을 보장합니다.
+  다이제스트는 object가 생성될 때 계산되며 object의 데이터가 변경될 때마다
+  업데이트됩니다.
 
-## Summary
+## 요약
 
-- Objects in Sui are high-level abstractions representing digital assets.
-- Objects have a type, unique ID, owner, data, version, and digest.
-- The Object Model simplifies asset management and enables a wide range of use cases.
+- Sui의 object는 디지털 자산을 나타내는 고수준 추상화입니다.
+- object는 타입, 고유 ID, 소유자, 데이터, 버전, 그리고 다이제스트를 가집니다.
+- Object Model은 자산 관리를 단순화하고 다양한 사용 사례를 가능하게 합니다.
 
-## Further Reading
+## 추가 자료
 
-- [Object Model](https://docs.sui.io/concepts/object-model) in Sui Documentation.
+- Sui 문서의 [Object Model](https://docs.sui.io/concepts/object-model)

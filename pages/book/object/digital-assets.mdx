@@ -1,53 +1,51 @@
-# Move - Language for Digital Assets
+# Move - 디지털 자산을 위한 언어
 
-Smart-contract programming languages have historically focused on defining and managing digital
-assets. For example, the ERC-20 standard in Ethereum pioneered a set of standards to interact with
-digital currency tokens, establishing a blueprint for creating and managing digital currencies on
-the blockchain. Subsequently, the introduction of the ERC-721 standard marked a significant
-evolution, popularizing the concept of non-fungible tokens (NFTs), which represent unique,
-indivisible assets. These standards laid the groundwork for the complex digital assets we see today.
+스마트 컨트랙트 프로그래밍 언어는 역사적으로 디지털 자산의 정의와 관리에 중점을 두어왔습니다. 
+예를 들어, Ethereum의 ERC-20 표준은 디지털 통화 토큰과 상호작용하기 위한 일련의 표준을 개척하여
+블록체인에서 디지털 통화를 생성하고 관리하기 위한 청사진을 확립했습니다. 이후 ERC-721 표준의
+도입은 고유하고 분할할 수 없는 자산을 나타내는 대체 불가능한 토큰(NFT)의 개념을 대중화하며
+중요한 진화를 이루었습니다. 이러한 표준들은 오늘날 우리가 보는 복잡한 디지털 자산의 토대를 마련했습니다.
 
-{/* ## Move and Digital Assets */}
+{/* ## Move와 디지털 자산 */}
 
 {/* note: consider "native" -> "fine-grained" */}
 
-However, Ethereum's programming model lacked a native representation of assets. In other words,
-externally, a Smart Contract behaved like an asset, but the language itself did not have a way to
-inherently represent assets. From the start, Move aimed to provide a first-class abstraction for
-assets, opening up new avenues for thinking about and programming assets.
+그러나 Ethereum의 프로그래밍 모델에는 자산의 네이티브 표현이 부족했습니다. 다시 말해,
+외부적으로는 스마트 컨트랙트가 자산처럼 동작했지만, 언어 자체에는 자산을 본질적으로
+표현할 방법이 없었습니다. Move는 처음부터 자산에 대한 일급 추상화를 제공하는 것을 목표로 하여
+자산에 대해 생각하고 프로그래밍하는 새로운 길을 열었습니다.
 
-{/* Move was initially created in 2018 as part of the Libra project. The language was designed to address shortcomings in existing smart contract languages, especially in handling assets and access control. The Move language aims to provide first-class abstractions for these concepts, improving the safety and productivity of smart contract programming. */}
+{/* Move는 2018년 Libra 프로젝트의 일부로 처음 만들어졌습니다. 이 언어는 기존 스마트 컨트랙트 언어의 단점, 특히 자산 처리와 접근 제어에서의 문제를 해결하기 위해 설계되었습니다. Move 언어는 이러한 개념에 대한 일급 추상화를 제공하여 스마트 컨트랙트 프로그래밍의 안전성과 생산성을 향상시키는 것을 목표로 합니다. */}
 
-It is important to highlight which properties are essential for an asset:
+자산에 필수적인 속성이 무엇인지 강조하는 것이 중요합니다:
 
-- **Ownership:** Every asset is associated with an owner(s), mirroring the straightforward concept
-  of ownership in the physical world—just as you own a car, you can own a digital asset. Move
-  enforces ownership in such a way that once an asset is _moved_, the previous owner completely
-  loses any control over it. This mechanism ensures a clear and secure change of ownership.
+- **소유권(Ownership):** 모든 자산은 소유자와 연결되어 있으며, 이는 물리적 세계의 간단한 소유권 개념을
+  반영합니다—자동차를 소유하는 것처럼 디지털 자산을 소유할 수 있습니다. Move는
+  자산이 _이동_되면 이전 소유자가 완전히 통제권을 잃도록 소유권을 강제합니다.
+  이 메커니즘은 명확하고 안전한 소유권 변경을 보장합니다.
 
-- **Non-copyable:** In the real world, unique items cannot be duplicated effortlessly. Move applies
-  this principle to digital assets, ensuring they cannot be arbitrarily copied within the program.
-  This property is crucial for maintaining the scarcity and uniqueness of digital assets, mirroring
-  the intrinsic value of physical assets.
+- **복사 불가능(Non-copyable):** 현실 세계에서는 고유한 아이템을 쉽게 복제할 수 없습니다. Move는
+  이 원칙을 디지털 자산에 적용하여 프로그램 내에서 임의로 복사할 수 없도록 보장합니다.
+  이 속성은 디지털 자산의 희소성과 고유성을 유지하는 데 중요하며,
+  물리적 자산의 본질적 가치를 반영합니다.
 
-- **Non-discardable:** Just as you cannot accidentally lose a house or a car without a trace, Move
-  ensures that no asset can be discarded or lost in a program. Instead, assets must be explicitly
-  transferred or destroyed. This property guarantees the deliberate handling of digital assets,
-  preventing accidental loss and ensuring accountability in asset management.
+- **폐기 불가능(Non-discardable):** 집이나 자동차를 흔적도 없이 실수로 잃을 수 없는 것처럼, Move는
+  프로그램에서 어떤 자산도 폐기되거나 손실될 수 없도록 보장합니다. 대신, 자산은 명시적으로
+  전송되거나 파괴되어야 합니다. 이 속성은 디지털 자산의 의도적인 처리를 보장하여
+  우발적인 손실을 방지하고 자산 관리의 책임성을 보장합니다.
 
-Move managed to encapsulate these properties in its design, becoming an ideal language for digital
-assets.
+Move는 이러한 속성들을 설계에 캡슐화하여 디지털 자산을 위한 이상적인 언어가 되었습니다.
 
-## Summary
+## 요약
 
-- Move was designed to provide a first-class abstraction for digital assets, enabling developers to
-  create and manage assets natively.
-- Essential properties of digital assets include ownership, non-copyability, and non-discardability,
-  which Move enforces in its design.
-- Move's asset model mirrors real-world asset management, ensuring secure and accountable asset
-  ownership and transfer.
+- Move는 디지털 자산에 대한 일급 추상화를 제공하도록 설계되어 개발자가
+  자산을 네이티브하게 생성하고 관리할 수 있게 합니다.
+- 디지털 자산의 필수 속성에는 소유권, 복사 불가능성, 폐기 불가능성이 포함되며,
+  Move는 설계에서 이를 강제합니다.
+- Move의 자산 모델은 현실 세계의 자산 관리를 반영하여 안전하고 책임감 있는 자산
+  소유권과 전송을 보장합니다.
 
-## Further Reading
+## 추가 자료
 
 - [Move: A Language With Programmable Resources (pdf)](https://developers.diem.com/papers/diem-move-a-language-with-programmable-resources/2019-06-18.pdf)
   by Sam Blackshear, Evan Cheng, David L. Dill, Victor Gao, Ben Maurer, Todd Nowacki, Alistair Pott,

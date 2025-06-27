@@ -1,27 +1,26 @@
-# Evolution of Move
+# Move의 진화
 
-While Move was created to manage digital assets, its initial storage model was bulky and not
-well-suited for many use cases. For instance, if Alice wanted to transfer an asset X to Bob, Bob had
-to create a new "empty" resource, and then Alice could transfer asset X to Bob. This process was not
-intuitive and presented implementation challenges, partly due to the restrictive design of
-[Diem](https://www.diem.com/en-us). Another drawback of the original design was the lack of built-in
-support for a "transfer" operation, requiring every module to implement its own storage transfer
-logic. Additionally, managing heterogeneous collections of assets in a single account was
-particularly challenging.
+Move가 디지털 자산 관리를 위해 만들어졌지만, 초기 스토리지 모델은 번거롭고 많은 사용 사례에
+적합하지 않았습니다. 예를 들어, Alice가 자산 X를 Bob에게 전송하려면, Bob이 먼저 새로운 "빈" 리소스를
+생성해야 했고, 그 후에야 Alice가 자산 X를 Bob에게 전송할 수 있었습니다. 이 과정은 직관적이지 않았고
+구현상의 어려움을 야기했는데, 이는 부분적으로 [Diem](https://www.diem.com/en-us)의 제한적인 설계
+때문이었습니다. 원래 설계의 또 다른 단점은 "전송" 작업에 대한 내장 지원이 없어서
+모든 module이 자체적인 스토리지 전송 로직을 구현해야 했다는 것입니다. 또한 단일 계정에서
+이질적인 자산 컬렉션을 관리하는 것은 특히 어려웠습니다.
 
-Sui addressed these challenges by redesigning the storage and ownership model of objects to more
-closely resemble real-world object interactions. With a native concept of ownership and _transfer_,
-Alice can directly transfer asset X to Bob. Furthermore, Bob can maintain a collection of different
-assets without any preparatory steps. These improvements laid the foundation for the Object Model in
-Sui.
+Sui는 object의 스토리지와 소유권 모델을 실제 세계의 객체 상호작용과 더 유사하게 재설계하여
+이러한 문제들을 해결했습니다. 소유권과 _전송_의 네이티브 개념을 통해
+Alice는 자산 X를 Bob에게 직접 전송할 수 있습니다. 또한 Bob은 어떤 준비 단계 없이도
+다양한 자산들의 컬렉션을 유지할 수 있습니다. 이러한 개선사항들은 Sui의 Object Model을 위한
+토대를 마련했습니다.
 
-## Summary
+## 요약
 
-- Move's initial storage model was not well-suited for managing digital assets, requiring complex
-  and restrictive transfer operations.
-- Sui introduced the Object Model, which provides a native concept of ownership, simplifying asset
-  management and enabling heterogeneous collections.
+- Move의 초기 스토리지 모델은 디지털 자산 관리에 적합하지 않았으며, 복잡하고
+  제한적인 전송 작업이 필요했습니다.
+- Sui는 Object Model을 도입하여 네이티브 소유권 개념을 제공하고, 자산 관리를 단순화하며
+  이질적인 컬렉션을 가능하게 했습니다.
 
-## Further Reading
+## 추가 자료
 
 - [Why We Created Sui Move](https://blog.sui.io/why-we-created-sui-move/) by Sam Blackshear
