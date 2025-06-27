@@ -1,5 +1,4 @@
 export default {
-  index: "11. Appendix",
   glossary: "11.1 A - Glossary",
   "reserved-addresses": "11.2 B - Reserved Addresses",
   publications: "11.3 C - Publications",
