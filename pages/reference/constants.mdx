@@ -3,22 +3,22 @@ title: 'Constants | Reference'
 description: ''
 ---
 
-# Constants
+# 상수
 
-Constants are a way of giving a name to shared, static values inside of a `module`.
+상수는 `module` 내부에서 공유되는 정적 값에 이름을 부여하는 방법입니다.
 
-The constant's value must be known at compilation. The constant's value is stored in the compiled
-module. And each time the constant is used, a new copy of that value is made.
+상수의 값은 컴파일 시점에 알려져야 합니다. 상수의 값은 컴파일된 module에 저장됩니다.
+그리고 상수가 사용될 때마다 해당 값의 새로운 복사본이 만들어집니다.
 
-## Declaration
+## 선언
 
-Constant declarations begin with the `const` keyword, followed by a name, a type, and a value.
+상수 선언은 `const` 키워드로 시작하고, 그 다음에 이름, 타입, 값이 옵니다.
 
 ```text
 const <name>: <type> = <expression>;
 ```
 
-For example
+예를 들어
 
 ```move
 module a::example;
@@ -30,10 +30,10 @@ public fun permissioned(addr: address) {
 }
 ```
 
-## Naming
+## 명명 규칙
 
-Constants must start with a capital letter `A` to `Z`. After the first letter, constant names can
-contain underscores `_`, letters `a` to `z`, letters `A` to `Z`, or digits `0` to `9`.
+상수는 대문자 `A`부터 `Z`로 시작해야 합니다. 첫 글자 이후, 상수 이름은
+밑줄 `_`, 소문자 `a`부터 `z`, 대문자 `A`부터 `Z`, 또는 숫자 `0`부터 `9`를 포함할 수 있습니다.
 
 ```move
 const FLAG: bool = false;
@@ -41,28 +41,27 @@ const EMyErrorCode: u64 = 0;
 const ADDRESS_42: address = @0x42;
 ```
 
-Even though you can use letters `a` to `z` in a constant. The
-[general style guidelines](./coding-conventions) are to use just uppercase letters `A` to `Z`, with
-underscores `_` between each word. For error codes, we use `E` as a prefix and then upper camel case
-(also known as Pascal case) for the rest of the name, as seen in `EMyErrorCode`.
+상수에 소문자 `a`부터 `z`를 사용할 수 있지만,
+[일반적인 스타일 가이드라인](./coding-conventions)은 대문자 `A`부터 `Z`만 사용하고,
+각 단어 사이에 밑줄 `_`을 사용하는 것입니다. 에러 코드의 경우, `E`를 접두사로 사용하고
+나머지 이름은 대문자 카멜 케이스(파스칼 케이스라고도 함)를 사용합니다. `EMyErrorCode`에서 볼 수 있듯이요.
 
-The current naming restriction of starting with `A` to `Z` is in place to give room for future
-language features.
+`A`부터 `Z`로 시작해야 한다는 현재의 명명 제한은 향후 언어 기능을 위한 여지를 남겨두기 위한 것입니다.
 
-## Visibility
+## 가시성
 
-`public` or `public(package)` constants are not currently supported. `const` values can be used only
-in the declaring module. However, as a convenience, they can be used across modules in
-[unit tests attributes](./unit-testing).
+`public` 또는 `public(package)` 상수는 현재 지원되지 않습니다. `const` 값은 선언된 module에서만
+사용할 수 있습니다. 그러나 편의를 위해 [단위 테스트 속성](./unit-testing)에서는 module 간에
+사용할 수 있습니다.
 
-## Valid Expressions
+## 유효한 표현식
 
-Currently, constants are limited to the primitive types `bool`, `u8`, `u16`, `u32`, `u64`, `u128`,
-`u256`, `address`, and `vector<T>`, where `T` is the valid type for a constant.
+현재 상수는 원시 타입 `bool`, `u8`, `u16`, `u32`, `u64`, `u128`,
+`u256`, `address`, 그리고 `vector<T>`로 제한됩니다. 여기서 `T`는 상수에 유효한 타입입니다.
 
-### Values
+### 값
 
-Commonly, `const`s are assigned a simple value, or literal, of their type. For example
+일반적으로 `const`는 해당 타입의 간단한 값이나 리터럴이 할당됩니다. 예를 들어
 
 ```move
 const MY_BOOL: bool = false;
@@ -71,13 +70,12 @@ const BYTES: vector<u8> = b"hello world";
 const HEX_BYTES: vector<u8> = x"DEADBEEF";
 ```
 
-### Complex Expressions
+### 복잡한 표현식
 
-In addition to literals, constants can include more complex expressions, as long as the compiler is
-able to reduce the expression to a value at compile time.
+리터럴 외에도, 컴파일러가 컴파일 시점에 표현식을 값으로 축소할 수 있는 한,
+상수는 더 복잡한 표현식을 포함할 수 있습니다.
 
-Currently, equality operations, all boolean operations, all bitwise operations, and all arithmetic
-operations can be used.
+현재 동등 연산, 모든 불리언 연산, 모든 비트 연산, 그리고 모든 산술 연산을 사용할 수 있습니다.
 
 ```move
 const RULE: bool = true && false;
@@ -91,8 +89,7 @@ const REM: u256 =
 const EQUAL: bool = 1 == 1;
 ```
 
-If the operation would result in a runtime exception, the compiler will give an error that it is
-unable to generate the constant's value
+연산이 런타임 예외를 발생시킬 경우, 컴파일러는 상수의 값을 생성할 수 없다는 오류를 발생시킵니다.
 
 ```move
 const DIV_BY_ZERO: u64 = 1 / 0; // ERROR!
@@ -100,14 +97,14 @@ const SHIFT_BY_A_LOT: u64 = 1 << 100; // ERROR!
 const NEGATIVE_U64: u64 = 0 - 1; // ERROR!
 ```
 
-Additionally, constants can refer to other constants within the same module.
+또한 상수는 동일한 module 내의 다른 상수를 참조할 수 있습니다.
 
 ```move
 const BASE: u8 = 4;
 const SQUARE: u8 = BASE * BASE;
 ```
 
-Note though, that any cycle in the constant definitions results in an error.
+하지만 상수 정의에서 순환 참조가 발생하면 오류가 발생한다는 점에 주의하세요.
 
 ```move
 const A: u16 = B + 1;

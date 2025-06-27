@@ -3,50 +3,45 @@ title: 'Tuples and Unit | Reference'
 description: ''
 ---
 
-# Tuples and Unit
+# 튜플과 Unit
 
-Move does not fully support tuples as one might expect coming from another language with them as a
-[first-class value](https://en.wikipedia.org/wiki/First-class_citizen). However, in order to support
-multiple return values, Move has tuple-like expressions. These expressions do not result in a
-concrete value at runtime (there are no tuples in the bytecode), and as a result they are very
-limited:
+Move는 다른 언어에서 [일급 값(first-class value)](https://en.wikipedia.org/wiki/First-class_citizen)으로
+기대할 수 있는 튜플을 완전히 지원하지 않습니다. 그러나 여러 반환 값을 지원하기 위해 Move는
+튜플과 유사한 표현식을 가지고 있습니다. 이러한 표현식은 런타임에 구체적인 값을 생성하지 않으며
+(바이트코드에는 튜플이 없음), 결과적으로 매우 제한적입니다:
 
-- They can only appear in expressions (usually in the return position for a function).
-- They cannot be bound to local variables.
-- They cannot be bound to local variables.
-- They cannot be stored in structs.
-- Tuple types cannot be used to instantiate generics.
+- 표현식에서만 나타날 수 있습니다 (일반적으로 함수의 반환 위치에서).
+- 지역 변수에 바인딩할 수 없습니다.
+- 지역 변수에 바인딩할 수 없습니다.
+- 구조체에 저장할 수 없습니다.
+- 튜플 타입은 제네릭을 인스턴스화하는 데 사용할 수 없습니다.
 
-Similarly, [unit `()`](https://en.wikipedia.org/wiki/Unit_type) is a type created by the Move source
-language in order to be expression based. The unit value `()` does not result in any runtime value.
-We can consider unit`()` to be an empty tuple, and any restrictions that apply to tuples also apply
-to unit.
+마찬가지로, [unit `()`](https://en.wikipedia.org/wiki/Unit_type)은 표현식 기반이 되기 위해
+Move 소스 언어에서 생성한 타입입니다. unit 값 `()`는 런타임 값을 생성하지 않습니다.
+unit`()`를 빈 튜플로 간주할 수 있으며, 튜플에 적용되는 모든 제한 사항이 unit에도 적용됩니다.
 
-It might feel weird to have tuples in the language at all given these restrictions. But one of the
-most common use cases for tuples in other languages is for functions to allow functions to return
-multiple values. Some languages work around this by forcing the users to write structs that contain
-the multiple return values. However in Move, you cannot put references inside of
-[structs](./../structs). This required Move to support multiple return values. These multiple return
-values are all pushed on the stack at the bytecode level. At the source level, these multiple return
-values are represented using tuples.
+이러한 제한 사항을 고려하면 언어에 튜플이 있는 것이 이상하게 느껴질 수 있습니다. 하지만 다른 언어에서
+튜플의 가장 일반적인 사용 사례 중 하나는 함수가 여러 값을 반환할 수 있도록 하는 것입니다.
+일부 언어는 사용자가 여러 반환 값을 포함하는 구조체를 작성하도록 강제하여 이를 해결합니다.
+그러나 Move에서는 [구조체](./../structs) 내부에 참조를 넣을 수 없습니다. 이로 인해 Move는
+여러 반환 값을 지원해야 했습니다. 이러한 여러 반환 값은 바이트코드 수준에서 모두 스택에 푸시됩니다.
+소스 수준에서 이러한 여러 반환 값은 튜플을 사용하여 표현됩니다.
 
-## Literals
+## 리터럴
 
-Tuples are created by a comma separated list of expressions inside of parentheses.
+튜플은 괄호 안에 쉼표로 구분된 표현식 목록으로 생성됩니다.
 
-| Syntax          | Type                                                                         | Description                                                  |
+| 구문            | 타입                                                                         | 설명                                                         |
 | --------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `()`            | `(): ()`                                                                     | Unit, the empty tuple, or the tuple of arity 0               |
-| `(e1, ..., en)` | `(e1, ..., en): (T1, ..., Tn)` where `e_i: Ti` s.t. `0 < i <= n` and `n > 0` | A `n`-tuple, a tuple of arity `n`, a tuple with `n` elements |
+| `()`            | `(): ()`                                                                     | Unit, 빈 튜플, 또는 항수 0의 튜플                           |
+| `(e1, ..., en)` | `(e1, ..., en): (T1, ..., Tn)` where `e_i: Ti` s.t. `0 < i <= n` and `n > 0` | `n`-튜플, 항수 `n`의 튜플, `n`개의 요소를 가진 튜플         |
 
-Note that `(e)` does not have type `(e): (t)`, in other words there is no tuple with one element. If
-there is only a single element inside of the parentheses, the parentheses are only used for
-disambiguation and do not carry any other special meaning.
+`(e)`는 `(e): (t)` 타입을 가지지 않습니다. 즉, 한 요소를 가진 튜플은 없습니다. 괄호 안에
+단일 요소만 있는 경우, 괄호는 모호성 해소를 위해서만 사용되며 다른 특별한 의미를 갖지 않습니다.
 
-Sometimes, tuples with two elements are called "pairs" and tuples with three elements are called
-"triples."
+때때로 두 요소를 가진 튜플은 "쌍(pairs)"이라고 하고 세 요소를 가진 튜플은 "삼중(triples)"이라고 합니다.
 
-### Examples
+### 예제
 
 ```move
 module 0::example;
@@ -71,15 +66,15 @@ fun returns_4_values(x: &u64): (&u64, u8, u128, vector<u8>) {
 }
 ```
 
-## Operations
+## 연산
 
-The only operation that can be done on tuples currently is destructuring.
+현재 튜플에서 수행할 수 있는 유일한 연산은 구조 분해(destructuring)입니다.
 
-### Destructuring
+### 구조 분해
 
-For tuples of any size, they can be destructured in either a `let` binding or in an assignment.
+모든 크기의 튜플은 `let` 바인딩이나 할당에서 구조 분해될 수 있습니다.
 
-For example:
+예를 들어:
 
 ```move
 module 0x42::example;
@@ -110,15 +105,15 @@ fun examples_with_function_calls() {
 }
 ```
 
-For more details, see [Move Variables](./../variables).
+더 자세한 내용은 [Move 변수](./../variables)를 참조하세요.
 
-## Subtyping
+## 서브타이핑
 
-Along with references, tuples are the only types that have
-[subtyping](https://en.wikipedia.org/wiki/Subtyping) in Move. Tuples have subtyping only in the
-sense that subtype with references (in a covariant way).
+참조와 함께 튜플은 Move에서 [서브타이핑(subtyping)](https://en.wikipedia.org/wiki/Subtyping)을
+가진 유일한 타입입니다. 튜플은 참조와 함께 서브타입을 가진다는 의미에서만 서브타이핑을 가집니다
+(공변적인 방식으로).
 
-For example:
+예를 들어:
 
 ```move
 let x: &u64 = &0;
@@ -139,9 +134,8 @@ let (e, f): (&mut u64, &mut u64) = (x, y);
 // highlight-error-end
 ```
 
-## Ownership
+## 소유권
 
-As mentioned above, tuple values don't really exist at runtime. And currently they cannot be stored
-into local variables because of this (but it is likely that this feature will come at some point in
-the future). As such, tuples can only be moved currently, as copying them would require putting them
-into a local variable first.
+위에서 언급했듯이, 튜플 값은 런타임에 실제로 존재하지 않습니다. 그리고 현재 이러한 이유로
+지역 변수에 저장할 수 없습니다 (하지만 이 기능은 미래의 어느 시점에 추가될 가능성이 있습니다).
+따라서 튜플은 현재 이동만 가능하며, 복사하려면 먼저 지역 변수에 넣어야 하기 때문입니다.

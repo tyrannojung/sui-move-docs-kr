@@ -1,31 +1,25 @@
 ---
-title: 'References | Reference'
+title: '참조 | Reference'
 description: ''
 ---
 
-# References
+# 참조
 
-Move has two types of references: immutable `&` and mutable `&mut`. Immutable references are read
-only, and cannot modify the underlying value (or any of its fields). Mutable references allow for
-modifications via a write through that reference. Move's type system enforces an ownership
-discipline that prevents reference errors.
+Move에는 두 가지 타입의 참조가 있습니다: 불변(immutable) `&`와 가변(mutable) `&mut`. 불변 참조는 읽기 전용이며, 기본 값(또는 그 필드)을 수정할 수 없습니다. 가변 참조는 해당 참조를 통해 쓰기로 수정할 수 있습니다. Move의 타입 시스템은 참조 오류를 방지하는 소유권 규칙을 적용합니다.
 
-## Reference Operators
+## 참조 연산자
 
-Move provides operators for creating and extending references as well as converting a mutable
-reference to an immutable one. Here and elsewhere, we use the notation `e: T` for "expression `e`
-has type `T`".
+Move는 참조를 생성하고 확장하는 연산자와 가변 참조를 불변 참조로 변환하는 연산자를 제공합니다. 여기서와 다른 곳에서 `e: T`라는 표기법은 "표현식 `e`가 타입 `T`를 갖는다"는 의미로 사용합니다.
 
-| Syntax      | Type                                                  | Description                                                    |
+| 구문        | 타입                                                   | 설명                                                           |
 | ----------- | ----------------------------------------------------- | -------------------------------------------------------------- |
-| `&e`        | `&T` where `e: T` and `T` is a non-reference type     | Create an immutable reference to `e`                           |
-| `&mut e`    | `&mut T` where `e: T` and `T` is a non-reference type | Create a mutable reference to `e`.                             |
-| `&e.f`      | `&T` where `e.f: T`                                   | Create an immutable reference to field `f` of struct `e`.      |
-| `&mut e.f`  | `&mut T` where `e.f: T`                               | Create a mutable reference to field `f` of struct`e`.          |
-| `freeze(e)` | `&T` where `e: &mut T`                                | Convert the mutable reference `e` into an immutable reference. |
+| `&e`        | `&T` (여기서 `e: T`이고 `T`는 참조가 아닌 타입)        | `e`에 대한 불변 참조 생성                                       |
+| `&mut e`    | `&mut T` (여기서 `e: T`이고 `T`는 참조가 아닌 타입)    | `e`에 대한 가변 참조 생성                                       |
+| `&e.f`      | `&T` (여기서 `e.f: T`)                                | 구조체 `e`의 필드 `f`에 대한 불변 참조 생성                     |
+| `&mut e.f`  | `&mut T` (여기서 `e.f: T`)                            | 구조체 `e`의 필드 `f`에 대한 가변 참조 생성                     |
+| `freeze(e)` | `&T` (여기서 `e: &mut T`)                             | 가변 참조 `e`를 불변 참조로 변환                                |
 
-The `&e.f` and `&mut e.f` operators can be used both to create a new reference into a struct or to
-extend an existing reference:
+`&e.f`와 `&mut e.f` 연산자는 구조체에 대한 새로운 참조를 생성하거나 기존 참조를 확장하는 데 모두 사용할 수 있습니다:
 
 ```move
 let s = S { f: 10 };
@@ -34,7 +28,7 @@ let s_ref: &S = &s;
 let f_ref2: &u64 = &s_ref.f // also works
 ```
 
-A reference expression with multiple fields works as long as both structs are in the same module:
+여러 필드가 있는 참조 표현식은 두 구조체가 같은 module에 있는 한 작동합니다:
 
 ```move
 public struct A { b: B }
@@ -44,7 +38,7 @@ fun f(a: &A): &u64 {
 }
 ```
 
-Finally, note that references to references are not allowed:
+마지막으로, 참조에 대한 참조는 허용되지 않습니다:
 
 ```move
 let x = 7;
@@ -53,24 +47,20 @@ let y: &u64 = &x;
 let z: &&u64 = &y; // ERROR! will not compile
 ```
 
-## Reading and Writing Through References
+## 참조를 통한 읽기와 쓰기
 
-Both mutable and immutable references can be read to produce a copy of the referenced value.
+가변 및 불변 참조 모두 참조된 값의 복사본을 생성하기 위해 읽을 수 있습니다.
 
-Only mutable references can be written. A write `*x = v` discards the value previously stored in `x`
-and updates it with `v`.
+가변 참조만 쓸 수 있습니다. `*x = v` 쓰기는 이전에 `x`에 저장된 값을 버리고 `v`로 업데이트합니다.
 
-Both operations use the C-like `*` syntax. However, note that a read is an expression, whereas a
-write is a mutation that must occur on the left hand side of an equals.
+두 작업 모두 C와 유사한 `*` 구문을 사용합니다. 그러나 읽기는 표현식인 반면, 쓰기는 등호의 왼쪽에서 발생해야 하는 변경임을 주의하세요.
 
-| Syntax     | Type                                | Description                         |
-| ---------- | ----------------------------------- | ----------------------------------- |
-| `*e`       | `T` where `e` is `&T` or `&mut T`   | Read the value pointed to by `e`    |
-| `*e1 = e2` | `()` where `e1: &mut T` and `e2: T` | Update the value in `e1` with `e2`. |
+| 구문       | 타입                                | 설명                               |
+| ---------- | ----------------------------------- | ---------------------------------- |
+| `*e`       | `T` (여기서 `e`는 `&T` 또는 `&mut T`) | `e`가 가리키는 값을 읽기            |
+| `*e1 = e2` | `()` (여기서 `e1: &mut T`이고 `e2: T`) | `e1`의 값을 `e2`로 업데이트        |
 
-In order for a reference to be read, the underlying type must have the
-[`copy` ability](../abilities) as reading the reference creates a new copy of the value. This rule
-prevents the copying of assets:
+참조를 읽으려면 기본 타입이 [`copy` ability](../abilities)를 가져야 합니다. 참조를 읽으면 값의 새로운 복사본이 생성되기 때문입니다. 이 규칙은 자산의 복사를 방지합니다:
 
 ```move
 fun copy_coin_via_ref_bad(c: Coin) {
@@ -82,9 +72,7 @@ fun copy_coin_via_ref_bad(c: Coin) {
 }
 ```
 
-Dually: in order for a reference to be written to, the underlying type must have the
-[`drop` ability](../abilities) as writing to the reference will discard (or "drop") the old value.
-This rule prevents the destruction of resource values:
+반대로: 참조에 쓰려면 기본 타입이 [`drop` ability](../abilities)를 가져야 합니다. 참조에 쓰면 이전 값을 버리기(또는 "drop") 때문입니다. 이 규칙은 리소스 값의 파괴를 방지합니다:
 
 ```move
 fun destroy_coin_via_ref_bad(mut ten_coins: Coin, c: Coin) {
@@ -94,17 +82,16 @@ fun destroy_coin_via_ref_bad(mut ten_coins: Coin, c: Coin) {
 }
 ```
 
-## `freeze` inference
+## `freeze` 추론
 
-A mutable reference can be used in a context where an immutable reference is expected:
+가변 참조는 불변 참조가 예상되는 컨텍스트에서 사용될 수 있습니다:
 
 ```move
 let mut x = 7;
 let y: &u64 = &mut x;
 ```
 
-This works because the under the hood, the compiler inserts `freeze` instructions where they are
-needed. Here are a few more examples of `freeze` inference in action:
+이것이 작동하는 이유는 컴파일러가 내부적으로 필요한 곳에 `freeze` 명령을 삽입하기 때문입니다. 다음은 `freeze` 추론이 작동하는 몇 가지 추가 예시입니다:
 
 ```move
 fun takes_immut_returns_immut(x: &u64): &u64 { x }
@@ -132,12 +119,9 @@ fun assignment_examples() {
 }
 ```
 
-### Subtyping
+### 서브타이핑
 
-With this `freeze` inference, the Move type checker can view `&mut T` as a subtype of `&T`. As shown
-above, this means that anywhere for any expression where a `&T` value is used, a `&mut T` value can
-also be used. This terminology is used in error messages to concisely indicate that a `&mut T` was
-needed where a `&T` was supplied. For example
+이 `freeze` 추론으로 Move 타입 검사기는 `&mut T`를 `&T`의 서브타입으로 볼 수 있습니다. 위에서 보듯이, 이는 `&T` 값이 사용되는 모든 표현식에서 `&mut T` 값도 사용할 수 있음을 의미합니다. 이 용어는 오류 메시지에서 `&T`가 필요한 곳에 `&mut T`가 제공되었음을 간결하게 나타내는 데 사용됩니다. 예를 들어:
 
 ```move
 module a::example {
@@ -160,7 +144,7 @@ module a::example {
 }
 ```
 
-will yield the following error messages
+다음과 같은 오류 메시지가 표시됩니다:
 
 ```text
 error:
@@ -192,12 +176,11 @@ error:
     │
 ```
 
-The only other types that currently have subtyping are [tuples](./tuples)
+현재 서브타이핑을 가진 다른 타입은 [튜플](./tuples)뿐입니다.
 
-## Ownership
+## 소유권
 
-Both mutable and immutable references can always be copied and extended _even if there are existing
-copies or extensions of the same reference_:
+가변 및 불변 참조는 _동일한 참조의 기존 복사본이나 확장이 있더라도_ 항상 복사하고 확장할 수 있습니다:
 
 ```move
 fun reference_copies(s: &mut S) {
@@ -208,29 +191,14 @@ fun reference_copies(s: &mut S) {
 }
 ```
 
-This might be surprising for programmers familiar with Rust's ownership system, which would reject
-the code above. Move's type system is more permissive in its treatment of
-[copies](./../variables#move-and-copy), but equally strict in ensuring unique ownership of mutable
-references before writes.
+이는 위 코드를 거부하는 Rust의 소유권 시스템에 익숙한 프로그래머에게는 놀라울 수 있습니다. Move의 타입 시스템은 [복사](./../variables#move-and-copy) 처리에서 더 관대하지만, 쓰기 전 가변 참조의 고유한 소유권을 보장하는 데는 동일하게 엄격합니다.
 
-### References Cannot Be Stored
+### 참조는 저장될 수 없음
 
-References and tuples are the _only_ types that cannot be stored as a field value of structs, which
-also means that they cannot exist in storage or [objects](./../abilities/object). All references
-created during program execution will be destroyed when a Move program terminates; they are entirely
-ephemeral. This also applies to all types without the `store` ability: any value of a non-`store`
-type must be destroyed before the program terminates. [ability](./../abilities), but note that
-references and tuples go a step further by never being allowed in structs in the first place.
+참조와 튜플은 구조체의 필드 값으로 저장할 수 없는 _유일한_ 타입입니다. 이는 또한 스토리지나 [object](./../abilities/object)에 존재할 수 없음을 의미합니다. 프로그램 실행 중에 생성된 모든 참조는 Move 프로그램이 종료될 때 파괴됩니다. 참조는 완전히 일시적입니다. 이는 `store` ability가 없는 모든 타입에도 적용됩니다: `store`가 아닌 타입의 모든 값은 프로그램이 종료되기 전에 파괴되어야 합니다. [ability](./../abilities) 참조와 튜플은 애초에 구조체에 허용되지 않는다는 점에서 한 걸음 더 나아갑니다.
 
-This is another difference between Move and Rust, which allows references to be stored inside of
-structs.
+이는 구조체 내부에 참조를 저장할 수 있는 Rust와 Move의 또 다른 차이점입니다.
 
-One could imagine a fancier, more expressive, type system that would allow references to be stored
-in structs. We could allow references inside of structs that do not have the `store`
-[ability](./../abilities), but the core difficulty is that Move has a fairly complex system for
-tracking static reference safety. This aspect of the type system would also have to be extended to
-support storing references inside of structs. In short, Move's reference safety system would have to
-expand to support stored references, and it is something we are keeping an eye on as the language
-evolves.
+구조체 내부에 참조를 저장할 수 있도록 하는 더 멋지고 표현력이 풍부한 타입 시스템을 상상할 수 있습니다. `store` [ability](./../abilities)가 없는 구조체 내부에 참조를 허용할 수 있지만, 핵심적인 어려움은 Move가 정적 참조 안전성을 추적하기 위한 상당히 복잡한 시스템을 가지고 있다는 것입니다. 타입 시스템의 이 측면도 구조체 내부에 참조를 저장하는 것을 지원하도록 확장되어야 합니다. 간단히 말해, Move의 참조 안전성 시스템은 저장된 참조를 지원하도록 확장되어야 하며, 이는 언어가 발전함에 따라 우리가 주시하고 있는 부분입니다.
 
 {/* TODO actually document a sketch of the borrow rules */}

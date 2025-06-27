@@ -3,39 +3,38 @@ title: 'Abort and Assert | Reference'
 description: ''
 ---
 
-# Abort and Assert
+# Abort와 Assert
 
-[`return`](./functions) and `abort` are two control flow constructs that end execution, one for
-the current function and one for the entire transaction.
+[`return`](./functions)과 `abort`는 실행을 종료하는 두 가지 제어 흐름 구조로, 하나는
+현재 함수용이고 다른 하나는 전체 트랜잭션용입니다.
 
-More information on [`return` can be found in the linked section](./functions#return-expression)
+[`return`에 대한 자세한 정보는 링크된 섹션에서 확인할 수 있습니다](./functions#return-expression)
 
 ## `abort`
 
-`abort` is an expression that takes either takes no arguments, or just one - an **abort code** of
-type `u64`. For example:
+`abort`는 인자를 받지 않거나, `u64` 타입의 **중단 코드** 하나만 받는 표현식입니다. 예를 들어:
 
 ```move
 abort
 abort 42
 ```
 
-The `abort` expression halts execution the current function and reverts all changes made to state by
-the current transaction (note though that this guarantee must be upheld by the adapter of the
-specific deployment of Move). There is no mechanism for "catching" or otherwise handling an `abort`.
+`abort` 표현식은 현재 함수의 실행을 중단하고 현재 트랜잭션에서 상태에 대한 모든 변경 사항을
+되돌립니다(하지만 이 보장은 Move의 특정 배포 어댑터에 의해 유지되어야 합니다). `abort`를
+"잡거나" 다른 방식으로 처리하는 메커니즘은 없습니다.
 
-Luckily, in Move transactions are all or nothing, meaning any changes to storage are made all at
-once only if the transaction succeeds. For Sui, this means no objects are modified.
+다행히도 Move에서 트랜잭션은 전부 아니면 전무이므로, 트랜잭션이 성공한 경우에만 스토리지에 대한
+모든 변경 사항이 한 번에 이루어집니다. Sui의 경우, 이는 어떤 object도 수정되지 않음을 의미합니다.
 
-Because of this transactional commitment of changes, after an abort there is no need to worry about
-backing out changes. While this approach is lacking in flexibility, it is incredibly simple and
-predictable.
+이러한 트랜잭션 변경 사항의 커밋 방식 때문에, abort 후에는 변경 사항을 되돌리는 것에 대해 걱정할
+필요가 없습니다. 이 접근 방식은 유연성이 부족하지만, 믿을 수 없을 정도로 간단하고
+예측 가능합니다.
 
-Similar to [`return`](./functions), `abort` is useful for exiting control flow when some
-condition cannot be met.
+[`return`](./functions)과 유사하게, `abort`는 어떤 조건을 충족할 수 없을 때 제어 흐름을
+종료하는 데 유용합니다.
 
-In this example, the function will pop two items off of the vector, but will abort early if the
-vector does not have two items
+이 예제에서 함수는 벡터에서 두 개의 항목을 꺼내지만, 벡터에 두 개의 항목이 없으면 일찍
+중단됩니다
 
 {/* {{#include ../../packages/reference/sources/abort-and-assert.move}} */}
 
@@ -48,8 +47,8 @@ fun pop_twice<T>(v: &mut vector<T>): (T, T) {
 }
 ```
 
-This is even more useful deep inside a control-flow construct. For example, this function checks
-that all numbers in the vector are less than the specified `bound`. And aborts otherwise
+이는 제어 흐름 구조 깊숙한 곳에서 더욱 유용합니다. 예를 들어, 이 함수는 벡터의 모든 숫자가
+지정된 `bound`보다 작은지 확인합니다. 그렇지 않으면 중단합니다
 
 ```move
 use std::vector;
@@ -66,33 +65,33 @@ fun check_vec(v: &vector<u64>, bound: u64) {
 
 ### `assert`
 
-`assert` is a builtin, macro operation provided by the Move compiler. It takes two arguments, a
-condition of type `bool` and a code of type `u64`
+`assert`는 Move 컴파일러가 제공하는 내장 매크로 작업입니다. `bool` 타입의 조건과 `u64` 타입의
+코드, 두 개의 인자를 받습니다
 
 ```move
 assert!(condition: bool, code: u64)
 ```
 
-Since the operation is a macro, it must be invoked with the `!`. This is to convey that the
-arguments to `assert` are call-by-expression. In other words, `assert` is not a normal function and
-does not exist at the bytecode level. It is replaced inside the compiler with
+이 작업은 매크로이므로 `!`와 함께 호출해야 합니다. 이는 `assert`에 대한 인자가
+표현식별 호출(call-by-expression)임을 전달하기 위함입니다. 다시 말해, `assert`는 일반 함수가 아니며
+바이트코드 수준에서 존재하지 않습니다. 컴파일러 내부에서 다음과 같이 대체됩니다
 
 ```move
 if (condition) () else abort code
 ```
 
-`assert` is more commonly used than just `abort` by itself. The `abort` examples above can be
-rewritten using `assert`
+`assert`는 단독 `abort`보다 더 일반적으로 사용됩니다. 위의 `abort` 예제는 `assert`를 사용하여
+다시 작성할 수 있습니다
 
 ```move
 use std::vector;
 fun pop_twice<T>(v: &mut vector<T>): (T, T) {
-    assert!(v.length() >= 2, 42); // Now uses 'assert'
+    assert!(v.length() >= 2, 42); // 이제 'assert' 사용
     (v.pop_back(), v.pop_back())
 }
 ```
 
-and
+그리고
 
 ```move
 use std::vector;
@@ -101,41 +100,40 @@ fun check_vec(v: &vector<u64>, bound: u64) {
     let n = v.length();
     while (i < n) {
         let cur = v[i];
-        assert!(cur <= bound, 42); // Now uses 'assert'
+        assert!(cur <= bound, 42); // 이제 'assert' 사용
         i = i + 1;
     }
 }
 ```
 
-Note that because the operation is replaced with this `if-else`, the argument for the `code` is not
-always evaluated. For example:
+이 작업이 `if-else`로 대체되기 때문에 `code`에 대한 인자가 항상 평가되는 것은 아닙니다.
+예를 들어:
 
 ```move
 assert!(true, 1 / 0)
 ```
 
-Will not result in an arithmetic error, it is equivalent to
+산술 오류가 발생하지 않습니다. 이는 다음과 동일합니다
 
 ```move
 if (true) () else (1 / 0)
 ```
 
-So the arithmetic expression is never evaluated!
+따라서 산술 표현식은 평가되지 않습니다!
 
-### Abort codes in the Move VM
+### Move VM에서의 중단 코드
 
-When using `abort`, it is important to understand how the `u64` code will be used by the VM.
+`abort`를 사용할 때, `u64` 코드가 VM에서 어떻게 사용되는지 이해하는 것이 중요합니다.
 
-Normally, after successful execution, the Move VM, and the adapter for the specific deployment,
-determine the changes made to storage.
+일반적으로 성공적인 실행 후에는 Move VM과 특정 배포용 어댑터가 스토리지에 대한 변경 사항을
+결정합니다.
 
-If an `abort` is reached, the VM will instead indicate an error. Included in that error will be two
-pieces of information:
+`abort`에 도달하면, VM은 대신 오류를 표시합니다. 해당 오류에는 두 가지 정보가 포함됩니다:
 
-- The module that produced the abort (package/address value and module name)
-- The abort code.
+- abort를 생성한 module (패키지/주소 값과 module 이름)
+- 중단 코드.
 
-For example
+예를 들어
 
 ```move
 module 0x2::example {
@@ -151,12 +149,12 @@ module 0x3::invoker {
 }
 ```
 
-If a transaction, such as the function `always_aborts` above, calls `0x2::example::aborts`, the VM
-would produce an error that indicated the module `0x2::example` and the code `42`.
+위의 `always_aborts` 함수와 같은 트랜잭션이 `0x2::example::aborts`를 호출하면, VM은
+`0x2::example` module과 코드 `42`를 나타내는 오류를 생성합니다.
 
-This can be useful for having multiple aborts being grouped together inside a module.
+이는 module 내에서 여러 abort를 함께 그룹화하는 데 유용할 수 있습니다.
 
-In this example, the module has two separate error codes used in multiple functions
+이 예제에서 module은 여러 함수에서 사용되는 두 개의 별도 오류 코드를 가지고 있습니다
 
 ```move
 module 0::example;
@@ -166,7 +164,7 @@ use std::vector;
 const EEmptyVector: u64 = 0;
 const EIndexOutOfBounds: u64 = 1;
 
-// move i to j, move j to k, move k to i
+// i를 j로, j를 k로, k를 i로 이동
 public fun rotate_three<T>(v: &mut vector<T>, i: u64, j: u64, k: u64) {
     let n = v.length();
     assert!(n > 0, EEmptyVector);
@@ -189,24 +187,24 @@ public fun remove_twice<T>(v: &mut vector<T>, i: u64, j: u64): (T, T) {
 }
 ```
 
-## The type of `abort`
+## `abort`의 타입
 
-The `abort i` expression can have any type! This is because both constructs break from the normal
-control flow, so they never need to evaluate to the value of that type.
+`abort i` 표현식은 어떤 타입이든 가질 수 있습니다! 두 구조 모두 정상적인 제어 흐름에서
+벗어나므로, 해당 타입의 값으로 평가될 필요가 없기 때문입니다.
 
-The following are not useful, but they will type check
+다음은 유용하지 않지만 타입 검사를 통과합니다
 
 ```move
 let y: address = abort 0;
 ```
 
-This behavior can be helpful in situations where you have a branching instruction that produces a
-value on some branches, but not all. For example:
+이 동작은 일부 분기에서는 값을 생성하지만 모든 분기에서는 그렇지 않은 분기 명령이 있는 상황에서
+유용할 수 있습니다. 예를 들어:
 
 ```move
 let b =
     if (x == 0) false
     else if (x == 1) true
     else abort 42;
-//       ^^^^^^^^ `abort 42` has type `bool`
+//       ^^^^^^^^ `abort 42`는 `bool` 타입을 가집니다
 ```

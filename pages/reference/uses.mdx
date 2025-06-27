@@ -3,10 +3,9 @@ title: 'Uses and Aliases | Reference'
 description: ''
 ---
 
-# Uses and Aliases
+# Use와 별칭
 
-The `use` syntax can be used to create aliases to members in other modules. `use` can be used to
-create aliases that last either for the entire module, or for a given expression block scope.
+`use` 구문은 다른 모듈의 멤버에 대한 별칭을 만드는 데 사용할 수 있습니다. `use`는 전체 모듈 또는 주어진 표현식 블록 범위에 대해 지속되는 별칭을 만드는 데 사용할 수 있습니다.
 
 ## Syntax
 
@@ -18,7 +17,7 @@ use <address>::<module name>;
 use <address>::<module name> as <module alias name>;
 ```
 
-For example
+예를 들어
 
 ```move
 use std::vector;
@@ -51,7 +50,7 @@ use <address>::<module name>::<module member>;
 use <address>::<module name>::<module member> as <member alias>;
 ```
 
-For example
+예를 들어
 
 ```move
 use std::vector::push_back;
@@ -83,7 +82,7 @@ syntax
 use <address>::<module name>::{<module member>, <module member> as <member alias> ... };
 ```
 
-For example
+예를 들어
 
 ```move
 use std::vector::push_back;

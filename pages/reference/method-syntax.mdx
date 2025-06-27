@@ -3,19 +3,11 @@ title: 'Method Syntax | Reference'
 description: ''
 ---
 
-# Methods
+# 메서드
 
-As a syntactic convenience, some functions in Move can be called as "methods" on a value. This is done
-by using the `.` operator to call the function, where the value on the left-hand side of the `.` is
-the first argument to the function (sometimes called the receiver). The type of that value
-statically determines which function is called. This is an important difference from some other
-languages, where this syntax might indicate a dynamic call, where the function to be called is
-determined at runtime. In Move, all function calls are statically determined.
+구문상의 편의를 위해 Move의 일부 함수는 값에 대한 "메서드"로 호출할 수 있습니다. 이는 `.` 연산자를 사용하여 함수를 호출함으로써 이루어지며, 여기서 `.`의 왼쪽에 있는 값이 함수의 첫 번째 인자(때때로 수신자라고 함)가 됩니다. 해당 값의 타입이 호출되는 함수를 정적으로 결정합니다. 이는 다른 언어와 중요한 차이점인데, 다른 언어에서는 이 구문이 런타임에 호출할 함수가 결정되는 동적 호출을 나타낼 수 있습니다. Move에서는 모든 함수 호출이 정적으로 결정됩니다.
 
-In short, this syntax exists to make it easier to call functions without having to create an alias
-with `use`, and without having to explicitly borrow the first argument to the function.
-Additionally, this can make code more readable, as it reduces the amount of boilerplate needed to
-call a function and makes it easier to chain function calls.
+간단히 말해, 이 구문은 `use`로 별칭을 만들지 않고도 함수를 더 쉽게 호출할 수 있고, 함수의 첫 번째 인자를 명시적으로 차용하지 않아도 되도록 하기 위해 존재합니다. 또한 함수를 호출하는 데 필요한 보일러플레이트를 줄이고 함수 호출을 연결하기 쉽게 만들어 코드를 더 읽기 쉽게 만들 수 있습니다.
 
 ## Syntax
 
@@ -25,7 +17,7 @@ The syntax for calling a method is as follows:
 <expression> . <identifier> <[type_arguments],*> ( <arguments> )
 ```
 
-For example
+예를 들어
 
 ```move
 coin.value();

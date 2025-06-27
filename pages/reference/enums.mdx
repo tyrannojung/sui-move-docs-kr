@@ -3,14 +3,11 @@ title: 'Enumerations | Reference'
 description: ''
 ---
 
-# Enumerations
+# 열거형 (Enumerations)
 
-An _enum_ is a user-defined data structure containing one or more _variants_. Each variant can
-optionally contain typed fields. The number, and types of these fields can differ for each variant
-in the enumeration. Fields in enums can store any non-reference, non-tuple type, including other
-structs or enums.
+_열거형(enum)_ 은 하나 이상의 _변형(variant)_ 을 포함하는 사용자 정의 데이터 구조입니다. 각 변형은 선택적으로 타입이 지정된 필드를 포함할 수 있습니다. 이러한 필드의 개수와 타입은 열거형 내의 각 변형마다 다를 수 있습니다. 열거형의 필드는 다른 구조체나 열거형을 포함하여 참조가 아닌, 튜플이 아닌 모든 타입을 저장할 수 있습니다.
 
-As a simple example, consider the following enum definition in Move:
+간단한 예시로, Move에서 다음과 같은 열거형 정의를 살펴보겠습니다:
 
 ```move
 public enum Action {
@@ -21,25 +18,20 @@ public enum Action {
 }
 ```
 
-This declares an enum `Action` that represents different actions that can be taken by a game -- you
-can `Stop`, `Pause` for a given duration, `MoveTo` a specific location, or `Jump` to a specific
-height.
+이는 게임에서 수행할 수 있는 다양한 동작을 나타내는 `Action` 열거형을 선언합니다 -- `Stop`(멈추기), 주어진 시간 동안 `Pause`(일시정지), 특정 위치로 `MoveTo`(이동), 또는 특정 높이로 `Jump`(점프)할 수 있습니다.
 
-Similar to structs, enums can have [abilities](./abilities) that control what operations can be
-performed on them. It is important to note however that enums cannot have the `key` ability since
-they cannot be top-level objects.
+구조체와 유사하게, 열거형은 수행할 수 있는 작업을 제어하는 [abilities](./abilities)를 가질 수 있습니다. 그러나 열거형은 최상위 object가 될 수 없으므로 `key` ability를 가질 수 없다는 점에 주의해야 합니다.
 
-## Defining Enums
+## 열거형 정의하기
 
-Enums must be defined in a module, an enum must contain at least one variant, and each variant of an
-enum can either have no fields, positional fields, or named fields. Here are some examples of each:
+열거형은 module 내에서 정의되어야 하며, 열거형은 최소한 하나의 변형을 포함해야 하고, 열거형의 각 변형은 필드가 없거나, 위치 필드, 또는 이름이 있는 필드를 가질 수 있습니다. 각각의 예시는 다음과 같습니다:
 
 ```move
 module a::m;
 
 public enum Foo has drop {
     VariantWithNoFields,
-    //                 ^ note: it is fine to have a trailing comma after variant declarations
+    //                 ^ 참고: 변형 선언 뒤에 쉼표가 있어도 괜찮습니다
 }
 public enum Bar has copy, drop {
     VariantWithPositionalFields(u64, bool),
@@ -49,55 +41,49 @@ public enum Baz has drop {
 }
 ```
 
-Enums cannot be recursive in any of their variants, so the following definitions of an enum are not
-allowed because they would be recursive in at least one variant.
+열거형은 어떤 변형에서도 재귀적일 수 없으므로, 다음과 같은 열거형 정의는 최소 하나의 변형에서 재귀적이기 때문에 허용되지 않습니다.
 
-Incorrect:
+잘못된 예:
 
 ```move
 module a::m;
 
 public enum Foo {
     Recursive(Foo),
-    //        ^ error: recursive enum variant
+    //        ^ 오류: 재귀적 열거형 변형
 }
 public enum List {
     Nil,
     Cons { head: u64, tail: List },
-    //                      ^ error: recursive enum variant
+    //                      ^ 오류: 재귀적 열거형 변형
 }
 public enum BTree<T> {
     Leaf(T),
     Node { left: BTree<T>, right: BTree<T> },
-    //           ^ error: recursive enum variant
+    //           ^ 오류: 재귀적 열거형 변형
 }
 
-// Mutually recursive enums are also not allowed
+// 상호 재귀적 열거형도 허용되지 않습니다
 public enum MutuallyRecursiveA {
     Base,
     Other(MutuallyRecursiveB),
-    //    ^^^^^^^^^^^^^^^^^^ error: recursive enum variant
+    //    ^^^^^^^^^^^^^^^^^^ 오류: 재귀적 열거형 변형
 }
 
 public enum MutuallyRecursiveB {
     Base,
     Other(MutuallyRecursiveA),
-    //    ^^^^^^^^^^^^^^^^^^ error: recursive enum variant
+    //    ^^^^^^^^^^^^^^^^^^ 오류: 재귀적 열거형 변형
 }
 ```
 
-## Visibility
+## 가시성 (Visibility)
 
-All enums are declared as `public`. This means that the type of the enum can be referred to from any
-other module. However, the variants of the enum, the fields within each variant, and the ability to
-create or destroy variants of the enum are internal to the module that defines the enum.
+모든 열거형은 `public`으로 선언됩니다. 이는 열거형의 타입을 다른 module에서 참조할 수 있다는 의미입니다. 그러나 열거형의 변형, 각 변형 내의 필드, 그리고 열거형의 변형을 생성하거나 소멸시키는 능력은 열거형을 정의하는 module 내부로 제한됩니다.
 
 ### Abilities
 
-Just like with structs, by default an enum declaration is linear and ephemeral. To use an enum value
-in a non-linear or non-ephemeral way -- i.e., copied, dropped, or stored in an
-[object](./abilities/object) -- you need to grant it additional [abilities](./abilities) by
-annotating them with `has <ability>`:
+구조체와 마찬가지로, 기본적으로 열거형 선언은 선형적이고 일시적입니다. 열거형 값을 비선형적이거나 비일시적인 방식으로 사용하려면 -- 즉, 복사하거나, 삭제하거나, [object](./abilities/object)에 저장하려면 -- `has <ability>`로 주석을 달아 추가적인 [abilities](./abilities)를 부여해야 합니다:
 
 ```move
 module a::m;
@@ -107,9 +93,7 @@ public enum Foo has copy, drop {
 }
 ```
 
-The ability declaration can occur either before or after the enum's variants, however only one or
-the other can be used, and not both. If declared after the variants, the ability declaration must be
-terminated with a semicolon:
+ability 선언은 열거형의 변형 전이나 후에 올 수 있지만, 둘 중 하나만 사용할 수 있고 둘 다 사용할 수는 없습니다. 변형 뒤에 선언된 경우, ability 선언은 세미콜론으로 종료되어야 합니다:
 
 ```move
 module a::m;
@@ -117,20 +101,17 @@ module a::m;
 public enum PreNamedAbilities has copy, drop { Variant }
 public enum PostNamedAbilities { Variant } has copy, drop;
 public enum PostNamedAbilitiesInvalid { Variant } has copy, drop
-//                                                              ^ ERROR! missing semicolon
+//                                                              ^ 오류! 세미콜론 누락
 
 public enum NamedInvalidAbilities has copy { Variant } has drop;
-//                                                     ^ ERROR! duplicate ability declaration
+//                                                     ^ 오류! 중복된 ability 선언
 ```
 
-For more details, see the section on
-[annotating abilities](./abilities#annotating-structs-and-enums).
+더 자세한 내용은 [ability 주석 달기](./abilities#annotating-structs-and-enums) 섹션을 참조하세요.
 
-## Naming
+## 명명 규칙
 
-Enums and variants within enums must start with a capital letter `A` to `Z`. After the first letter,
-enum names can contain underscores `_`, lowercase letters `a` to `z`, uppercase letters `A` to `Z`,
-or digits `0` to `9`.
+열거형과 열거형 내의 변형은 대문자 `A`부터 `Z`로 시작해야 합니다. 첫 글자 이후에는 열거형 이름에 밑줄 `_`, 소문자 `a`부터 `z`, 대문자 `A`부터 `Z`, 또는 숫자 `0`부터 `9`를 포함할 수 있습니다.
 
 ```move
 public enum Foo { Variant }
@@ -138,21 +119,15 @@ public enum BAR { Variant }
 public enum B_a_z_4_2 { V_a_riant_0 }
 ```
 
-This naming restriction of starting with `A` to `Z` is in place to give room for future language
-features.
+`A`부터 `Z`로 시작해야 한다는 명명 제한은 향후 언어 기능을 위한 여지를 남겨두기 위함입니다.
 
-## Using Enums
+## 열거형 사용하기
 
-### Creating Enum Variants
+### 열거형 변형 생성하기
 
-Values of an enum type can be created (or "packed") by indicating a variant of the enum, followed by
-a value for each field in the variant. The variant name must always be qualified by the enum's name.
+열거형 타입의 값은 열거형의 변형을 지정하고, 변형의 각 필드에 대한 값을 제공함으로써 생성(또는 "패킹")될 수 있습니다. 변형 이름은 항상 열거형의 이름으로 한정되어야 합니다.
 
-Similarly to structs, for a variant with named fields, the order of the fields does not matter but
-the field names need to be provided. For a variant with positional fields, the order of the fields
-matters and the order of the fields must match the order in the variant declaration. It must also be
-created using `()` instead of `{}`. If the variant has no fields, the variant name is sufficient and
-no `()` or `{}` needs to be used.
+구조체와 유사하게, 이름이 있는 필드를 가진 변형의 경우 필드의 순서는 중요하지 않지만 필드 이름을 제공해야 합니다. 위치 필드를 가진 변형의 경우 필드의 순서가 중요하며 필드의 순서는 변형 선언에서의 순서와 일치해야 합니다. 또한 `{}` 대신 `()`를 사용하여 생성해야 합니다. 변형에 필드가 없는 경우, 변형 이름만으로 충분하며 `()`나 `{}`를 사용할 필요가 없습니다.
 
 ```move
 module a::m;
@@ -168,49 +143,35 @@ public enum Other has drop {
 }
 
 fun example() {
-    // Note: The `Stop` variant of `Action` doesn't have fields so no parentheses or curlies are needed.
+    // 참고: `Action`의 `Stop` 변형은 필드가 없으므로 괄호나 중괄호가 필요하지 않습니다.
     let stop = Action::Stop;
     let pause = Action::Pause { duration: 10 };
     let move_to = Action::MoveTo { x: 10, y: 20 };
     let jump = Action::Jump(10);
-    // Note: The `Stop` variant of `Other` does have positional fields so we need to supply them.
+    // 참고: `Other`의 `Stop` 변형은 위치 필드가 있으므로 제공해야 합니다.
     let other_stop = Other::Stop(10);
 }
 ```
 
-For variants with named fields you can also use the shorthand syntax that you might be familiar with
-from structs to create the variant:
+이름이 있는 필드를 가진 변형의 경우 구조체에서 익숙할 수 있는 축약 구문을 사용하여 변형을 생성할 수도 있습니다:
 
 ```move
 let duration = 10;
 
 let pause = Action::Pause { duration: duration };
-// is equivalent to
+// 다음과 동일합니다
 let pause = Action::Pause { duration };
 ```
 
-### Pattern Matching Enum Variants and Destructuring
+### 열거형 변형의 패턴 매칭과 구조 분해
 
-Since enum values can take on different shapes, dot access to fields of variants is not allowed like
-it is for struct fields. Instead, to access fields within a variant -- either by value, or immutable
-or mutable reference -- you must use pattern matching.
+열거형 값은 다양한 형태를 가질 수 있으므로, 구조체 필드처럼 변형의 필드에 점 접근은 허용되지 않습니다. 대신, 변형 내의 필드에 접근하려면 -- 값으로, 불변 참조로, 또는 가변 참조로 -- 패턴 매칭을 사용해야 합니다.
 
-You can pattern match on Move values by value, immutable reference, and mutable reference. When
-pattern matching by value, the value is moved into the match arm. When pattern matching by
-reference, the value is borrowed into the match arm (either immutably or mutably). We'll go through
-a brief description of pattern matching using `match` here, but for more information on pattern
-matching using `match` in Move see the [Pattern Matching](./control-flow/pattern-matching) section.
+Move 값에 대해 값으로, 불변 참조로, 가변 참조로 패턴 매칭을 수행할 수 있습니다. 값으로 패턴 매칭할 때, 값은 match arm으로 이동됩니다. 참조로 패턴 매칭할 때, 값은 match arm으로 차용됩니다(불변 또는 가변으로). 여기서는 `match`를 사용한 패턴 매칭에 대한 간단한 설명을 다루지만, Move에서 `match`를 사용한 패턴 매칭에 대한 자세한 정보는 [패턴 매칭](./control-flow/pattern-matching) 섹션을 참조하세요.
 
-A `match` statement is used to pattern match on a Move value and consists of a number of _match
-arms_. Each match arm consists of a pattern, an arrow `=>`, and an expression, followed by a comma
-`,`. The pattern can be a struct, enum variant, binding (`x`, `y`), wildcard (`_` or `..`), constant
-(`ConstValue`), or literal value (`true`, `42`, and so on). The value is matched against each
-pattern from the top-down, and will match the first pattern that structurally matches the value.
-Once the value is matched, the expression on the right hand side of the `=>` is executed.
+`match` 문은 Move 값에 대한 패턴 매칭에 사용되며 여러 개의 _match arm_ 으로 구성됩니다. 각 match arm은 패턴, 화살표 `=>`, 표현식, 그리고 쉼표 `,`로 구성됩니다. 패턴은 구조체, 열거형 변형, 바인딩(`x`, `y`), 와일드카드(`_` 또는 `..`), 상수(`ConstValue`), 또는 리터럴 값(`true`, `42` 등)일 수 있습니다. 값은 위에서 아래로 각 패턴과 대조되며, 구조적으로 일치하는 첫 번째 패턴과 매치됩니다. 값이 매치되면, `=>` 오른쪽의 표현식이 실행됩니다.
 
-Additionally, match arms can have optional _guards_ that are checked after the pattern matches but
-_before_ the expression is executed. Guards are specified by the `if` keyword followed by an
-expression that must evaluate to a boolean value before the `=>`.
+또한, match arm은 패턴이 매치된 후 표현식이 실행되기 _전에_ 확인되는 선택적 _가드(guard)_ 를 가질 수 있습니다. 가드는 `if` 키워드 다음에 `=>` 앞에 오는 불리언 값으로 평가되어야 하는 표현식으로 지정됩니다.
 
 ```move
 module a::m;
@@ -223,7 +184,7 @@ public enum Action has drop {
 }
 
 public struct GameState {
-    // Fields containing a game state
+    // 게임 상태를 포함하는 필드들
     character_x: u64,
     character_y: u64,
     character_height: u64,
@@ -232,27 +193,24 @@ public struct GameState {
 
 fun perform_action(stat: &mut GameState, action: Action) {
     match (action) {
-        // Handle the `Stop` variant
+        // `Stop` 변형 처리
         Action::Stop => state.stop(),
-        // Handle the `Pause` variant
-        // If the duration is 0, do nothing
+        // `Pause` 변형 처리
+        // duration이 0이면 아무것도 하지 않음
         Action::Pause { duration: 0 } => (),
         Action::Pause { duration } => state.pause(duration),
-        // Handle the `MoveTo` variant
+        // `MoveTo` 변형 처리
         Action::MoveTo { x, y } => state.move_to(x, y),
-        // Handle the `Jump` variant
-        // if the game disallows jumps then do nothing
+        // `Jump` 변형 처리
+        // 게임에서 점프가 허용되지 않으면 아무것도 하지 않음
         Action::Jump(_) if (state.jumps_not_allowed()) => (),
-        // otherwise, jump to the specified height
+        // 그렇지 않으면 지정된 높이로 점프
         Action::Jump(height) => state.jump(height),
     }
 }
 ```
 
-To see how to pattern match on an enum to update values within it mutably, let's take the following
-example of a simple enum that has two variants, each with a single field. We can then write two
-functions, one that only increments the value of the first variant, and another that only increments
-the value of the second variant:
+열거형에 대한 패턴 매칭으로 값을 가변적으로 업데이트하는 방법을 보려면, 각각 단일 필드를 가진 두 개의 변형을 가진 간단한 열거형의 다음 예제를 살펴보겠습니다. 그런 다음 첫 번째 변형의 값만 증가시키는 함수와 두 번째 변형의 값만 증가시키는 함수를 작성할 수 있습니다:
 
 ```move
 module a::m;
@@ -277,24 +235,20 @@ public fun incr_enum_variant2(simple_enum: &mut SimpleEnum) {
 }
 ```
 
-Now, if we have a value of `SimpleEnum` we can use the functions to increment the value of this
-variant:
+이제 `SimpleEnum`의 값이 있다면 함수를 사용하여 이 변형의 값을 증가시킬 수 있습니다:
 
 ```move
 let mut x = SimpleEnum::Variant1(10);
 incr_enum_variant1(&mut x);
 assert!(x == SimpleEnum::Variant1(11));
-// Doesn't increment since it increments a different variant
+// 다른 변형을 증가시키므로 증가하지 않음
 incr_enum_variant2(&mut x);
 assert!(x == SimpleEnum::Variant1(11));
 ```
 
-When pattern matching on a Move value that does not have the `drop` ability, the value must be
-consumed or destructured in each match arm. If the value is not consumed or destructured in a match
-arm, the compiler will raise an error. This is to ensure that all possible values are handled in the
-match statement.
+`drop` ability가 없는 Move 값에 대해 패턴 매칭을 수행할 때, 각 match arm에서 값을 소비하거나 구조 분해해야 합니다. 값이 match arm에서 소비되거나 구조 분해되지 않으면 컴파일러가 오류를 발생시킵니다. 이는 match 문에서 모든 가능한 값이 처리되도록 보장하기 위함입니다.
 
-As an example, consider the following code:
+예를 들어, 다음 코드를 살펴보겠습니다:
 
 ```move
 module a::m;
@@ -304,13 +258,12 @@ public enum X { Variant { x: u64 } }
 public fun bad(x: X) {
     match (x) {
         _ => (),
-    // ^ ERROR! value of type `X` is not consumed or destructured in this match arm
+    // ^ 오류! 이 match arm에서 타입 `X`의 값이 소비되거나 구조 분해되지 않았습니다
     }
 }
 ```
 
-To properly handle this, you will need to destructure `X` and all its variants in the match's
-arm(s):
+이를 올바르게 처리하려면 match의 arm에서 `X`와 모든 변형을 구조 분해해야 합니다:
 
 ```move
 module a::m;
@@ -319,16 +272,15 @@ public enum X { Variant { x: u64 } }
 
 public fun good(x: X) {
     match (x) {
-        // OK! Compiles since the value is destructured
+        // 성공! 값이 구조 분해되므로 컴파일됩니다
         X::Variant { x: _ } => (),
     }
 }
 ```
 
-### Overwriting to Enum Values
+### 열거형 값 덮어쓰기
 
-As long as the enum has the `drop` ability, you can overwrite the value of an enum with a new value
-of the same type just as you might with other values in Move.
+열거형이 `drop` ability를 가지고 있는 한, Move의 다른 값과 마찬가지로 열거형 값을 같은 타입의 새 값으로 덮어쓸 수 있습니다.
 
 ```move
 module a::m;

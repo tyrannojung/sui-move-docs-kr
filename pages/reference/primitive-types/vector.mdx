@@ -5,33 +5,30 @@ description: ''
 
 # Vector
 
-`vector<T>` is the only primitive collection type provided by Move. A `vector<T>` is a homogeneous
-collection of `T`'s that can grow or shrink by pushing/popping values off the "end".
+`vector<T>`는 Move에서 제공하는 유일한 원시 컬렉션 타입입니다. `vector<T>`는 "끝"에서 값을 추가(push)하거나 제거(pop)하여 크기가 늘어나거나 줄어들 수 있는 `T`의 동질적인(homogeneous) 컬렉션입니다.
 
-A `vector<T>` can be instantiated with any type `T`. For example, `vector<u64>`, `vector<address>`,
-`vector<0x42::my_module::MyData>`, and `vector<vector<u8>>` are all valid vector types.
+`vector<T>`는 모든 타입 `T`로 인스턴스화할 수 있습니다. 예를 들어, `vector<u64>`, `vector<address>`,
+`vector<0x42::my_module::MyData>`, `vector<vector<u8>>` 모두 유효한 벡터 타입입니다.
 
-## Literals
+## 리터럴
 
-### General `vector` Literals
+### 일반 `vector` 리터럴
 
-Vectors of any type can be created with `vector` literals.
+모든 타입의 벡터는 `vector` 리터럴로 생성할 수 있습니다.
 
-| Syntax                | Type                                                                          | Description                                |
+| 구문                  | 타입                                                                          | 설명                                       |
 | --------------------- | ----------------------------------------------------------------------------- | ------------------------------------------ |
-| `vector[]`            | `vector[]: vector<T>` where `T` is any single, non-reference type             | An empty vector                            |
-| `vector[e1, ..., en]` | `vector[e1, ..., en]: vector<T>` where `e_i: T` s.t. `0 < i <= n` and `n > 0` | A vector with `n` elements (of length `n`) |
+| `vector[]`            | `vector[]: vector<T>` where `T` is any single, non-reference type             | 빈 벡터                                    |
+| `vector[e1, ..., en]` | `vector[e1, ..., en]: vector<T>` where `e_i: T` s.t. `0 < i <= n` and `n > 0` | `n`개의 요소를 가진 벡터 (길이 `n`)        |
 
-In these cases, the type of the `vector` is inferred, either from the element type or from the
-vector's usage. If the type cannot be inferred, or simply for added clarity, the type can be
-specified explicitly:
+이러한 경우 `vector`의 타입은 요소 타입이나 벡터의 사용법으로부터 추론됩니다. 타입을 추론할 수 없거나 단순히 명확성을 위해 타입을 명시적으로 지정할 수 있습니다:
 
 ```move
 vector<T>[]: vector<T>
 vector<T>[e1, ..., en]: vector<T>
 ```
 
-#### Example Vector Literals
+#### 벡터 리터럴 예제
 
 ```move
 (vector[]: vector<bool>);
@@ -40,41 +37,35 @@ vector<T>[e1, ..., en]: vector<T>
 (vector<address>[@0x42, @0x100]: vector<address>);
 ```
 
-### `vector<u8>` literals
+### `vector<u8>` 리터럴
 
-A common use-case for vectors in Move is to represent "byte arrays", which are represented with
-`vector<u8>`. These values are often used for cryptographic purposes, such as a public key or a hash
-result. These values are so common that specific syntax is provided to make the values more
-readable, as opposed to having to use `vector[]` where each individual `u8` value is specified in
-numeric form.
+Move에서 벡터의 일반적인 사용 사례는 `vector<u8>`로 표현되는 "바이트 배열"을 나타내는 것입니다. 이러한 값들은 공개 키나 해시 결과와 같은 암호화 목적으로 자주 사용됩니다. 이러한 값들이 매우 일반적이므로 각 개별 `u8` 값을 숫자 형식으로 지정해야 하는 `vector[]`를 사용하는 대신, 값을 더 읽기 쉽게 만드는 특별한 구문이 제공됩니다.
 
-There are currently two supported types of `vector<u8>` literals, _byte strings_ and _hex strings_.
+현재 `vector<u8>` 리터럴은 _바이트 문자열(byte strings)_ 과 _16진수 문자열(hex strings)_ 두 가지 타입이 지원됩니다.
 
-#### Byte Strings
+#### 바이트 문자열
 
-Byte strings are quoted string literals prefixed by a `b`, e.g. `b"Hello!\n"`.
+바이트 문자열은 `b` 접두사가 붙은 따옴표로 묶인 문자열 리터럴입니다. 예: `b"Hello!\n"`.
 
-These are ASCII encoded strings that allow for escape sequences. Currently, the supported escape
-sequences are:
+이들은 이스케이프 시퀀스를 허용하는 ASCII 인코딩된 문자열입니다. 현재 지원되는 이스케이프 시퀀스는 다음과 같습니다:
 
-| Escape Sequence | Description                                    |
-| --------------- | ---------------------------------------------- |
-| `\n`            | New line (or Line feed)                        |
-| `\r`            | Carriage return                                |
-| `\t`            | Tab                                            |
-| `\\`            | Backslash                                      |
-| `\0`            | Null                                           |
-| `\"`            | Quote                                          |
-| `\xHH`          | Hex escape, inserts the hex byte sequence `HH` |
+| 이스케이프 시퀀스 | 설명                                           |
+| ----------------- | ---------------------------------------------- |
+| `\n`              | 개행 (또는 줄 바꿈)                            |
+| `\r`              | 캐리지 리턴                                    |
+| `\t`              | 탭                                             |
+| `\\`              | 백슬래시                                       |
+| `\0`              | 널(Null)                                       |
+| `\"`              | 따옴표                                         |
+| `\xHH`            | 16진수 이스케이프, 16진수 바이트 시퀀스 `HH` 삽입 |
 
-#### Hex Strings
+#### 16진수 문자열
 
-Hex strings are quoted string literals prefixed by a `x`, e.g. `x"48656C6C6F210A"`.
+16진수 문자열은 `x` 접두사가 붙은 따옴표로 묶인 문자열 리터럴입니다. 예: `x"48656C6C6F210A"`.
 
-Each byte pair, ranging from `00` to `FF`, is interpreted as hex encoded `u8` value. So each byte
-pair corresponds to a single entry in the resulting `vector<u8>`.
+`00`부터 `FF`까지의 각 바이트 쌍은 16진수로 인코딩된 `u8` 값으로 해석됩니다. 따라서 각 바이트 쌍은 결과 `vector<u8>`의 단일 항목에 해당합니다.
 
-#### Example String Literals
+#### 문자열 리터럴 예제
 
 ```move
 fun byte_and_hex_strings() {
@@ -89,33 +80,32 @@ fun byte_and_hex_strings() {
 }
 ```
 
-## Operations
+## 연산
 
-`vector` supports the following operations via the `std::vector` module in the Move standard
-library:
+`vector`는 Move 표준 라이브러리의 `std::vector` 모듈을 통해 다음 연산을 지원합니다:
 
-| Function                                                   | Description                                                                                                                                                     | Aborts?                        |
+| 함수                                                       | 설명                                                                                                                                                            | 중단 조건                      |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `vector::empty<T>(): vector<T>`                            | Create an empty vector that can store values of type `T`                                                                                                        | Never                          |
-| `vector::singleton<T>(t: T): vector<T>`                    | Create a vector of size 1 containing `t`                                                                                                                        | Never                          |
-| `vector::push_back<T>(v: &mut vector<T>, t: T)`            | Add `t` to the end of `v`                                                                                                                                       | Never                          |
-| `vector::pop_back<T>(v: &mut vector<T>): T`                | Remove and return the last element in `v`                                                                                                                       | If `v` is empty                |
-| `vector::borrow<T>(v: &vector<T>, i: u64): &T`             | Return an immutable reference to the `T` at index `i`                                                                                                           | If `i` is not in bounds        |
-| `vector::borrow_mut<T>(v: &mut vector<T>, i: u64): &mut T` | Return a mutable reference to the `T` at index `i`                                                                                                              | If `i` is not in bounds        |
-| `vector::destroy_empty<T>(v: vector<T>)`                   | Delete `v`                                                                                                                                                      | If `v` is not empty            |
-| `vector::append<T>(v1: &mut vector<T>, v2: vector<T>)`     | Add the elements in `v2` to the end of `v1`                                                                                                                     | Never                          |
-| `vector::contains<T>(v: &vector<T>, e: &T): bool`          | Return true if `e` is in the vector `v`. Otherwise, returns false                                                                                               | Never                          |
-| `vector::swap<T>(v: &mut vector<T>, i: u64, j: u64)`       | Swaps the elements at the `i`th and `j`th indices in the vector `v`                                                                                             | If `i` or `j` is out of bounds |
-| `vector::reverse<T>(v: &mut vector<T>)`                    | Reverses the order of the elements in the vector `v` in place                                                                                                   | Never                          |
-| `vector::index_of<T>(v: &vector<T>, e: &T): (bool, u64)`   | Return `(true, i)` if `e` is in the vector `v` at index `i`. Otherwise, returns `(false, 0)`                                                                    | Never                          |
-| `vector::remove<T>(v: &mut vector<T>, i: u64): T`          | Remove the `i`th element of the vector `v`, shifting all subsequent elements. This is O(n) and preserves ordering of elements in the vector                     | If `i` is out of bounds        |
-| `vector::swap_remove<T>(v: &mut vector<T>, i: u64): T`     | Swap the `i`th element of the vector `v` with the last element and then pop the element, This is O(1), but does not preserve ordering of elements in the vector | If `i` is out of bounds        |
+| `vector::empty<T>(): vector<T>`                            | 타입 `T`의 값을 저장할 수 있는 빈 벡터 생성                                                                                                                     | 없음                           |
+| `vector::singleton<T>(t: T): vector<T>`                    | `t`를 포함하는 크기 1의 벡터 생성                                                                                                                               | 없음                           |
+| `vector::push_back<T>(v: &mut vector<T>, t: T)`            | `v`의 끝에 `t` 추가                                                                                                                                             | 없음                           |
+| `vector::pop_back<T>(v: &mut vector<T>): T`                | `v`의 마지막 요소를 제거하고 반환                                                                                                                               | `v`가 비어있을 때              |
+| `vector::borrow<T>(v: &vector<T>, i: u64): &T`             | 인덱스 `i`에 있는 `T`에 대한 불변 참조 반환                                                                                                                     | `i`가 범위를 벗어날 때         |
+| `vector::borrow_mut<T>(v: &mut vector<T>, i: u64): &mut T` | 인덱스 `i`에 있는 `T`에 대한 가변 참조 반환                                                                                                                     | `i`가 범위를 벗어날 때         |
+| `vector::destroy_empty<T>(v: vector<T>)`                   | `v` 삭제                                                                                                                                                        | `v`가 비어있지 않을 때         |
+| `vector::append<T>(v1: &mut vector<T>, v2: vector<T>)`     | `v2`의 요소들을 `v1`의 끝에 추가                                                                                                                                | 없음                           |
+| `vector::contains<T>(v: &vector<T>, e: &T): bool`          | `e`가 벡터 `v`에 있으면 true 반환. 그렇지 않으면 false 반환                                                                                                     | 없음                           |
+| `vector::swap<T>(v: &mut vector<T>, i: u64, j: u64)`       | 벡터 `v`에서 `i`번째와 `j`번째 인덱스의 요소를 교환                                                                                                             | `i` 또는 `j`가 범위를 벗어날 때 |
+| `vector::reverse<T>(v: &mut vector<T>)`                    | 벡터 `v`의 요소 순서를 제자리에서 역순으로 변경                                                                                                                 | 없음                           |
+| `vector::index_of<T>(v: &vector<T>, e: &T): (bool, u64)`   | `e`가 벡터 `v`의 인덱스 `i`에 있으면 `(true, i)` 반환. 그렇지 않으면 `(false, 0)` 반환                                                                          | 없음                           |
+| `vector::remove<T>(v: &mut vector<T>, i: u64): T`          | 벡터 `v`의 `i`번째 요소를 제거하고, 이후의 모든 요소를 이동. 이는 O(n)이며 벡터의 요소 순서를 유지                                                               | `i`가 범위를 벗어날 때         |
+| `vector::swap_remove<T>(v: &mut vector<T>, i: u64): T`     | 벡터 `v`의 `i`번째 요소를 마지막 요소와 교환한 다음 해당 요소를 제거. 이는 O(1)이지만 벡터의 요소 순서를 유지하지 않음                                           | `i`가 범위를 벗어날 때         |
 
 {/* TODO we should just link out to generated stdlib docs? Maybe?  */}
 
-More operations may be added over time.
+시간이 지나면서 더 많은 연산이 추가될 수 있습니다.
 
-## Example
+## 예제
 
 ```move
 use std::vector;
@@ -130,13 +120,11 @@ assert!(vector::pop_back(&mut v) == 6, 42);
 assert!(vector::pop_back(&mut v) == 5, 42);
 ```
 
-## Destroying and copying `vector`s
+## `vector` 소멸과 복사
 
-Some behaviors of `vector<T>` depend on the abilities of the element type, `T`. For example, vectors
-containing elements that do not have `drop` cannot be implicitly discarded like `v` in the example
-above--they must be explicitly destroyed with `vector::destroy_empty`.
+`vector<T>`의 일부 동작은 요소 타입 `T`의 능력(abilities)에 따라 달라집니다. 예를 들어, `drop`을 가지지 않은 요소를 포함하는 벡터는 위의 예제에서 `v`처럼 암시적으로 폐기될 수 없습니다--반드시 `vector::destroy_empty`로 명시적으로 소멸시켜야 합니다.
 
-Note that `vector::destroy_empty` will abort at runtime unless `vec` contains zero elements:
+`vector::destroy_empty`는 `vec`이 0개의 요소를 포함하지 않는 한 런타임에 중단된다는 점에 유의하세요:
 
 ```move
 fun destroy_any_vector<T>(vec: vector<T>) {
@@ -144,7 +132,7 @@ fun destroy_any_vector<T>(vec: vector<T>) {
 }
 ```
 
-But no error would occur for dropping a vector that contains elements with `drop`:
+하지만 `drop`을 가진 요소를 포함하는 벡터를 폐기할 때는 오류가 발생하지 않습니다:
 
 ```move
 fun destroy_droppable_vector<T: drop>(vec: vector<T>) {
@@ -153,9 +141,7 @@ fun destroy_droppable_vector<T: drop>(vec: vector<T>) {
 }
 ```
 
-Similarly, vectors cannot be copied unless the element type has `copy`. In other words, a
-`vector<T>` has `copy` if and only if `T` has `copy`. Note that it will be implicitly copied if
-needed:
+마찬가지로, 요소 타입이 `copy`를 가지지 않는 한 벡터는 복사될 수 없습니다. 다시 말해, `vector<T>`는 `T`가 `copy`를 가진 경우에만 `copy`를 가집니다. 필요한 경우 암시적으로 복사된다는 점에 유의하세요:
 
 ```move
 let x = vector[10];
@@ -164,8 +150,7 @@ let z = x;
 (y, z)
 ```
 
-Keep in mind, copies of large vectors can be expensive. If this is a concern, annotating the
-`intended` usage can prevent accidental copies. For example,
+큰 벡터의 복사는 비용이 많이 들 수 있다는 점을 명심하세요. 이것이 우려되는 경우, `의도된` 사용법을 주석으로 표시하면 실수로 복사하는 것을 방지할 수 있습니다. 예를 들어:
 
 ```move
 let x = vector[10];
@@ -174,11 +159,8 @@ let z = x; // ERROR! x has been moved
 (y, z)
 ```
 
-For more details see the sections on [type abilities](./../abilities) and [generics](./../generics).
+더 자세한 내용은 [타입 능력](./../abilities)과 [제네릭](./../generics) 섹션을 참조하세요.
 
-## Ownership
+## 소유권
 
-As mentioned [above](#destroying-and-copying-vectors), `vector` values can be copied only if the
-elements can be copied. In that case, the copy can be done via a
-[`copy`](./../variables#move-and-copy) or a
-[dereference `*`](./references#reading-and-writing-through-references).
+[위에서](#destroying-and-copying-vectors) 언급했듯이, `vector` 값은 요소가 복사 가능한 경우에만 복사될 수 있습니다. 이 경우, 복사는 [`copy`](./../variables#move-and-copy) 또는 [역참조 `*`](./references#reading-and-writing-through-references)를 통해 수행될 수 있습니다.

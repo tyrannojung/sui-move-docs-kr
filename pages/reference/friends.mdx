@@ -3,21 +3,17 @@ title: 'Friends | Reference'
 description: ''
 ---
 
-# DEPRECATED: Friends
+# 더 이상 사용되지 않음: Friends
 
-NOTE: this feature has been superseded by [`public(package)`](./functions#visibility).
+참고: 이 기능은 [`public(package)`](./functions#visibility)로 대체되었습니다.
 
-The `friend` syntax was used to declare modules that are trusted by the current module. A trusted
-module is allowed to call any function defined in the current module that have the `public(friend)`
-visibility. For details on function visibilities, refer to the _Visibility_ section in
-[Functions](./functions).
+`friend` 구문은 현재 module이 신뢰하는 module을 선언하는 데 사용되었습니다. 신뢰하는 module은 현재 module에서 `public(friend)` 가시성을 가진 함수를 호출할 수 있습니다. 함수 가시성에 대한 자세한 내용은 [함수](./functions)의 _가시성_ 섹션을 참조하세요.
 
-## Friend declaration
+## Friend 선언
 
-A module can declare other modules as friends via friend declaration statements, in the format of
+module은 friend 선언문을 통해 다른 module을 friend로 선언할 수 있으며, 형식은 다음과 같습니다:
 
-- `friend <address::name>` — friend declaration using fully qualified module name like the example
-  below, or
+- `friend <address::name>` — 아래 예제처럼 정규화된 module 이름을 사용한 friend 선언, 또는
 
   ```move
   module 0x42::a {
@@ -25,8 +21,7 @@ A module can declare other modules as friends via friend declaration statements,
   }
   ```
 
-- `friend <module-name-alias>` — friend declaration using a module name alias, where the module
-  alias is introduced via the `use` statement.
+- `friend <module-name-alias>` — module 이름 별칭을 사용한 friend 선언, 여기서 module 별칭은 `use` 문을 통해 도입됩니다.
 
   ```move
   module 0x42::a {
@@ -35,9 +30,7 @@ A module can declare other modules as friends via friend declaration statements,
   }
   ```
 
-A module may have multiple friend declarations, and the union of all the friend modules forms the
-friend list. In the example below, both `0x42::B` and `0x42::C` are considered as friends of
-`0x42::A`.
+module은 여러 friend 선언을 가질 수 있으며, 모든 friend module의 합집합이 friend 목록을 형성합니다. 아래 예제에서 `0x42::B`와 `0x42::C` 모두 `0x42::A`의 friend로 간주됩니다.
 
 ```move
 module 0x42::a;
@@ -46,48 +39,41 @@ friend 0x42::b;
 friend 0x42::c;
 ```
 
-Unlike `use` statements, `friend` can only be declared in the module scope and not in the expression
-block scope. `friend` declarations may be located anywhere a top-level construct (e.g., `use`,
-`function`, `struct`, etc.) is allowed. However, for readability, it is advised to place friend
-declarations near the beginning of the module definition.
+`use` 문과 달리, `friend`는 module 범위에서만 선언할 수 있고 표현식 블록 범위에서는 선언할 수 없습니다. `friend` 선언은 최상위 구조(예: `use`, `function`, `struct` 등)가 허용되는 모든 곳에 위치할 수 있습니다. 그러나 가독성을 위해 friend 선언을 module 정의의 시작 부분 근처에 배치하는 것이 좋습니다.
 
-### Friend declaration rules
+### Friend 선언 규칙
 
-Friend declarations are subject to the following rules:
+Friend 선언은 다음 규칙을 따릅니다:
 
-- A module cannot declare itself as a friend.
+- module은 자기 자신을 friend로 선언할 수 없습니다.
 
   ```move
-  module 0x42::m { friend Self; // ERROR! }
-  //                      ^^^^ Cannot declare the module itself as a friend
+  module 0x42::m { friend Self; // 오류! }
+  //                      ^^^^ module 자체를 friend로 선언할 수 없습니다
 
-  module 0x43::m { friend 0x43::M; // ERROR! }
-  //                      ^^^^^^^ Cannot declare the module itself as a friend
+  module 0x43::m { friend 0x43::M; // 오류! }
+  //                      ^^^^^^^ module 자체를 friend로 선언할 수 없습니다
   ```
 
-- Friend modules must be known by the compiler
+- Friend module은 컴파일러에 알려져 있어야 합니다
 
   ```move
-  module 0x42::m { friend 0x42::nonexistent; // ERROR! }
-  //                      ^^^^^^^^^^^^^^^^^ Unbound module '0x42::nonexistent'
+  module 0x42::m { friend 0x42::nonexistent; // 오류! }
+  //                      ^^^^^^^^^^^^^^^^^ 바인딩되지 않은 module '0x42::nonexistent'
   ```
 
-- Friend modules must be within the same account address.
+- Friend module은 같은 계정 주소 내에 있어야 합니다.
 
   ```move
   module 0x42::m {}
 
-  module 0x42::n { friend 0x42::m; // ERROR! }
-  //                      ^^^^^^^ Cannot declare modules out of the current address as a friend
+  module 0x42::n { friend 0x42::m; // 오류! }
+  //                      ^^^^^^^ 현재 주소 밖의 module을 friend로 선언할 수 없습니다
   ```
 
-- Friends relationships cannot create cyclic module dependencies.
+- Friend 관계는 순환 module 의존성을 만들 수 없습니다.
 
-  Cycles are not allowed in the friend relationships, e.g., the relation `0x2::a` friends `0x2::b`
-  friends `0x2::c` friends `0x2::a` is not allowed. More generally, declaring a friend module adds a
-  dependency upon the current module to the friend module (because the purpose is for the friend to
-  call functions in the current module). If that friend module is already used, either directly or
-  transitively, a cycle of dependencies would be created.
+  friend 관계에서 순환은 허용되지 않습니다. 예를 들어, `0x2::a`가 `0x2::b`를 friend로, `0x2::b`가 `0x2::c`를 friend로, `0x2::c`가 `0x2::a`를 friend로 하는 관계는 허용되지 않습니다. 더 일반적으로, friend module을 선언하면 현재 module에 대한 의존성이 friend module에 추가됩니다(목적이 friend가 현재 module의 함수를 호출하는 것이기 때문입니다). 해당 friend module이 이미 직접적 또는 간접적으로 사용되고 있다면, 의존성 순환이 생성됩니다.
 
   ```move
   module 0x2::a {
@@ -100,8 +86,8 @@ Friend declarations are subject to the following rules:
   }
 
   module 0x2::b {
-      friend 0x2::c; // ERROR!
-  //         ^^^^^^ This friend relationship creates a dependency cycle: '0x2::b' is a friend of '0x2::a' uses '0x2::c' is a friend of '0x2::b'
+      friend 0x2::c; // 오류!
+  //         ^^^^^^ 이 friend 관계는 의존성 순환을 만듭니다: '0x2::b'는 '0x2::a'의 friend이고 '0x2::a'는 '0x2::c'를 사용하며 '0x2::c'는 '0x2::b'의 friend입니다
   }
 
   module 0x2::c {
@@ -109,7 +95,7 @@ Friend declarations are subject to the following rules:
   }
   ```
 
-- The friend list for a module cannot contain duplicates.
+- module의 friend 목록에는 중복이 포함될 수 없습니다.
 
   ```move
   module 0x42::a {}
@@ -117,7 +103,7 @@ Friend declarations are subject to the following rules:
   module 0x42::m {
       use 0x42::a as aliased_a;
       friend 0x42::A;
-      friend aliased_a; // ERROR!
-  //         ^^^^^^^^^ Duplicate friend declaration '0x42::a'. Friend declarations in a module must be unique
+      friend aliased_a; // 오류!
+  //         ^^^^^^^^^ 중복된 friend 선언 '0x42::a'. module의 friend 선언은 고유해야 합니다
   }
   ```

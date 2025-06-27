@@ -3,28 +3,21 @@ title: 'Labeled Control Flow | Reference'
 description: ''
 ---
 
-# Labeled Control Flow
+# 레이블이 지정된 제어 흐름
 
-Move supports labeled control flow when writing both loops and blocks of code, allowing you
-to `break` and `continue` loops and `return` from blocks (which can be particularly helpful in the
-presence of macros).
+Move는 루프와 코드 블록을 작성할 때 레이블이 지정된 제어 흐름을 지원하여 루프에서 `break`와 `continue`를 사용하고 블록에서 `return`할 수 있습니다(매크로가 있을 때 특히 유용합니다).
 
-## Loops
+## 루프
 
-Loops allow you to define and transfer control to specific labels in a function. For example, we can
-nest two loops and use `break` and `continue` with those labels to precisely specify control flow.
-You can prefix any `loop` or `while` form with a `'label:` form to allow breaking or continuing
-directly there.
+루프를 사용하면 함수에서 특정 레이블을 정의하고 제어를 전달할 수 있습니다. 예를 들어, 두 개의 루프를 중첩하고 해당 레이블과 함께 `break`와 `continue`를 사용하여 제어 흐름을 정확하게 지정할 수 있습니다.
+`loop`나 `while` 형식 앞에 `'label:` 형식을 붙여서 직접 중단하거나 계속할 수 있습니다.
 
-To demonstrate this behavior, consider a function that takes nested vectors of numbers (i.e.,
-`vector<vector<u64>>`) to sum against some threshold, which behaves as follows:
+이 동작을 보여주기 위해, 중첩된 숫자 벡터(즉, `vector<vector<u64>>`)를 받아 특정 임계값에 대해 합계를 구하는 함수를 고려해보세요. 이 함수는 다음과 같이 동작합니다:
 
-- If the sum of all the numbers are under the threshold, return that sum.
-- If adding a number to the current sum would surpass the threshold, return the current sum.
+- 모든 숫자의 합이 임계값 미만이면 해당 합계를 반환합니다.
+- 현재 합계에 숫자를 추가하면 임계값을 초과할 경우, 현재 합계를 반환합니다.
 
-We can write this by iterating over the vector of vectors as nested loops and labelling the outer
-one. If any addition in the inner loop would push us over the threshold, we can use `break` with the
-outer label to escape both loops at once:
+벡터의 벡터를 중첩 루프로 반복하고 외부 루프에 레이블을 지정하여 이를 작성할 수 있습니다. 내부 루프의 어떤 추가가 임계값을 초과하게 만들면, 외부 레이블과 함께 `break`를 사용하여 두 루프를 한 번에 탈출할 수 있습니다:
 
 ```move
 fun sum_until_threshold(input: &vector<vector<u64>>, threshold: u64): u64 {
@@ -33,7 +26,7 @@ fun sum_until_threshold(input: &vector<vector<u64>>, threshold: u64): u64 {
     let input_size = input.length();
 
     'outer: loop {
-        // breaks to outer since it is the closest enclosing loop
+        // 가장 가까운 둘러싸는 루프이므로 outer로 중단합니다
         if (i >= input_size) break sum;
 
         let vec = &input[i];
@@ -45,8 +38,8 @@ fun sum_until_threshold(input: &vector<vector<u64>>, threshold: u64): u64 {
             if (sum + v_entry < threshold) {
                 sum = sum + v_entry;
             } else {
-                // the next element we saw would break the threshold,
-                // so we return the current sum
+                // 다음에 본 요소가 임계값을 초과하게 만들므로
+                // 현재 합계를 반환합니다
                 break 'outer sum
             };
             j = j + 1;
@@ -56,9 +49,7 @@ fun sum_until_threshold(input: &vector<vector<u64>>, threshold: u64): u64 {
 }
 ```
 
-These sorts of labels can also be used with a nested loop form, providing precise control in larger
-bodies of code. For example, if we were processing a large table where each entry required iteration
-that might see us continuing the inner or outer loop, we could express that code using labels:
+이러한 종류의 레이블은 중첩된 루프 형식과 함께 사용할 수도 있어, 더 큰 코드 본문에서 정밀한 제어를 제공합니다. 예를 들어, 각 항목이 내부 또는 외부 루프를 계속하는 것을 볼 수 있는 반복이 필요한 큰 테이블을 처리하는 경우, 레이블을 사용하여 해당 코드를 표현할 수 있습니다:
 
 ```move
 let x = 'outer: loop {
@@ -75,10 +66,9 @@ let x = 'outer: loop {
 };
 ```
 
-## Labeled Blocks
+## 레이블이 지정된 블록
 
-Labeled blocks allow you to write Move programs that contain intra-function non-local control flow,
-including inside of macro lambdas and returning values:
+레이블이 지정된 블록을 사용하면 매크로 람다 내부를 포함하여 함수 내 비지역 제어 흐름을 포함하고 값을 반환하는 Move 프로그램을 작성할 수 있습니다:
 
 ```move
 fun named_return(n: u64): vector<u8> {
@@ -92,13 +82,9 @@ fun named_return(n: u64): vector<u8> {
 }
 ```
 
-In this simple example, the program checks if the input `n` is even. If it is, the program leaves
-the block labeled `'a:` with the value `b"even"`. If not, the code continues, ending the block
-labeled `'a:` with the value `b"odd"`. At the end, we set `x` to the value and then return it.
+이 간단한 예제에서 프로그램은 입력 `n`이 짝수인지 확인합니다. 짝수인 경우, 프로그램은 `b"even"` 값으로 `'a:` 레이블이 지정된 블록을 떠납니다. 그렇지 않으면 코드가 계속되어 `b"odd"` 값으로 `'a:` 레이블이 지정된 블록을 종료합니다. 마지막에 `x`를 값으로 설정한 다음 반환합니다.
 
-This control flow feature works across macro bodies as well. For example, suppose we wanted to write
-a function to find the first even number in a vector, and that we have some macro `for_ref` that
-iterates the vector elements in a loop:
+이 제어 흐름 기능은 매크로 본문에서도 작동합니다. 예를 들어, 벡터에서 첫 번째 짝수를 찾는 함수를 작성하고 싶고, 루프에서 벡터 요소를 반복하는 `for_ref` 매크로가 있다고 가정해봅시다:
 
 ```move
 macro fun for_ref<$T>($vs: &vector<$T>, $f: |&$T|) {
@@ -112,8 +98,7 @@ macro fun for_ref<$T>($vs: &vector<$T>, $f: |&$T|) {
 }
 ```
 
-Using `for_ref` and a label, we can write a lambda expression to pass `for_ref` that will escape the
-loop, returning the first even number it finds:
+`for_ref`와 레이블을 사용하여, 루프를 탈출하고 찾은 첫 번째 짝수를 반환하는 `for_ref`에 전달할 람다 표현식을 작성할 수 있습니다:
 
 ```move
 fun find_first_even(vs: vector<u64>): Option<u64> {
@@ -124,30 +109,26 @@ fun find_first_even(vs: vector<u64>): Option<u64> {
 }
 ```
 
-This function will iterate `vs` until it finds an even number, and return that (or return
-`option::none()` if no even number exists). This makes named labels a powerful tool for interacting
-with control flow macros such as `for!`, allowing you to customize iteration behavior in those
-contexts.
+이 함수는 짝수를 찾을 때까지 `vs`를 반복하고 그것을 반환합니다(짝수가 없으면 `option::none()`을 반환합니다). 이는 명명된 레이블을 `for!`와 같은 제어 흐름 매크로와 상호 작용하는 강력한 도구로 만들어, 이러한 컨텍스트에서 반복 동작을 사용자 정의할 수 있게 합니다.
 
-## Restrictions
+## 제한 사항
 
-To clarify program behavior, you may only use `break` and `continue` with loop labels, while
-`return` will only work with block labels. To this end, the following programs produce errors:
+프로그램 동작을 명확히 하기 위해, 루프 레이블과 함께는 `break`와 `continue`만 사용할 수 있고, `return`은 블록 레이블과만 작동합니다. 이를 위해 다음 프로그램은 오류를 생성합니다:
 
 ```move
 fun bad_loop() {
     'name: loop {
         return 'name 5
-            // ^^^^^ Invalid usage of 'return' with a loop block label
+            // ^^^^^ 루프 블록 레이블과 함께 'return'을 잘못 사용했습니다
     }
 }
 
 fun bad_block() {
     'name: {
         continue 'name;
-              // ^^^^^ Invalid usage of 'break' with a loop block label
+              // ^^^^^ 루프 블록 레이블과 함께 'break'를 잘못 사용했습니다
         break 'name;
-           // ^^^^^ Invalid usage of 'break' with a loop block label
+           // ^^^^^ 루프 블록 레이블과 함께 'break'를 잘못 사용했습니다
     }
 }
 ```

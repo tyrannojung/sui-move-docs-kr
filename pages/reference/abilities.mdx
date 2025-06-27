@@ -5,176 +5,169 @@ description: ''
 
 # Abilities
 
-Abilities are a typing feature in Move that control what actions are permissible for values of a
-given type. This system grants fine grained control over the "linear" typing behavior of values, as
-well as if and how values are used in storage (as defined by the specific deployment of Move, e.g.
-the notion of storage for the blockchain). This is implemented by gating access to certain bytecode
-instructions so that for a value to be used with the bytecode instruction, it must have the ability
-required (if one is required at all—not every instruction is gated by an ability).
+Ability는 주어진 타입의 값에 대해 어떤 작업이 허용되는지를 제어하는 Move의 타이핑 기능입니다. 이 시스템은 값의 "선형(linear)" 타이핑 동작에 대한 세밀한 제어를 제공하며, 값이 스토리지에서 사용되는지 여부와 방법(예: 블록체인용 스토리지 개념과 같은 Move의 특정 배포에 의해 정의됨)도 제어합니다. 이는 특정 바이트코드 명령어에 대한 접근을 제한하여 구현되므로, 바이트코드 명령어와 함께 값을 사용하려면 필요한 ability를 가져야 합니다(ability가 필요한 경우에만 해당—모든 명령어가 ability로 제한되는 것은 아닙니다).
 
-For Sui, `key` is used to signify an [object](./abilities/object). Objects are the basic unit of
-storage where each object has a unique, 32-byte ID. `store` is then used to both indicate what data
-can be stored inside of an object, and is also used to indicate what types can be transferred
-outside of their defining module.
+Sui에서 `key`는 [object](./abilities/object)를 나타내는 데 사용됩니다. Object는 각각 고유한 32바이트 ID를 가진 스토리지의 기본 단위입니다. `store`는 object 내부에 저장할 수 있는 데이터를 나타내는 데 사용되며, 정의된 module 외부로 전송할 수 있는 타입을 나타내는 데도 사용됩니다.
 
 {/* TODO future section on detailed walk through maybe. We have some examples at the end but it might be helpful to explain why we have precisely this set of abilities
 
 If you are already somewhat familiar with abilities from writing Move programs, but are still confused as to what is going on, it might be helpful to skip to the [motivating walkthrough](#motivating-walkthrough) section to get an idea of what the system is setup in the way that it is. */}
 
-## The Four Abilities
+## 네 가지 Ability
 
-The four abilities are:
+네 가지 ability는 다음과 같습니다:
 
 - [`copy`](#copy)
-  - Allows values of types with this ability to be copied.
+  - 이 ability를 가진 타입의 값을 복사할 수 있습니다.
 - [`drop`](#drop)
-  - Allows values of types with this ability to be popped/dropped.
+  - 이 ability를 가진 타입의 값을 팝/삭제할 수 있습니다.
 - [`store`](#store)
-  - Allows values of types with this ability to exist inside a value in storage.
-  - For Sui, `store` controls what data can be stored inside of an [object](./abilities/object).
-    `store` also controls what types can be transferred outside of their defining module.
+  - 이 ability를 가진 타입의 값이 스토리지의 값 내부에 존재할 수 있습니다.
+  - Sui에서 `store`는 [object](./abilities/object) 내부에 저장할 수 있는 데이터를 제어합니다.
+    `store`는 또한 정의된 module 외부로 전송할 수 있는 타입을 제어합니다.
 - [`key`](#key)
-  - Allows the type to serve as a "key" for storage. Ostensibly this means the value can be a
-    top-level value in storage; in other words, it does not need to be contained in another value to
-    be in storage.
-  - For Sui, `key` is used to signify an [object](./abilities/object).
+  - 타입이 스토리지의 "키"로 사용될 수 있도록 합니다. 표면적으로 이는 값이
+    스토리지의 최상위 값이 될 수 있음을 의미합니다. 즉, 스토리지에 있기 위해 다른 값에 포함될 필요가
+    없습니다.
+  - Sui에서 `key`는 [object](./abilities/object)를 나타내는 데 사용됩니다.
 
 ### `copy`
 
-The `copy` ability allows values of types with that ability to be copied. It gates the ability to
-copy values out of local variables with the [`copy`](./variables#move-and-copy) operator and to copy
-values via references with
-[dereference `*e`](./primitive-types/references#reading-and-writing-through-references).
+`copy` ability는 해당 ability를 가진 타입의 값을 복사할 수 있게 합니다. 이는 [`copy`](./variables#move-and-copy) 연산자를 사용하여 로컬 변수에서 값을 복사하고
+[역참조 `*e`](./primitive-types/references#reading-and-writing-through-references)를 통해 참조를 통해 값을 복사하는 기능을 제어합니다.
 
-If a value has `copy`, all values contained inside of that value have `copy`.
+값이 `copy`를 가지면, 해당 값 내부에 포함된 모든 값도 `copy`를 가집니다.
 
 ### `drop`
 
-The `drop` ability allows values of types with that ability to be dropped. By dropped, we mean that
-value is not transferred and is effectively destroyed as the Move program executes. As such, this
-ability gates the ability to ignore values in a multitude of locations, including:
+`drop` ability는 해당 ability를 가진 타입의 값을 삭제할 수 있게 합니다. 삭제된다는 것은
+값이 전송되지 않고 Move 프로그램이 실행되면서 효과적으로 파괴된다는 의미입니다. 따라서 이
+ability는 다음을 포함한 여러 위치에서 값을 무시하는 기능을 제어합니다:
 
-- not using the value in a local variable or parameter
-- not using the value in a [sequence via `;`](./variables#expression-blocks)
-- overwriting values in variables in [assignments](./variables#assignments)
-- overwriting values via references when
-  [writing `*e1 = e2`](./primitive-types/references#reading-and-writing-through-references).
+- 로컬 변수나 매개변수에서 값을 사용하지 않기
+- [`; 를 통한 시퀀스`](./variables#expression-blocks)에서 값을 사용하지 않기
+- [할당](./variables#assignments)에서 변수의 값 덮어쓰기
+- [`*e1 = e2` 쓰기](./primitive-types/references#reading-and-writing-through-references) 시 참조를 통한 값 덮어쓰기.
 
-If a value has `drop`, all values contained inside of that value have `drop`.
+값이 `drop`을 가지면, 해당 값 내부에 포함된 모든 값도 `drop`을 가집니다.
 
 ### `store`
 
-The `store` ability allows values of types with this ability to exist inside of a value in storage,
-_but_ not necessarily as a top-level value in storage. This is the only ability that does not
-directly gate an operation. Instead it gates the existence in storage when used in tandem with
-`key`.
+`store` ability는 이 ability를 가진 타입의 값이 스토리지의 값 내부에 존재할 수 있도록 하지만,
+반드시 스토리지의 최상위 값일 필요는 _없습니다_. 이는 직접적으로 작업을
+제어하지 않는 유일한 ability입니다. 대신 `key`와 함께 사용될 때 스토리지에서의 존재를
+제어합니다.
 
-If a value has `store`, all values contained inside of that value have `store`.
+값이 `store`를 가지면, 해당 값 내부에 포함된 모든 값도 `store`를 가집니다.
 
-For Sui, `store` serves double duty. It controls what values can appear inside of an
-[object](/book/storage/store-ability), and what objects can be
-[transferred](./abilities/object#transfer-rules) outside of their defining module.
+Sui에서 `store`는 이중 역할을 합니다. [object](/book/storage/store-ability) 내부에 나타날 수 있는 값을 제어하고,
+정의된 module 외부로 [전송](./abilities/object#transfer-rules)될 수 있는 object를 제어합니다.
 
 ### `key`
 
-The `key` ability allows the type to serve as a key for storage operations as defined by the
-deployment of Move. While it is specific per Move instance, it serves to gates all storage
-operations, so in order for a type to be used with storage primitives, the type must have the `key`
-ability.
+`key` ability는 타입이 Move 배포에서 정의한 대로 스토리지 작업의 키로 사용될 수 있도록 합니다.
+Move 인스턴스별로 구체적이지만, 모든 스토리지 작업을 제어하므로 타입이 스토리지 기본 요소와
+함께 사용되려면 `key` ability를 가져야 합니다.
 
-If a value has `key`, all values contained inside of that value have `store`. This is the only
-ability with this sort of asymmetry.
+값이 `key`를 가지면, 해당 값 내부에 포함된 모든 값은 `store`를 가집니다. 이는 이런 종류의
+비대칭성을 가진 유일한 ability입니다.
 
-For Sui, `key` is used to signify an [object](./abilities/object).
+Sui에서 `key`는 [object](./abilities/object)를 나타내는 데 사용됩니다.
 
-## Builtin Types
+## 내장 타입
 
-All primitive, builtin types have `copy`, `drop`, and `store`.
+모든 기본, 내장 타입은 `copy`, `drop`, `store`를 가집니다.
 
-- `bool`, `u8`, `u16`, `u32`, `u64`, `u128`, `u256`, and `address` all have `copy`, `drop`, and
-  `store`.
-- `vector<T>` may have `copy`, `drop`, and `store` depending on the abilities of `T`.
-  - See [Conditional Abilities and Generic Types](#conditional-abilities-and-generic-types) for more
-    details.
-- Immutable references `&` and mutable references `&mut` both have `copy` and `drop`.
-  - This refers to copying and dropping the reference itself, not what they refer to.
-  - References cannot appear in global storage, hence they do not have `store`.
+- `bool`, `u8`, `u16`, `u32`, `u64`, `u128`, `u256`, `address`는 모두 `copy`, `drop`,
+  `store`를 가집니다.
+- `vector<T>`는 `T`의 ability에 따라 `copy`, `drop`, `store`를 가질 수 있습니다.
+  - 자세한 내용은 [조건부 Ability와 제네릭 타입](#conditional-abilities-and-generic-types)을
+    참조하세요.
+- 불변 참조 `&`와 가변 참조 `&mut`는 모두 `copy`와 `drop`을 가집니다.
+  - 이는 참조가 가리키는 것이 아니라 참조 자체를 복사하고 삭제하는 것을 의미합니다.
+  - 참조는 전역 스토리지에 나타날 수 없으므로 `store`를 가지지 않습니다.
 
-Note that none of the primitive types have `key`, meaning none of them can be used directly with
-storage operations.
+기본 타입 중 어느 것도 `key`를 가지지 않으므로, 스토리지 작업에 직접 사용할 수 없습니다.
 
-## Annotating Structs and Enums
+## 구조체와 열거형에 주석 달기
 
-To declare that a `struct` or `enum` has an ability, it is declared with `has <ability>` after the
-datatype name and either before or after the fields/variants. For example:
+`struct`나 `enum`이 ability를 가진다고 선언하려면, 데이터 타입 이름 뒤와 필드/변형 앞이나
+뒤에 `has <ability>`로 선언합니다. 예를 들어:
 
 ```move file=packages/reference/sources/abilities.move anchor=annotating_datatypes
+public struct Ignorable has drop { f: u64 }
+public struct Pair has copy, drop, store { x: u64, y: u64 }
+public struct MyVec(vector<u64>) has copy, drop, store;
 
+public enum IgnorableEnum has drop { Variant }
+public enum PairEnum has copy, drop, store {
+    Variant(u64, u64)
+}
+public enum MyVecEnum has copy, drop, store { Variant(vector<u64>) }
 ```
 
-In this case: `Ignorable*` has the `drop` ability. `Pair*` and `MyVec*` both have `copy`, `drop`,
-and `store`.
+이 경우: `Ignorable*`은 `drop` ability를 가집니다. `Pair*`와 `MyVec*`는 모두 `copy`, `drop`,
+`store`를 가집니다.
 
-All of these abilities have strong guarantees over these gated operations. The operation can be
-performed on the value only if it has that ability; even if the value is deeply nested inside of
-some other collection!
+이러한 모든 ability는 이러한 제한된 작업에 대한 강력한 보장을 가집니다. 작업은 해당 ability를
+가진 경우에만 값에 수행할 수 있습니다. 값이 다른 컬렉션 내부에 깊이 중첩되어 있어도 마찬가지입니다!
 
-As such: when declaring a struct’s abilities, certain requirements are placed on the fields. All
-fields must satisfy these constraints. These rules are necessary so that structs satisfy the
-reachability rules for the abilities given above. If a struct is declared with the ability...
+따라서: 구조체의 ability를 선언할 때, 필드에 특정 요구사항이 적용됩니다. 모든
+필드는 이러한 제약 조건을 만족해야 합니다. 이러한 규칙은 구조체가 위에서 주어진 ability에 대한
+도달 가능성 규칙을 만족하는 데 필요합니다. 구조체가 다음 ability로 선언된 경우...
 
-- `copy`, all fields must have `copy`.
-- `drop`, all fields must have `drop`.
-- `store`, all fields must have `store`.
-- `key`, all fields must have `store`.
-  - `key` is the only ability currently that doesn’t require itself.
+- `copy`, 모든 필드는 `copy`를 가져야 합니다.
+- `drop`, 모든 필드는 `drop`을 가져야 합니다.
+- `store`, 모든 필드는 `store`를 가져야 합니다.
+- `key`, 모든 필드는 `store`를 가져야 합니다.
+  - `key`는 현재 자기 자신을 요구하지 않는 유일한 ability입니다.
 
-An enum can have any of these abilities with the exception of `key`, which enums cannot have because
-they cannot be top-level values (objects) in storage. The same rules apply to fields of enum
-variants as they do for struct fields though. In particular, if an enum is declared with the
-ability...
+열거형은 `key`를 제외한 이러한 ability 중 어느 것이든 가질 수 있습니다. `key`는 열거형이
+스토리지의 최상위 값(object)이 될 수 없기 때문에 가질 수 없습니다. 동일한 규칙이 구조체 필드에
+적용되는 것처럼 열거형 변형의 필드에도 적용됩니다. 특히, 열거형이 다음 ability로 선언된
+경우...
 
-- `copy`, all fields of all variants must have `copy`.
-- `drop`, all fields of all variants must have `drop`.
-- `store`, all fields of all variants must have `store`.
-- `key`, is not allowed on enums as previously mentioned.
+- `copy`, 모든 변형의 모든 필드는 `copy`를 가져야 합니다.
+- `drop`, 모든 변형의 모든 필드는 `drop`을 가져야 합니다.
+- `store`, 모든 변형의 모든 필드는 `store`를 가져야 합니다.
+- `key`, 앞서 언급했듯이 열거형에는 허용되지 않습니다.
 
-For example:
+예를 들어:
 
 ```move
-// A struct without any abilities
+// ability가 없는 구조체
 public struct NoAbilities {}
 
 public struct WantsCopy has copy {
-    f: NoAbilities, // ERROR 'NoAbilities' does not have 'copy'
+    f: NoAbilities, // 오류! 'NoAbilities'는 'copy'를 가지지 않습니다
 }
 
 public enum WantsCopyEnum has copy {
     Variant1
-    Variant2(NoAbilities), // ERROR 'NoAbilities' does not have 'copy'
+    Variant2(NoAbilities), // 오류! 'NoAbilities'는 'copy'를 가지지 않습니다
 }
 ```
 
-and similarly:
+그리고 유사하게:
 
 ```move
-// A struct without any abilities
+// ability가 없는 구조체
 public struct NoAbilities {}
 
 public struct MyData has key {
-    f: NoAbilities, // Error 'NoAbilities' does not have 'store'
+    f: NoAbilities, // 오류! 'NoAbilities'는 'store'를 가지지 않습니다
 }
 
 public struct MyDataEnum has store {
     Variant1,
-    Variant2(NoAbilities), // Error 'NoAbilities' does not have 'store'
+    Variant2(NoAbilities), // 오류! 'NoAbilities'는 'store'를 가지지 않습니다
 }
 ```
 
-## Conditional Abilities and Generic Types
+## 조건부 Ability와 제네릭 타입
 
-When abilities are annotated on a generic type, not all instances of that type are guaranteed to
-have that ability. Consider this struct declaration:
+제네릭 타입에 ability가 주석으로 달려 있을 때, 해당 타입의 모든 인스턴스가 해당 ability를
+가진다고 보장되지 않습니다. 다음 구조체 선언을 고려해보세요:
 
 {/* file=packages/reference/sources/abilities.move anchor=conditional_abilities */}
 
@@ -182,38 +175,37 @@ have that ability. Consider this struct declaration:
 public struct Cup<T> has copy, drop, store, key { item: T }
 ```
 
-It might be very helpful if `Cup` could hold any type, regardless of its abilities. The type system
-can _see_ the type parameter, so it should be able to remove abilities from `Cup` if it _sees_ a
-type parameter that would violate the guarantees for that ability.
+`Cup`이 ability에 관계없이 모든 타입을 보유할 수 있다면 매우 유용할 것입니다. 타입 시스템은
+타입 매개변수를 _볼_ 수 있으므로, 해당 ability에 대한 보장을 위반하는 타입 매개변수를 _본다면_
+`Cup`에서 ability를 제거할 수 있어야 합니다.
 
-This behavior might sound a bit confusing at first, but it might be more understandable if we think
-about collection types. We could consider the builtin type `vector` to have the following type
-declaration:
+이 동작은 처음에는 다소 혼란스러울 수 있지만, 컬렉션 타입에 대해 생각해보면 더 이해하기 쉬울 수
+있습니다. 내장 타입 `vector`가 다음과 같은 타입 선언을 가진다고 생각할 수 있습니다:
 
 ```move
 vector<T> has copy, drop, store;
 ```
 
-We want `vector`s to work with any type. We don't want separate `vector` types for different
-abilities. So what are the rules we would want? Precisely the same that we would want with the field
-rules above. So, it would be safe to copy a `vector` value only if the inner elements can be copied.
-It would be safe to ignore a `vector` value only if the inner elements can be ignored/dropped. And,
-it would be safe to put a `vector` in storage only if the inner elements can be in storage.
+우리는 `vector`가 모든 타입과 작동하기를 원합니다. 다른 ability를 위한 별도의 `vector` 타입을
+원하지 않습니다. 그렇다면 우리가 원하는 규칙은 무엇일까요? 위의 필드 규칙과 정확히 동일합니다.
+따라서 내부 요소를 복사할 수 있는 경우에만 `vector` 값을 안전하게 복사할 수 있습니다.
+내부 요소를 무시/삭제할 수 있는 경우에만 `vector` 값을 안전하게 무시할 수 있습니다. 그리고
+내부 요소가 스토리지에 있을 수 있는 경우에만 `vector`를 스토리지에 안전하게 넣을 수 있습니다.
 
-To have this extra expressiveness, a type might not have all the abilities it was declared with
-depending on the instantiation of that type; instead, the abilities a type will have depends on both
-its declaration **and** its type arguments. For any type, type parameters are pessimistically
-assumed to be used inside of the struct, so the abilities are only granted if the type parameters
-meet the requirements described above for fields. Taking `Cup` from above as an example:
+이러한 추가적인 표현력을 가지려면, 타입은 해당 타입의 인스턴스화에 따라 선언된 모든 ability를
+가지지 않을 수 있습니다. 대신, 타입이 가질 ability는 선언 **과** 타입 인자 모두에 따라 달라집니다.
+모든 타입에 대해, 타입 매개변수는 구조체 내부에서 사용된다고 비관적으로 가정되므로, ability는
+타입 매개변수가 필드에 대해 위에서 설명한 요구사항을 충족하는 경우에만 부여됩니다. 위의 `Cup`을
+예로 들면:
 
-- `Cup` has the ability `copy` only if `T` has `copy`.
-- It has `drop` only if `T` has `drop`.
-- It has `store` only if `T` has `store`.
-- It has `key` only if `T` has `store`.
+- `Cup`은 `T`가 `copy`를 가진 경우에만 `copy` ability를 가집니다.
+- `T`가 `drop`을 가진 경우에만 `drop`을 가집니다.
+- `T`가 `store`를 가진 경우에만 `store`를 가집니다.
+- `T`가 `store`를 가진 경우에만 `key`를 가집니다.
 
-Here are examples for this conditional system for each ability:
+다음은 각 ability에 대한 이 조건부 시스템의 예입니다:
 
-### Example: conditional `copy`
+### 예시: 조건부 `copy`
 
 ```move
 public struct NoAbilities {}
@@ -221,24 +213,24 @@ public struct S has copy, drop { f: bool }
 public struct Cup<T> has copy, drop, store { item: T }
 
 fun example(c_x: Cup<u64>, c_s: Cup<S>) {
-    // Valid, 'Cup<u64>' has 'copy' because 'u64' has 'copy'
+    // 유효함, 'Cup<u64>'는 'u64'가 'copy'를 가지므로 'copy'를 가집니다
     let c_x2 = copy c_x;
-    // Valid, 'Cup<S>' has 'copy' because 'S' has 'copy'
+    // 유효함, 'Cup<S>'는 'S'가 'copy'를 가지므로 'copy'를 가집니다
     let c_s2 = copy c_s;
 }
 
 fun invalid(c_account: Cup<signer>, c_n: Cup<NoAbilities>) {
-    // Invalid, 'Cup<signer>' does not have 'copy'.
-    // Even though 'Cup' was declared with copy, the instance does not have 'copy'
-    // because 'signer' does not have 'copy'
+    // 유효하지 않음, 'Cup<signer>'는 'copy'를 가지지 않습니다.
+    // 'Cup'이 copy로 선언되었지만, 인스턴스는 'copy'를 가지지 않습니다
+    // 왜냐하면 'signer'가 'copy'를 가지지 않기 때문입니다
     let c_account2 = copy c_account;
-    // Invalid, 'Cup<NoAbilities>' does not have 'copy'
-    // because 'NoAbilities' does not have 'copy'
+    // 유효하지 않음, 'Cup<NoAbilities>'는 'copy'를 가지지 않습니다
+    // 왜냐하면 'NoAbilities'가 'copy'를 가지지 않기 때문입니다
     let c_n2 = copy c_n;
 }
 ```
 
-### Example: conditional `drop`
+### 예시: 조건부 `drop`
 
 ```move
 public struct NoAbilities {}
@@ -246,72 +238,72 @@ public struct S has copy, drop { f: bool }
 public struct Cup<T> has copy, drop, store { item: T }
 
 fun unused() {
-    Cup<bool> { item: true }; // Valid, 'Cup<bool>' has 'drop'
-    Cup<S> { item: S { f: false }}; // Valid, 'Cup<S>' has 'drop'
+    Cup<bool> { item: true }; // 유효함, 'Cup<bool>'은 'drop'을 가집니다
+    Cup<S> { item: S { f: false }}; // 유효함, 'Cup<S>'는 'drop'을 가집니다
 }
 
 fun left_in_local(c_account: Cup<signer>): u64 {
     let c_b = Cup<bool> { item: true };
     let c_s = Cup<S> { item: S { f: false }};
-    // Valid return: 'c_account', 'c_b', and 'c_s' have values
-    // but 'Cup<signer>', 'Cup<bool>', and 'Cup<S>' have 'drop'
+    // 유효한 반환: 'c_account', 'c_b', 'c_s'는 값을 가지지만
+    // 'Cup<signer>', 'Cup<bool>', 'Cup<S>'는 'drop'을 가집니다
     0
 }
 
 fun invalid_unused() {
-    // Invalid, Cannot ignore 'Cup<NoAbilities>' because it does not have 'drop'.
-    // Even though 'Cup' was declared with 'drop', the instance does not have 'drop'
-    // because 'NoAbilities' does not have 'drop'
+    // 유효하지 않음, 'Cup<NoAbilities>'는 'drop'을 가지지 않으므로 무시할 수 없습니다.
+    // 'Cup'이 'drop'으로 선언되었지만, 인스턴스는 'drop'을 가지지 않습니다
+    // 왜냐하면 'NoAbilities'가 'drop'을 가지지 않기 때문입니다
     Cup<NoAbilities> { item: NoAbilities {} };
 }
 
 fun invalid_left_in_local(): u64 {
     let n = Cup<NoAbilities> { item: NoAbilities {} };
-    // Invalid return: 'c_n' has a value
-    // and 'Cup<NoAbilities>' does not have 'drop'
+    // 유효하지 않은 반환: 'c_n'은 값을 가지고
+    // 'Cup<NoAbilities>'는 'drop'을 가지지 않습니다
     0
 }
 ```
 
-### Example: conditional `store`
+### 예시: 조건부 `store`
 
 ```move
 public struct Cup<T> has copy, drop, store { item: T }
 
-// 'MyInnerData is declared with 'store' so all fields need 'store'
+// 'MyInnerData'는 'store'로 선언되었으므로 모든 필드가 'store'를 필요로 합니다
 struct MyInnerData has store {
-    yes: Cup<u64>, // Valid, 'Cup<u64>' has 'store'
-    // no: Cup<signer>, Invalid, 'Cup<signer>' does not have 'store'
+    yes: Cup<u64>, // 유효함, 'Cup<u64>'는 'store'를 가집니다
+    // no: Cup<signer>, 유효하지 않음, 'Cup<signer>'는 'store'를 가지지 않습니다
 }
 
-// 'MyData' is declared with 'key' so all fields need 'store'
+// 'MyData'는 'key'로 선언되었으므로 모든 필드가 'store'를 필요로 합니다
 struct MyData has key {
-    yes: Cup<u64>, // Valid, 'Cup<u64>' has 'store'
-    inner: Cup<MyInnerData>, // Valid, 'Cup<MyInnerData>' has 'store'
-    // no: Cup<signer>, Invalid, 'Cup<signer>' does not have 'store'
+    yes: Cup<u64>, // 유효함, 'Cup<u64>'는 'store'를 가집니다
+    inner: Cup<MyInnerData>, // 유효함, 'Cup<MyInnerData>'는 'store'를 가집니다
+    // no: Cup<signer>, 유효하지 않음, 'Cup<signer>'는 'store'를 가지지 않습니다
 }
 ```
 
-### Example: conditional `key`
+### 예시: 조건부 `key`
 
 ```move
 public struct NoAbilities {}
 public struct MyData<T> has key { f: T }
 
 fun valid(addr: address) acquires MyData {
-    // Valid, 'MyData<u64>' has 'key'
+    // 유효함, 'MyData<u64>'는 'key'를 가집니다
     transfer(addr, MyData<u64> { f: 0 });
 }
 
 fun invalid(addr: address) {
-   // Invalid, 'MyData<NoAbilities>' does not have 'key'
+   // 유효하지 않음, 'MyData<NoAbilities>'는 'key'를 가지지 않습니다
    transfer(addr, MyData<NoAbilities> { f: NoAbilities {} })
-   // Invalid, 'MyData<NoAbilities>' does not have 'key'
+   // 유효하지 않음, 'MyData<NoAbilities>'는 'key'를 가지지 않습니다
    borrow<NoAbilities>(addr);
-   // Invalid, 'MyData<NoAbilities>' does not have 'key'
+   // 유효하지 않음, 'MyData<NoAbilities>'는 'key'를 가지지 않습니다
    borrow_mut<NoAbilities>(addr);
 }
 
-// Mock storage operation
+// 모의 스토리지 작업
 native public fun transfer<T: key>(addr: address, value: T);
 ```

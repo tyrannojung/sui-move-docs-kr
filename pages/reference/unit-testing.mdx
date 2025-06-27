@@ -3,23 +3,20 @@ title: 'Unit Tests | Reference'
 description: ''
 ---
 
-# Unit Tests
+# 유닛 테스트
 
-Unit testing for Move uses three annotations in the Move source language:
+Move의 유닛 테스트는 Move 소스 언어에서 세 가지 주석을 사용합니다:
 
-- `#[test]` marks a function as a test;
-- `#[expected_failure]` marks that a test is expected to fail;
-- `#[test_only]` marks a module or module member ([`use`](./uses), [function](./functions),
-  [struct](./structs), or [constant](./constants)) as code to be included for testing only.
+- `#[test]`는 함수를 테스트로 표시합니다;
+- `#[expected_failure]`는 테스트가 실패할 것으로 예상됨을 표시합니다;
+- `#[test_only]`는 모듈 또는 모듈 멤버([`use`](./uses), [함수](./functions),
+  [구조체](./structs), 또는 [상수](./constants))를 테스트용으로만 포함될 코드로 표시합니다.
 
-These annotations can be placed on any appropriate form with any visibility. Whenever a module or
-module member is annotated as `#[test_only]` or `#[test]`, it will not be included in the compiled
-bytecode unless it is compiled for testing.
+이러한 주석은 모든 가시성을 가진 적절한 형식에 배치할 수 있습니다. 모듈 또는 모듈 멤버가 `#[test_only]` 또는 `#[test]`로 주석 처리되면 테스트용으로 컴파일되지 않는 한 컴파일된 바이트코드에 포함되지 않습니다.
 
-## Test Annotations
+## 테스트 주석
 
-The `#[test]` annotation can only be placed on a function with no parameters. This annotation marks
-the function as a test to be run by the unit testing harness.
+`#[test]` 주석은 매개변수가 없는 함수에만 배치할 수 있습니다. 이 주석은 함수를 유닛 테스트 하네스에서 실행할 테스트로 표시합니다.
 
 ```move
 #[test] // OK
@@ -29,13 +26,9 @@ fun this_is_a_test() { ... }
 fun this_is_not_correct(arg: u64) { ... }
 ```
 
-A test can also be annotated as an `#[expected_failure]`. This annotation marks that the test is
-expected to raise an error. There are a number of options that can be used with the
-`#[expected_failure]` annotation to ensure only a failure with the specified condition is marked as
-passing, these options are detailed in [Expected Failures](#expected-failures). Only functions that
-have the `#[test]` annotation can also be annotated as an #`[expected_failure]`.
+테스트는 `#[expected_failure]`로도 주석 처리할 수 있습니다. 이 주석은 테스트가 오류를 발생시킬 것으로 예상됨을 표시합니다. `#[expected_failure]` 주석과 함께 사용할 수 있는 여러 옵션이 있어 지정된 조건의 실패만 통과로 표시되도록 할 수 있으며, 이러한 옵션은 [예상 실패](#expected-failures)에 자세히 설명되어 있습니다. `#[test]` 주석을 가진 함수만 #`[expected_failure]`로도 주석 처리할 수 있습니다.
 
-Some simple examples of using the `#[expected_failure]` annotation are shown below:
+`#[expected_failure]` 주석 사용의 몇 가지 간단한 예는 다음과 같습니다:
 
 ```move
 #[test]
@@ -58,21 +51,18 @@ public fun test_will_error_and_fail() { 1/0; }
 public fun this_other_test_will_abort_and_pass() { abort 1 }
 ```
 
-> **Note**: `#[test]` and `#[test_only]` functions can also call
-> [`entry`](./functions#entry-modifier) functions, regardless of their visibility.
+> **참고**: `#[test]` 및 `#[test_only]` 함수는 가시성에 관계없이
+> [`entry`](./functions#entry-modifier) 함수도 호출할 수 있습니다.
 
-## Expected Failures
+## 예상 실패
 
-There are a number of different ways that you can use the `#[expected_failure]` annotation to
-specify different types of error conditions. These are:
+`#[expected_failure]` 주석을 사용하여 다양한 유형의 오류 조건을 지정할 수 있는 여러 가지 방법이 있습니다. 이들은 다음과 같습니다:
 
 ### 1. `#[expected_failure(abort_code = <constant>)]`
 
-This will pass if the test aborts with the specified constant value in the module that defines the
-constant and fail otherwise. This is the recommended way of testing for expected test failures.
+테스트가 상수를 정의하는 모듈의 지정된 상수 값으로 중단되면 통과하고 그렇지 않으면 실패합니다. 이는 예상되는 테스트 실패를 테스트하는 권장 방법입니다.
 
-> **Note**: You can reference constants outside of the current module or package in
-> `expected_failure` annotations.
+> **참고**: `expected_failure` 주석에서 현재 모듈이나 패키지 외부의 상수를 참조할 수 있습니다.
 
 ```move
 module pkg_addr::other_module {
@@ -103,9 +93,7 @@ module pkg_addr::my_module {
 
 ### 2. `#[expected_failure(arithmetic_error, location = <location>)]`
 
-This specifies that the test is expected to fail with an arithmetic error (e.g., integer overflow,
-division by zero, etc) at the specified location. The `<location>` must be a valid path to a module
-location, e.g., `Self`, or `my_package::my_module`.
+테스트가 지정된 위치에서 산술 오류(예: 정수 오버플로, 0으로 나누기 등)로 실패할 것으로 예상됨을 지정합니다. `<location>`은 모듈 위치에 대한 유효한 경로여야 합니다(예: `Self` 또는 `my_package::my_module`).
 
 ```move
 module pkg_addr::other_module {
@@ -131,9 +119,7 @@ module pkg_addr::my_module {
 
 ### 3. `#[expected_failure(out_of_gas, location = <location>)]`
 
-This specifies that the test is expected to fail with an out of gas error at the specified location.
-The `<location>` must be a valid path to a module location, e.g., `Self`, or
-`my_package::my_module`.
+테스트가 지정된 위치에서 가스 부족 오류로 실패할 것으로 예상됨을 지정합니다. `<location>`은 모듈 위치에 대한 유효한 경로여야 합니다(예: `Self` 또는 `my_package::my_module`).
 
 ```move
 module pkg_addr::other_module {
@@ -160,12 +146,7 @@ module pkg_addr::my_module {
 
 ### 4. `#[expected_failure(vector_error, minor_status = <u64_opt>, location = <location>)]`
 
-This specifies that the test is expected to fail with a vector error at the specified location with
-the given `minor_status` (if provided). The `<location>` must be a valid path to a module module
-location, e.g., `Self`, or `my_package::my_module`. The `<u64_opt>` is an optional parameter that
-specifies the minor status of the vector error. If it is not specified, the test will pass if the
-test fails with any minor status. If it is specified, the test will only pass if the test fails with
-a vector error with the specified minor status.
+테스트가 지정된 위치에서 주어진 `minor_status`(제공된 경우)로 벡터 오류로 실패할 것으로 예상됨을 지정합니다. `<location>`은 모듈 위치에 대한 유효한 경로여야 합니다(예: `Self` 또는 `my_package::my_module`). `<u64_opt>`는 벡터 오류의 부 상태를 지정하는 선택적 매개변수입니다. 지정하지 않으면 테스트가 모든 부 상태로 실패할 때 통과합니다. 지정하면 테스트가 지정된 부 상태의 벡터 오류로 실패할 때만 통과합니다.
 
 ```move
 module pkg_addr::other_module {
@@ -212,9 +193,7 @@ module pkg_addr::my_module {
 
 ### 5. `#[expected_failure]`
 
-This will pass if the test aborts with _any_ error code. You should be **_incredibly careful_**
-using this to annotate expected tests failures, and always prefer one of the ways described above
-instead. Examples of these types of annotations are:
+테스트가 _모든_ 오류 코드로 중단되면 통과합니다. 예상되는 테스트 실패를 주석 처리하는 데 이것을 사용할 때는 **_매우 주의해야_** 하며, 항상 위에 설명된 방법 중 하나를 선호해야 합니다. 이러한 유형의 주석 예는 다음과 같습니다:
 
 ```move
 #[test]
@@ -226,16 +205,12 @@ fun test_will_abort_and_pass1() { abort 1 }
 fun test_will_arith_error_and_pass2() { 1/0; }
 ```
 
-## Test Only Annotations
+## 테스트 전용 주석
 
-A module and any of its members can be declared as test only. If an item is annotated as
-`#[test_only]` the item will only be included in the compiled Move bytecode when compiled in test
-mode. Additionally, when compiled outside of test mode, any non-test `use`s of a `#[test_only]`
-module will raise an error during compilation.
+모듈과 그 멤버들은 테스트 전용으로 선언될 수 있습니다. 항목이 `#[test_only]`로 주석 처리되면 해당 항목은 테스트 모드로 컴파일될 때만 컴파일된 Move 바이트코드에 포함됩니다. 또한 테스트 모드 외부에서 컴파일할 때 `#[test_only]` 모듈의 비테스트 `use`는 컴파일 중 오류를 발생시킵니다.
 
-> **Note**: functions that are annotated with `#[test_only]` will only be available to be called
-> from test code, but they themselves are not tests and will not be run as tests by the unit testing
-> framework.
+> **참고**: `#[test_only]`로 주석 처리된 함수는 테스트 코드에서만 호출할 수 있지만,
+> 그 자체는 테스트가 아니며 유닛 테스트 프레임워크에서 테스트로 실행되지 않습니다.
 
 ```move
 #[test_only] // test only attributes can be attached to modules
@@ -254,39 +229,31 @@ public struct SomeStruct { ... }
 fun test_only_function(...) { ... }
 ```
 
-## Running Unit Tests
+## 유닛 테스트 실행
 
-Unit tests for a Move package can be run with the [`sui move test` command](./packages).
+Move 패키지의 유닛 테스트는 [`sui move test` 명령](./packages)으로 실행할 수 있습니다.
 
-When running tests, every test will either `PASS`, `FAIL`, or `TIMEOUT`. If a test case fails, the
-location of the failure along with the function name that caused the failure will be reported if
-possible. You can see an example of this below.
+테스트를 실행할 때 모든 테스트는 `PASS`, `FAIL` 또는 `TIMEOUT` 중 하나가 됩니다. 테스트 케이스가 실패하면 가능한 경우 실패를 야기한 함수 이름과 함께 실패 위치가 보고됩니다. 아래에서 이에 대한 예를 볼 수 있습니다.
 
-A test will be marked as timing out if it exceeds the maximum number of instructions that can be
-executed for any single test. This bound can be changed using the options below. Additionally, while
-the result of a test is always deterministic, tests are run in parallel by default, so the ordering
-of test results in a test run is non-deterministic unless running with only one thread, which can be
-configured via an option.
+테스트가 단일 테스트에 대해 실행할 수 있는 최대 명령어 수를 초과하면 타임아웃으로 표시됩니다. 이 한계는 아래 옵션을 사용하여 변경할 수 있습니다. 또한 테스트 결과는 항상 결정적이지만 테스트는 기본적으로 병렬로 실행되므로 옵션을 통해 구성할 수 있는 하나의 스레드로만 실행하지 않는 한 테스트 실행에서 테스트 결과의 순서는 비결정적입니다.
 
-These aforementioned options are two among many that can fine-tune testing and help debug failing
-tests. To see all available options, and a description of what each one does, pass the `--help` flag
-to the `sui move test` command:
+위에서 언급한 옵션은 테스트를 미세 조정하고 실패한 테스트를 디버깅하는 데 도움이 되는 여러 옵션 중 두 가지입니다. 사용 가능한 모든 옵션과 각 옵션이 수행하는 작업에 대한 설명을 보려면 `sui move test` 명령에 `--help` 플래그를 전달하세요:
 
 ```
 $ sui move test --help
 ```
 
-## Example
+## 예제
 
-A simple module using some of the unit testing features is shown in the following example:
+유닛 테스트 기능 중 일부를 사용하는 간단한 모듈이 다음 예제에 표시됩니다:
 
-First create an empty package and change directory into it:
+먼저 빈 패키지를 만들고 해당 디렉토리로 이동합니다:
 
 ```bash
 $ sui move new test_example; cd test_example
 ```
 
-Next add the following module under the `sources` directory:
+다음으로 `sources` 디렉토리 아래에 다음 모듈을 추가합니다:
 
 ```move
 // filename: sources/my_module.move
@@ -329,9 +296,9 @@ fun make_sure_zero_coin_fails2() {
 }
 ```
 
-### Running Tests
+### 테스트 실행
 
-You can then run these tests with the `move test` command:
+그런 다음 `move test` 명령으로 이러한 테스트를 실행할 수 있습니다:
 
 ```bash
 $ sui move test
@@ -348,13 +315,11 @@ Running Move unit tests
 Test result: OK. Total tests: 3; passed: 3; failed: 0
 ```
 
-### Using Test Flags
+### 테스트 플래그 사용
 
-#### Passing specific tests to run
+#### 실행할 특정 테스트 전달
 
-You can run a specific test, or a set of tests with `sui move test <str>`. This will only run tests
-whose fully qualified name contains `<str>`. For example if we wanted to only run tests with
-`"non_zero"` in their name:
+`sui move test <str>`로 특정 테스트 또는 테스트 세트를 실행할 수 있습니다. 이는 완전한 정규 이름에 `<str>`이 포함된 테스트만 실행합니다. 예를 들어 이름에 `"non_zero"`가 있는 테스트만 실행하려는 경우:
 
 ```bash
 $ sui move test non_zero
@@ -369,9 +334,9 @@ Running Move unit tests
 Test result: OK. Total tests: 1; passed: 1; failed: 0
 ```
 
-#### `-i <bound>` or `--gas_used <bound>`
+#### `-i <bound>` 또는 `--gas_used <bound>`
 
-This bounds the amount of gas that can be consumed for any one test to `<bound>`:
+이는 하나의 테스트에 소비할 수 있는 가스 양을 `<bound>`로 제한합니다:
 
 ```bash
 $ sui move test -i 0
@@ -423,11 +388,9 @@ Failures in 0x0::my_module:
 Test result: FAILED. Total tests: 3; passed: 0; failed: 3
 ```
 
-#### `-s` or `--statistics`
+#### `-s` 또는 `--statistics`
 
-With these flags you can gather statistics about the tests run and report the runtime and gas used
-for each test. You can additionally add `csv` (`sui move test -s csv`) to get the gas usage in a csv
-output format. For example, if we wanted to see the statistics for the tests in the example above:
+이러한 플래그를 사용하면 실행된 테스트에 대한 통계를 수집하고 각 테스트에 사용된 런타임과 가스를 보고할 수 있습니다. 추가로 `csv`(`sui move test -s csv`)를 추가하여 가스 사용량을 csv 출력 형식으로 얻을 수 있습니다. 예를 들어, 위 예제의 테스트에 대한 통계를 보고 싶다면:
 
 ```bash
 $ sui move test -s

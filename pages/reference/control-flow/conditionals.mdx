@@ -3,56 +3,55 @@ title: 'Conditional Expressions | Reference'
 description: ''
 ---
 
-# Conditional `if` Expressions
+# 조건부 `if` 표현식
 
-An `if` expression specifies that some code should only be evaluated if a certain condition is true.
-For example:
+`if` 표현식은 특정 조건이 참일 때만 일부 코드가 평가되어야 함을 지정합니다.
+예를 들어:
 
 ```move
 if (x > 5) x = x - 5
 ```
 
-The condition must be an expression of type `bool`.
+조건은 `bool` 타입의 표현식이어야 합니다.
 
-An `if` expression can optionally include an `else` clause to specify another expression to evaluate
-when the condition is false.
+`if` 표현식은 조건이 거짓일 때 평가할 다른 표현식을 지정하기 위해 선택적으로 `else` 절을
+포함할 수 있습니다.
 
 ```move
 if (y <= 10) y = y + 1 else y = 10
 ```
 
-Either the "true" branch or the "false" branch will be evaluated, but not both. Either branch can be
-a single expression or an expression block.
+"참" 분기 또는 "거짓" 분기 중 하나가 평가되지만, 둘 다 평가되지는 않습니다. 각 분기는
+단일 표현식이거나 표현식 블록이 될 수 있습니다.
 
-The conditional expressions may produce values so that the `if` expression has a result.
+조건부 표현식은 값을 생성할 수 있으므로 `if` 표현식이 결과를 가질 수 있습니다.
 
 ```move
 let z = if (x < 100) x else 100;
 ```
 
-The expressions in the true and false branches must have compatible types. For example:
+참과 거짓 분기의 표현식은 호환 가능한 타입을 가져야 합니다. 예를 들어:
 
 ```move
-// x and y must be u64 integers
+// x와 y는 u64 정수여야 합니다
 let maximum: u64 = if (x > y) x else y;
 
-// ERROR! branches different types
+// 오류! 분기의 타입이 다릅니다
 let z = if (maximum < 10) 10u8 else 100u64;
 
-// ERROR! branches different types, as default false-branch is () not u64
+// 오류! 분기의 타입이 다릅니다. 기본 거짓 분기는 u64가 아닌 ()입니다
 if (maximum >= 10) maximum;
 ```
 
-If the `else` clause is not specified, the false branch defaults to the unit value. The following
-are equivalent:
+`else` 절이 지정되지 않으면, 거짓 분기는 기본적으로 단위 값(unit value)이 됩니다. 다음은
+동일합니다:
 
 ```move
-if (condition) true_branch // implied default: else ()
+if (condition) true_branch // 암시적 기본값: else ()
 if (condition) true_branch else ()
 ```
 
-Commonly, `if` expressions are used in conjunction with
-[expression blocks](./../variables#expression-blocks).
+일반적으로 `if` 표현식은 [표현식 블록](./../variables#expression-blocks)과 함께 사용됩니다.
 
 ```move
 let maximum = if (x > y) x else y;
@@ -65,7 +64,7 @@ if (maximum < 10) {
 }
 ```
 
-## Grammar for Conditionals
+## 조건문 문법
 
 > _if-expression_ → **if (** _expression_ **)** _expression_ _else-clause_<sub>_opt_</sub> >
 > _else-clause_ → **else** _expression_

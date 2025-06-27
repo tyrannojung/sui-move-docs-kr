@@ -1,30 +1,26 @@
 ---
 title: 'Clever Errors | Reference'
 description:
-  Clever errors are a feature that allows for more informative error messages when an assertion
-  fails or an abort is raised
+  Clever errors는 assertion이 실패하거나 abort가 발생할 때 더 유익한 오류 메시지를 
+  제공하는 기능입니다
 ---
 
 # Clever Errors
 
-Clever errors are a feature that allows for more informative error messages when an assertion fails
-or an abort is raised. They are a source feature and compile to a `u64` abort code value that
-contains the information needed to access the line number, constant name, and constant value given
-the clever error code and the module that the clever error constant was declared in. Because of this
-compilation, post-processing is required to go from the `u64` abort code value to a human-readable
-error message. The post-processing is automatically performed by the Sui GraphQL server, as well as
-the Sui CLI. If you want to manually decode a clever abort code, you can use the process outlined in
-[Inflating Clever Abort Codes](#inflating-clever-abort-codes) to do so.
+Clever errors는 assertion이 실패하거나 abort가 발생할 때 더 유익한 오류 메시지를 제공하는 기능입니다. 
+이는 소스 기능이며 clever error 코드와 clever error 상수가 선언된 module이 주어졌을 때 줄 번호, 
+상수 이름, 상수 값에 접근하는 데 필요한 정보를 포함하는 `u64` abort 코드 값으로 컴파일됩니다. 이러한 
+컴파일 때문에 `u64` abort 코드 값에서 사람이 읽을 수 있는 오류 메시지로 변환하려면 후처리가 필요합니다. 
+후처리는 Sui GraphQL 서버와 Sui CLI에서 자동으로 수행됩니다. clever abort 코드를 수동으로 
+디코딩하려면 [Clever Abort 코드 확장](#inflating-clever-abort-codes)에 설명된 프로세스를 사용할 수 있습니다.
 
-> Clever errors include source line information amongst other data. Because of this their value may
-> change due to any changes in the source file (e.g., due to auto-formatting, adding a new module
-> member, or adding a newline).
+> Clever errors는 다른 데이터와 함께 소스 라인 정보를 포함합니다. 이 때문에 소스 파일의 변경사항
+> (예: 자동 포맷팅, 새 module 멤버 추가, 또는 줄바꿈 추가)으로 인해 값이 변경될 수 있습니다.
 
-## Clever Abort Codes
+## Clever Abort 코드
 
-Clever abort codes allow you to use non-u64 constants as abort codes as long as the constants are
-annotated with the `#[error]` attribute. They can be used both in assertions, and as codes to
-`abort`.
+Clever abort 코드를 사용하면 상수가 `#[error]` 속성으로 주석 처리되어 있는 한 u64가 아닌 상수를 
+abort 코드로 사용할 수 있습니다. 이들은 assertion과 `abort`의 코드로 모두 사용할 수 있습니다.
 
 ```move
 module 0x42::a_module;
@@ -32,58 +28,55 @@ module 0x42::a_module;
 #[error]
 const EIsThree: vector<u8> = b"The value is three";
 
-// Will abort with `EIsThree` if `x` is 3
+// `x`가 3이면 `EIsThree`로 abort합니다
 public fun double_except_three(x: u64): u64 {
     assert!(x != 3, EIsThree);
     x * x
 }
 
-// Will always abort with `EIsThree`
+// 항상 `EIsThree`로 abort합니다
 public fun clever_abort() {
     abort EIsThree
 }
 ```
 
-In this example, the `EIsThree` constant is a `vector<u8>`, which is not a `u64`. However, the
-`#[error]` attribute allows the constant to be used as an abort code, and will at runtime produce a
-`u64` abort code value that holds:
+이 예제에서 `EIsThree` 상수는 `u64`가 아닌 `vector<u8>`입니다. 그러나 `#[error]` 속성을 통해 
+상수를 abort 코드로 사용할 수 있으며, 런타임에 다음을 포함하는 `u64` abort 코드 값을 생성합니다:
 
-1. A set tag-bit that indicates that the abort code is a clever abort code.
-2. The line number of where the abort occurred in the source file (e.g., 7).
-3. The index in the module's identifier table for the constant's name (e.g., `EIsThree`).
-4. The index of the constant's value in the module's constant table (e.g., `b"The value is three"`).
+1. abort 코드가 clever abort 코드임을 나타내는 설정된 태그 비트.
+2. 소스 파일에서 abort가 발생한 줄 번호 (예: 7).
+3. 상수 이름에 대한 module의 식별자 테이블 인덱스 (예: `EIsThree`).
+4. module의 상수 테이블에서 상수 값의 인덱스 (예: `b"The value is three"`).
 
-In hex, if `double_except_three(3)` is called, it will abort with a `u64` abort code as follows:
+16진수로, `double_except_three(3)`이 호출되면 다음과 같은 `u64` abort 코드로 중단됩니다:
 
 ```
 0x8000_0007_0001_0000
   ^       ^    ^    ^
   |       |    |    |
   |       |    |    |
-  |       |    |    +-- Constant value index = 0 (b"The value is three")
-  |       |    +-- Constant name index = 1 (EIsThree)
-  |       +-- Line number = 7 (line of the assertion)
-  +-- Tag bit = 0b1000_0000_0000_0000
+  |       |    |    +-- 상수 값 인덱스 = 0 (b"The value is three")
+  |       |    +-- 상수 이름 인덱스 = 1 (EIsThree)
+  |       +-- 줄 번호 = 7 (assertion의 줄)
+  +-- 태그 비트 = 0b1000_0000_0000_0000
 ```
 
-And could be rendered as a human-readable error message as (e.g.)
+그리고 다음과 같이 사람이 읽을 수 있는 오류 메시지로 렌더링될 수 있습니다 (예:)
 
 ```
 Error from '0x42::a_module::double_except_three' (line 7), abort 'EIsThree': "The value is three"
 ```
 
-The exact formatting of this message may vary depending on the tooling used to decode the clever
-error however all of the information needed to generate a human-readable error message like the
-above is present in the `u64` abort code when coupled with the module where the error occurred.
+이 메시지의 정확한 형식은 clever error를 디코딩하는 데 사용된 도구에 따라 다를 수 있지만, 
+오류가 발생한 module과 결합될 때 위와 같은 사람이 읽을 수 있는 오류 메시지를 생성하는 데 
+필요한 모든 정보가 `u64` abort 코드에 있습니다.
 
-> Clever abort code values do _not_ need to be a `vector<u8>` -- it can be any valid constant type
-> in Move.
+> Clever abort 코드 값은 `vector<u8>`일 필요가 _없습니다_ -- Move의 모든 유효한 상수 타입이 될 수 있습니다.
 
-## Assertions with no Abort Codes
+## Abort 코드가 없는 Assertion
 
-Assertions and `abort` statements without an abort code will automatically derive an abort code from
-the source line number and will be encoded in the clever error format with the constant name and
-constant value information will be filled with sentinel values of `0xffff` each. E.g.,
+abort 코드가 없는 assertion과 `abort` 문은 소스 줄 번호에서 자동으로 abort 코드를 파생하며, 
+상수 이름과 상수 값 정보가 각각 `0xffff`의 센티널 값으로 채워진 clever error 형식으로 인코딩됩니다. 예:
 
 ```move
 module 0x42::a_module;
@@ -99,35 +92,32 @@ fun abort_no_code() {
 }
 ```
 
-Both of these will produce a `u64` abort code value that holds:
+이 둘 모두 다음을 포함하는 `u64` abort 코드 값을 생성합니다:
 
-1. A set tag-bit that indicates that the abort code is a clever abort code.
-2. The line number of where the abort occurred in the source file (e.g., 6).
-3. A sentinel value of `0xffff` for the index into the module's identifier table for the constant's
-   name.
-4. A sentinel value of `0xffff` for the index of the constant's value in the module's constant
-   table.
+1. abort 코드가 clever abort 코드임을 나타내는 설정된 태그 비트.
+2. 소스 파일에서 abort가 발생한 줄 번호 (예: 6).
+3. 상수 이름에 대한 module의 식별자 테이블 인덱스의 센티널 값 `0xffff`.
+4. module의 상수 테이블에서 상수 값의 인덱스에 대한 센티널 값 `0xffff`.
 
-In hex, if `assert_false(3)` is called, it will abort with a `u64` abort code as follows:
+16진수로, `assert_false(3)`가 호출되면 다음과 같은 `u64` abort 코드로 중단됩니다:
 
 ```
 0x8000_0004_ffff_ffff
   ^       ^    ^    ^
   |       |    |    |
   |       |    |    |
-  |       |    |    +-- Constant value index = 0xffff (sentinel value)
-  |       |    +-- Constant name index = 0xffff (sentinel value)
-  |       +-- Line number = 4 (link of the assertion)
-  +-- Tag bit = 0b1000_0000_0000_0000
+  |       |    |    +-- 상수 값 인덱스 = 0xffff (센티널 값)
+  |       |    +-- 상수 이름 인덱스 = 0xffff (센티널 값)
+  |       +-- 줄 번호 = 4 (assertion의 줄)
+  +-- 태그 비트 = 0b1000_0000_0000_0000
 ```
 
-## Clever Errors and Macros
+## Clever Errors와 매크로
 
-The line number information in clever abort codes are derived from the source file at the location
-where the abort occurs. In particular, for a function this will be the line number within in the
-function, however for macros, this will be the location where the macro is invoked. This can be
-quite useful when writing macros as it provides a way for users to use macros that may raise abort
-conditions and still get useful error messages.
+clever abort 코드의 줄 번호 정보는 abort가 발생하는 위치의 소스 파일에서 파생됩니다. 
+특히 함수의 경우 함수 내의 줄 번호가 되지만, 매크로의 경우 매크로가 호출되는 위치가 됩니다. 
+이는 매크로를 작성할 때 매우 유용할 수 있습니다. 사용자가 abort 조건을 발생시킬 수 있는 
+매크로를 사용하면서도 유용한 오류 메시지를 받을 수 있는 방법을 제공하기 때문입니다.
 
 ```move
 module 0x42::macro_exporter;
@@ -141,15 +131,15 @@ public macro fun abort_always() {
 }
 
 public fun assert_false_fun() {
-    assert!(false); // Will always abort with the line number of this invocation
+    assert!(false); // 항상 이 호출의 줄 번호로 abort합니다
 }
 
 public fun abort_always_fun() {
-    abort // Will always abort with the line number of this invocation
+    abort // 항상 이 호출의 줄 번호로 abort합니다
 }
 ```
 
-Then in a module that uses these macros:
+그런 다음 이러한 매크로를 사용하는 module에서:
 
 ```move
 module 0x42::user_module;
@@ -162,25 +152,25 @@ use 0x42::macro_exporter::{
 };
 
 fun invoke_assert_false() {
-    assert_false!(); // Will abort with the line number of this invocation
+    assert_false!(); // 이 호출의 줄 번호로 abort합니다
 }
 
 fun invoke_abort_always() {
-    abort_always!(); // Will abort with the line number of this invocation
+    abort_always!(); // 이 호출의 줄 번호로 abort합니다
 }
 
 fun invoke_assert_false_fun() {
-    assert_false_fun(); // Will abort with the line number of the assertion in `assert_false_fun`
+    assert_false_fun(); // `assert_false_fun`의 assertion 줄 번호로 abort합니다
 }
 
 fun invoke_abort_always_fun() {
-    abort_always_fun(); // Will abort with the line number of the `abort` in `abort_always_fun`
+    abort_always_fun(); // `abort_always_fun`의 `abort` 줄 번호로 abort합니다
 }
 ```
 
-## Inflating Clever Abort Codes
+## Clever Abort 코드 확장
 
-Precisely, the layout of a clever abort code is as follows:
+정확히 말하면, clever abort 코드의 레이아웃은 다음과 같습니다:
 
 ```
 
@@ -190,47 +180,47 @@ Precisely, the layout of a clever abort code is as follows:
 
 ```
 
-Note that the Move abort will come with some additional information -- importantly in our case the
-module where the error occurred. This is important because the identifier index, and constant index
-are relative to the module's identifier and constant tables (if not set the sentinel values).
+Move abort는 추가 정보와 함께 제공된다는 점에 유의하세요 -- 우리의 경우 중요한 것은 
+오류가 발생한 module입니다. 식별자 인덱스와 상수 인덱스가 module의 식별자 및 상수 테이블과 
+관련이 있기 때문에 이는 중요합니다 (센티널 값이 설정되지 않은 경우).
 
-> To decode a clever abort code, you will need to know the module where the error occurred if either
-> the identifier index or constant index are not set to the sentinel value of `0xffff`.
+> 식별자 인덱스나 상수 인덱스가 센티널 값 `0xffff`로 설정되지 않은 경우, clever abort 코드를 
+> 디코딩하려면 오류가 발생한 module을 알아야 합니다.
 
-In pseudo-code, you can decode a clever abort code as follows:
+의사 코드로 clever abort 코드를 다음과 같이 디코딩할 수 있습니다:
 
 ```rust
-// Information available in the MoveAbort
+// MoveAbort에서 사용 가능한 정보
 let clever_abort_code: u64 = ...;
 let (package_id, module_name): (PackageStorageId, ModuleName) = ...;
 
 let is_clever_abort = (clever_abort_code & 0x8000_0000_0000_0000) != 0;
 
 if is_clever_abort {
-    // Get line number, identifier index, and constant index
-    // Identifier and constant index are sentinel values if set to '0xffff'
+    // 줄 번호, 식별자 인덱스, 상수 인덱스 가져오기
+    // 식별자와 상수 인덱스는 '0xffff'로 설정된 경우 센티널 값입니다
     let line_number = ((clever_abort_code & 0x0000_ffff_0000_0000) >> 32) as u16;
     let identifier_index = ((clever_abort_code & 0x0000_0000_ffff_0000) >> 16) as u16;
     let constant_index = ((clever_abort_code & 0x0000_0000_0000_ffff)) as u16;
 
-    // Print the line error message
+    // 줄 오류 메시지 출력
     print!("Error from '{}::{}' (line {})", package_id, module_name, line_number);
 
-    // No need to print anything or load the module if both are sentinel values
+    // 둘 다 센티널 값인 경우 아무것도 출력하거나 module을 로드할 필요가 없습니다
     if identifier_index == 0xffff && constant_index == 0xffff {
         return;
     }
 
-    // Only needed if constant name and value are not 0xffff
+    // 상수 이름과 값이 0xffff가 아닌 경우에만 필요합니다
     let module: CompiledModule = fetch_module(package_id, module_name);
 
-    // Print the constant name (if any)
+    // 상수 이름 출력 (있는 경우)
     if identifier_index != 0xffff {
         let constant_name = module.get_identifier_at_table_index(identifier_index);
         print!(", '{}'", constant_name);
     }
 
-    // Print the constant value (if any)
+    // 상수 값 출력 (있는 경우)
     if constant_index != 0xffff {
         let constant_value = module
             .get_constant_at_table_index(constant_index)

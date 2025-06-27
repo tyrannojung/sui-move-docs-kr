@@ -3,37 +3,23 @@ title: 'Macro Functions | Reference'
 description: ''
 ---
 
-# Macro Functions
+# Macro 함수
 
-Macro functions are a way of defining functions that are expanded during compilation at each call
-site. The arguments of the macro are not evaluated eagerly like a normal function, and instead are
-substituted by expression. In addition, the caller can supply code to the macro via
-[lambdas](#lambdas).
+Macro 함수는 각 호출 지점에서 컴파일 시 확장되는 함수를 정의하는 방법입니다. 매크로의 인자는 일반 함수처럼 즉시 평가되지 않고, 대신 표현식으로 대체됩니다. 또한 호출자는 [람다(lambdas)](#lambdas)를 통해 매크로에 코드를 전달할 수 있습니다.
 
-These expression substitution mechanics make `macro` functions similar
-[to macros found in other programming languages](<https://en.wikipedia.org/wiki/Macro_(computer_science)>);
-however, they are more constrained in Move than you might expect from other languages. The
-parameters and return values of `macro` functions are still typed--though this can be partially
-relaxed with the [`_` type](./../generics#_-type). The upside of this restriction however, is that
-`macro` functions can be used anywhere a normal function can be used, which is notably helpful with
-[method syntax](./../method-syntax).
+이러한 표현식 대체 메커니즘은 `macro` 함수를 [다른 프로그래밍 언어의 매크로](<https://en.wikipedia.org/wiki/Macro_(computer_science)>)와 유사하게 만듭니다. 그러나 Move에서는 다른 언어에서 기대할 수 있는 것보다 더 제한적입니다. `macro` 함수의 매개변수와 반환값은 여전히 타입이 지정됩니다--비록 [`_` 타입](./../generics#_-type)으로 부분적으로 완화할 수 있지만요. 그러나 이러한 제한의 장점은 `macro` 함수를 일반 함수를 사용할 수 있는 모든 곳에서 사용할 수 있다는 것이며, 이는 특히 [메서드 구문(method syntax)](./../method-syntax)에서 유용합니다.
 
-A more extensive
-[syntactic macro](<https://en.wikipedia.org/wiki/Macro_(computer_science)#Syntactic_macros>) system
-may come in the future.
+더 광범위한 [구문적 매크로(syntactic macro)](<https://en.wikipedia.org/wiki/Macro_(computer_science)#Syntactic_macros>) 시스템이 향후 도입될 수 있습니다.
 
-## Syntax
+## 문법
 
-`macro` functions have a similar syntax to normal functions. However, all type parameter names and
-all parameter names must start with a `$`. Note that `_` can still be used by itself, but not as a
-prefix, and `$_` must be used instead.
+`macro` 함수는 일반 함수와 유사한 문법을 가집니다. 그러나 모든 타입 매개변수 이름과 모든 매개변수 이름은 `$`로 시작해야 합니다. `_`는 여전히 단독으로 사용할 수 있지만 접두사로는 사용할 수 없으며, 대신 `$_`를 사용해야 합니다.
 
 ```text
 <visibility>? macro fun <identifier><[$type_parameters: constraint],*>([$identifier: type],*): <return_type> <function_body>
 ```
 
-For example, the following `macro` function takes a vector and a lambda, and applies the lambda to
-each element of the vector to construct a new vector.
+예를 들어, 다음 `macro` 함수는 벡터와 람다를 받아서 벡터의 각 요소에 람다를 적용하여 새로운 벡터를 생성합니다.
 
 ```move
 macro fun map<$T, $U>($v: vector<$T>, $f: |$T| -> $U): vector<$U> {
@@ -49,51 +35,43 @@ macro fun map<$T, $U>($v: vector<$T>, $f: |$T| -> $U): vector<$U> {
 }
 ```
 
-The `$` is there to indicate that the parameters (both type and value parameters) do not behave like
-their normal, non-macro counterparts. For type parameters, they can be instantiated with any type
-(even a reference type `&` or `&mut`), and they will satisfy any constraint. Similarly for
-parameters, they will not be evaluated eagerly, and instead the argument expression will be
-substituted at each usage.
+`$`는 매개변수(타입 매개변수와 값 매개변수 모두)가 일반적인 비매크로 대응물처럼 동작하지 않음을 나타냅니다. 타입 매개변수의 경우, 모든 타입(참조 타입 `&` 또는 `&mut`도 포함)으로 인스턴스화될 수 있으며 모든 제약을 만족합니다. 마찬가지로 매개변수의 경우, 즉시 평가되지 않고 대신 인자 표현식이 각 사용 시점에서 대체됩니다.
 
-## Lambdas
+## 람다(Lambdas)
 
-Lambdas are a new type of expression that can only be used with `macro`s. These are used to pass
-code from the caller into the body of the `macro`. While the substitution is done at compile time,
-they are used similarly to [anonymous functions](https://en.wikipedia.org/wiki/Anonymous_function),
-[lambdas](https://en.wikipedia.org/wiki/Lambda_calculus), or
-[closures](<https://en.wikipedia.org/wiki/Closure_(computer_programming)>) in other languages.
+람다는 `macro`에서만 사용할 수 있는 새로운 타입의 표현식입니다. 이들은 호출자로부터 `macro` 본문으로 코드를 전달하는 데 사용됩니다. 대체가 컴파일 시간에 수행되지만, 다른 언어의 [익명 함수(anonymous functions)](https://en.wikipedia.org/wiki/Anonymous_function), [람다(lambdas)](https://en.wikipedia.org/wiki/Lambda_calculus) 또는 [클로저(closures)](<https://en.wikipedia.org/wiki/Closure_(computer_programming)>)와 유사하게 사용됩니다.
 
-As seen in the example above (`$f: |$T| -> $U`), lambda types are defined with the syntax
+위의 예시에서 본 것처럼 (`$f: |$T| -> $U`), 람다 타입은 다음 구문으로 정의됩니다:
 
 ```text
 |<type>,*| (-> <type>)?
 ```
 
-A few examples
+몇 가지 예시:
 
 ```move
-|u64, u64| -> u128 // a lambda that takes two u64s and returns a u128
-|&mut vector<u8>| -> &mut u8 // a lambda that takes a &mut vector<u8> and returns a &mut u8
+|u64, u64| -> u128 // 두 개의 u64를 받아 u128을 반환하는 람다
+|&mut vector<u8>| -> &mut u8 // &mut vector<u8>를 받아 &mut u8을 반환하는 람다
 ```
 
-If the return type is not annotated, it is unit `()` by default.
+반환 타입이 명시되지 않으면 기본적으로 단위 타입 `()`입니다.
 
 ```move
-// the following are equivalent
+// 다음은 동일합니다
 |&mut vector<u8>, u64|
 |&mut vector<u8>, u64| -> ()
 ```
 
-Lambda expressions are then defined at the call site of the `macro` with the syntax
+람다 표현식은 `macro` 호출 지점에서 다음 구문으로 정의됩니다:
 
 ```text
 |(<identifier> (: <type>)?),*| <expression>
 |(<identifier> (: <type>)?),*| -> <type> { <expression> }
 ```
 
-Note that if the return type is annotated, the body of the lambda must be enclosed in `{}`.
+반환 타입이 명시된 경우, 람다의 본문은 `{}`로 묶여야 합니다.
 
-Using the `map` macro defined above
+위에서 정의한 `map` 매크로 사용:
 
 ```move
 let v = vector[1, 2, 3];
@@ -101,43 +79,39 @@ let doubled: vector<u64> = map!(v, |x| 2 * x);
 let bytes: vector<vector<u8>> = map!(v, |x| std::bcs::to_bytes(&x));
 ```
 
-And with type annotations
+타입 주석과 함께:
 
 ```move
-let doubled: vector<u64> = map!(v, |x: u64| 2 * x); // return type annotation optional
+let doubled: vector<u64> = map!(v, |x: u64| 2 * x); // 반환 타입 주석은 선택사항
 let bytes: vector<vector<u8>> = map!(v, |x: u64| -> vector<u8> { std::bcs::to_bytes(&x) });
 ```
 
-### Capturing
+### 캡처링(Capturing)
 
-Lambda expressions can also refer to variables in the scope where the lambda is defined. This is
-sometimes called "capturing".
+람다 표현식은 람다가 정의된 스코프의 변수를 참조할 수도 있습니다. 이를 때때로 "캡처링(capturing)"이라고 합니다.
 
 ```move
 let res = foo();
 let incremented = map!(vector[1, 2, 3], |x| x + res);
 ```
 
-Any variable can be captured, including mutable and immutable references.
+가변 및 불변 참조를 포함한 모든 변수를 캡처할 수 있습니다.
 
-See the [Examples](#iterating-over-a-vector) section for more complicated usages.
+더 복잡한 사용법은 [예시](#iterating-over-a-vector) 섹션을 참조하세요.
 
-### Limitations
+### 제한사항
 
-Currently, lambdas can only be used directly in the call of a `macro` function. They cannot be bound
-to a variable. For example, the following is code will produce an error:
+현재 람다는 `macro` 함수 호출에서 직접만 사용할 수 있습니다. 변수에 바인딩할 수 없습니다. 예를 들어, 다음 코드는 오류를 생성합니다:
 
 ```move
 let f = |x| 2 * x;
-//      ^^^^^^^^^ Error! Lambdas must be used directly in 'macro' calls
+//      ^^^^^^^^^ 오류! 람다는 'macro' 호출에서 직접 사용되어야 합니다
 let doubled: vector<u64> = map!(vector[1, 2, 3], f);
 ```
 
-## Typing
+## 타이핑(Typing)
 
-Like normal functions, `macro` functions are typed--the types of the parameters and return value
-must be annotated. However, the body of the function is not type checked until the macro is
-expanded. This means that not all usages of a given macro may be valid. For example
+일반 함수처럼 `macro` 함수는 타입이 지정됩니다--매개변수와 반환값의 타입이 명시되어야 합니다. 그러나 함수 본문은 매크로가 확장될 때까지 타입 검사가 수행되지 않습니다. 이는 주어진 매크로의 모든 사용이 유효하지 않을 수 있음을 의미합니다. 예를 들어:
 
 ```move
 macro fun add_one<$T>($x: $T): $T {
@@ -145,10 +119,9 @@ macro fun add_one<$T>($x: $T): $T {
 }
 ```
 
-The above macro will not type check if `$T` is not a primitive integer type.
+위의 매크로는 `$T`가 기본 정수 타입이 아닌 경우 타입 검사를 통과하지 못합니다.
 
-This can be particularly useful in conjunction with [method syntax](./../method-syntax), where the
-function is not resolved until after the macro is expanded.
+이는 특히 [메서드 구문(method syntax)](./../method-syntax)과 함께 사용할 때 유용할 수 있으며, 여기서 함수는 매크로가 확장된 후에야 해결됩니다.
 
 ```move
 macro fun call_foo<$T, $U>($x: $T): &$U {
@@ -156,19 +129,13 @@ macro fun call_foo<$T, $U>($x: $T): &$U {
 }
 ```
 
-This macro will only expand successfully if `$T` has a method `foo` that returns a reference `&$U`.
-As described in the [hygiene](#hygiene) section, `foo` will be resolved based on the scope where
-`call_foo` was defined--not where it was expanded.
+이 매크로는 `$T`가 참조 `&$U`를 반환하는 메서드 `foo`를 가진 경우에만 성공적으로 확장됩니다. [위생(hygiene)](#hygiene) 섹션에서 설명한 대로, `foo`는 확장된 위치가 아닌 `call_foo`가 정의된 스코프를 기반으로 해결됩니다.
 
-### Type Parameters
+### 타입 매개변수
 
-Type parameters can be instantiated with any type, including reference types `&` and `&mut`. They
-can also be instantiated with [tuple types](./../primitive-types/tuples), though the utility of this
-is limited currently since tuples cannot be bound to a variable.
+타입 매개변수는 참조 타입 `&`와 `&mut`를 포함한 모든 타입으로 인스턴스화될 수 있습니다. [튜플 타입(tuple types)](./../primitive-types/tuples)으로도 인스턴스화될 수 있지만, 현재 튜플을 변수에 바인딩할 수 없으므로 그 유용성은 제한적입니다.
 
-This relaxation forces the constraints of a type parameter to be satisfied at the call site in a way
-that does not normally occur. It is generally recommended however to add all necessary constraints
-to a type parameter. For example
+이러한 완화는 일반적으로 발생하지 않는 방식으로 호출 지점에서 타입 매개변수의 제약이 충족되도록 강제합니다. 그러나 일반적으로 타입 매개변수에 필요한 모든 제약을 추가하는 것이 권장됩니다. 예를 들어:
 
 ```move
 public struct NoAbilities()
@@ -178,15 +145,14 @@ macro fun make_box<$T>($x: $T): CopyBox<$T> {
 }
 ```
 
-This macro will expand only if `$T` is instantiated with a type with the `copy` ability.
+이 매크로는 `$T`가 `copy` ability를 가진 타입으로 인스턴스화된 경우에만 확장됩니다.
 
 ```move
-make_box!(1); // Valid!
-make_box!(NoAbilities()); // Error! 'NoAbilities' does not have the copy ability
+make_box!(1); // 유효!
+make_box!(NoAbilities()); // 오류! 'NoAbilities'는 copy ability를 가지지 않습니다
 ```
 
-The suggested declaration of `make_box` would be to add the `copy` constraint to the type parameter.
-This then communicates to the caller that the type must have the `copy` ability.
+`make_box`의 권장 선언은 타입 매개변수에 `copy` 제약을 추가하는 것입니다. 이렇게 하면 호출자에게 타입이 `copy` ability를 가져야 함을 전달합니다.
 
 ```move
 macro fun make_box<$T: copy>($x: $T): CopyBox<$T> {
@@ -194,10 +160,7 @@ macro fun make_box<$T: copy>($x: $T): CopyBox<$T> {
 }
 ```
 
-One might reasonably ask then, why have this relaxation if the recommendation is not to use it? The
-constraints on type parameters simply cannot be enforced in all cases because the bodies are not
-checked until expansion. In the following example, the `copy` constraint on `$T` is not necessary in
-the signature, but is necessary in the body.
+사용하지 말라고 권장하는데 왜 이런 완화가 있는지 합리적으로 물을 수 있습니다. 타입 매개변수의 제약은 본문이 확장까지 검사되지 않기 때문에 모든 경우에 단순히 적용할 수 없습니다. 다음 예에서 `$T`의 `copy` 제약은 시그니처에서는 필요하지 않지만 본문에서는 필요합니다.
 
 ```move
 macro fun read_ref<$T>($r: &$T): $T {
@@ -205,17 +168,13 @@ macro fun read_ref<$T>($r: &$T): $T {
 }
 ```
 
-If however, you want to have an extremely relaxed type signature, it is instead recommended to use
-the [`_` type](#_-type).
+그러나 극도로 완화된 타입 시그니처를 원한다면 대신 [`_` 타입](#_-type)을 사용하는 것이 권장됩니다.
 
-### `_` Type
+### `_` 타입
 
-Normally, the [`_` placeholder type](./../generics#_-type) is used in expressions to allow for
-partial annotations of type arguments. However, with `macro` functions, the `_` type can be used in
-place of type parameters to relax the signature for any type. This should increase the ergonomics of
-declaring "generic" `macro` functions.
+일반적으로 [`_` 자리표시자 타입(placeholder type)](./../generics#_-type)은 표현식에서 타입 인자의 부분 주석을 허용하는 데 사용됩니다. 그러나 `macro` 함수에서는 `_` 타입을 타입 매개변수 대신 사용하여 모든 타입에 대해 시그니처를 완화할 수 있습니다. 이는 "제네릭" `macro` 함수를 선언하는 인체공학을 향상시켜야 합니다.
 
-For example, we could take any combination of integers and add them together.
+예를 들어, 정수의 어떤 조합이든 받아서 더할 수 있습니다.
 
 ```move
 macro fun add($x: _, $y: _, $z: _): u256 {
@@ -223,7 +182,7 @@ macro fun add($x: _, $y: _, $z: _): u256 {
 }
 ```
 
-Additionally, the `_` type can be instantiated _multiple_ times with different types. For example
+또한 `_` 타입은 서로 다른 타입으로 _여러 번_ 인스턴스화될 수 있습니다. 예를 들어:
 
 ```move
 public struct Box<T> has copy, drop, store { value: T }
@@ -232,38 +191,32 @@ macro fun create_two($f: |_| -> Box<_>): (Box<u8>, Box<u16>) {
 }
 ```
 
-If we declared the function with type parameters instead, the types would have to unify to a common
-type, which is not possible in this case.
+타입 매개변수로 함수를 선언했다면, 타입은 공통 타입으로 통합되어야 하는데, 이 경우에는 불가능합니다.
 
 ```move
 macro fun create_two<$T>($f: |$T| -> Box<$T>): (Box<u8>, Box<u16>) {
     ($f(0u8), $f(0u16))
-    //           ^^^^ Error! expected `u8` but found `u16`
+    //           ^^^^ 오류! `u8`이 예상되었지만 `u16`을 발견했습니다
 }
 ...
 let (a, b) = create_two!(|value| Box { value });
 ```
 
-In this case, `$T` must be instantiated with a single type, but inference finds that `$T` must be
-bound to both `u8` and `u16`.
+이 경우 `$T`는 단일 타입으로 인스턴스화되어야 하지만, 추론은 `$T`가 `u8`과 `u16` 모두에 바인딩되어야 한다는 것을 발견합니다.
 
-There is a tradeoff however, as the `_` type conveys less meaning and intention for the caller.
-Consider `map` macro from above re-declared with `_` instead of `$T` and `$U`.
+그러나 `_` 타입은 호출자에게 덜 의미와 의도를 전달한다는 트레이드오프가 있습니다. 위의 `map` 매크로를 `$T`와 `$U` 대신 `_`로 다시 선언한 것을 고려해보세요.
 
 ```move
 macro fun map($v: vector<_>, $f: |_| -> _): vector<_> {
 ```
 
-There is no longer any indication of behavior of `$f` at the type level. The caller must gain
-understanding from comments or the body of the macro.
+더 이상 타입 수준에서 `$f`의 동작에 대한 표시가 없습니다. 호출자는 주석이나 매크로 본문에서 이해를 얻어야 합니다.
 
-## Expansion and Substitution
+## 확장과 대체(Expansion and Substitution)
 
-The body of the `macro` is substituted into the call site at compile time. Each parameter is
-replaced by the _expression_, not the value, of its argument. For lambdas, additional local
-variables can have values bound within the context of the `macro` body.
+`macro`의 본문은 컴파일 시간에 호출 지점으로 대체됩니다. 각 매개변수는 인자의 값이 아닌 _표현식_으로 대체됩니다. 람다의 경우, 추가 로컬 변수가 `macro` 본문의 컨텍스트 내에서 값을 바인딩할 수 있습니다.
 
-Taking a very simple example
+매우 간단한 예를 들면:
 
 ```move
 macro fun apply($f: |u64| -> u64, $x: u64): u64 {
@@ -271,13 +224,13 @@ macro fun apply($f: |u64| -> u64, $x: u64): u64 {
 }
 ```
 
-With the call site
+호출 지점에서:
 
 ```move
 let incremented = apply!(|x| x + 1, 5);
 ```
 
-This will roughly be expanded to
+이는 대략 다음과 같이 확장됩니다:
 
 ```move
 let incremented = {
@@ -286,8 +239,7 @@ let incremented = {
 };
 ```
 
-Again, the value of `x` is not substituted, but the expression `5` is. This might mean that an
-argument is evaluated multiple times, or not at all, depending on the body of the `macro`.
+다시 말하지만, `x`의 값이 아니라 표현식 `5`가 대체됩니다. 이는 `macro` 본문에 따라 인자가 여러 번 평가되거나 전혀 평가되지 않을 수 있음을 의미합니다.
 
 ```move
 macro fun dup($f: |u64, u64| -> u64, $x: u64): u64 {
@@ -299,7 +251,7 @@ macro fun dup($f: |u64, u64| -> u64, $x: u64): u64 {
 let sum = dup!(|x, y| x + y, foo());
 ```
 
-is expanded to
+다음과 같이 확장됩니다:
 
 ```move
 let sum = {
@@ -309,10 +261,9 @@ let sum = {
 };
 ```
 
-Note that `foo()` will be called twice. Which would not happen if `dup` were a normal function.
+`foo()`가 두 번 호출됩니다. 이는 `dup`이 일반 함수였다면 발생하지 않았을 것입니다.
 
-It is often recommended to create predictable evaluation behavior by binding arguments to local
-variables.
+종종 인자를 로컬 변수에 바인딩하여 예측 가능한 평가 동작을 만드는 것이 권장됩니다.
 
 ```move
 macro fun dup($f: |u64, u64| -> u64, $x: u64): u64 {
@@ -321,7 +272,7 @@ macro fun dup($f: |u64, u64| -> u64, $x: u64): u64 {
 }
 ```
 
-Now that same call site will expand to
+이제 같은 호출 지점이 다음과 같이 확장됩니다:
 
 ```move
 let sum = {
@@ -334,20 +285,15 @@ let sum = {
 };
 ```
 
-### Hygiene
+### 위생(Hygiene)
 
-In the example above, the `dup` macro had a local variable `a` that was used to bind the argument
-`$x`. You might ask, what would happen if the variable was instead named `x`? Would that conflict
-with the `x` in the lambda?
+위의 예에서 `dup` 매크로는 인자 `$x`를 바인딩하는 데 사용된 로컬 변수 `a`를 가지고 있었습니다. 변수가 대신 `x`로 명명되었다면 어떻게 될까요? 람다의 `x`와 충돌할까요?
 
-The short answer is, no. `macro` functions are
-[hygienic](https://en.wikipedia.org/wiki/Hygienic_macro), meaning that the expansion of `macro`s and
-lambdas will not accidentally capture variables from another scope.
+짧은 대답은 아니오입니다. `macro` 함수는 [위생적(hygienic)](https://en.wikipedia.org/wiki/Hygienic_macro)이며, 이는 `macro`와 람다의 확장이 실수로 다른 스코프의 변수를 캡처하지 않는다는 것을 의미합니다.
 
-The compiler does this by associating a unique number with each scope. When the `macro` is expanded,
-the macro body gets its own scope. Additionally, the arguments are re-scoped on each usage.
+컴파일러는 각 스코프에 고유한 번호를 연결하여 이를 수행합니다. `macro`가 확장될 때 매크로 본문은 자체 스코프를 가집니다. 또한 인자는 각 사용 시 다시 스코프가 지정됩니다.
 
-Modifying the `dup` macro to use `x` instead of `a`
+`dup` 매크로를 `a` 대신 `x`를 사용하도록 수정:
 
 ```move
 macro fun dup($f: |u64, u64| -> u64, $x: u64): u64 {
@@ -356,7 +302,7 @@ macro fun dup($f: |u64, u64| -> u64, $x: u64): u64 {
 }
 ```
 
-The expansion of the call site
+호출 지점의 확장:
 
 ```move
 // let sum = dup!(|x, y| x + y, foo());
@@ -370,10 +316,9 @@ let sum = {
 };
 ```
 
-This is an approximation of the compiler's internal representation, some details are omitted for the
-simplicity of this example.
+이는 컴파일러 내부 표현의 근사치이며, 이 예제의 단순성을 위해 일부 세부 사항이 생략되었습니다.
 
-And each usage of an argument is re-scoped so that the different usages do not conflict.
+그리고 인자의 각 사용은 다른 사용이 충돌하지 않도록 다시 스코프가 지정됩니다.
 
 ```move
 macro fun apply_twice($f: |u64| -> u64, $x: u64): u64 {
@@ -385,7 +330,7 @@ macro fun apply_twice($f: |u64| -> u64, $x: u64): u64 {
 let result = apply_twice!(|x| x + 1, { let x = 5; x });
 ```
 
-Expands to
+다음과 같이 확장됩니다:
 
 ```move
 let result = {
@@ -401,8 +346,7 @@ let result = {
 };
 ```
 
-Similar to variable hygiene, [method resolution](./../method-syntax) is also scoped to the macro
-definition. For example
+변수 위생과 유사하게, [메서드 해결(method resolution)](./../method-syntax)도 매크로 정의에 스코프가 지정됩니다. 예를 들어:
 
 ```move
 public struct S { f: u64, g: u64 }
@@ -421,23 +365,20 @@ macro fun call_foo($s: &S): u64 {
 }
 ```
 
-The method call `foo` will in this case always resolve to the function `f`, even if `call_foo` is
-used in a scope where `foo` is bound to a different function, such as `g`.
+메서드 호출 `foo`는 이 경우 `call_foo`가 `foo`가 `g`와 같은 다른 함수에 바인딩된 스코프에서 사용되더라도 항상 함수 `f`로 해결됩니다.
 
 ```move
 fun example(s: &S): u64 {
     use fun g as foo;
-    call_foo!(s) // expands to 'f(s)', not 'g(s)'
+    call_foo!(s) // 'g(s)'가 아닌 'f(s)'로 확장됩니다
 }
 ```
 
-Due to this though, unused `use fun` declarations might not get warnings in modules with `macro`
-functions.
+그러나 이로 인해 `macro` 함수가 있는 module에서 사용되지 않는 `use fun` 선언이 경고를 받지 않을 수 있습니다.
 
-### Control Flow
+### 제어 흐름(Control Flow)
 
-Similar to variable hygiene, control flow constructs are also always scoped to where they are
-defined, not to where they are expanded.
+변수 위생과 유사하게, 제어 흐름 구조도 항상 확장된 위치가 아닌 정의된 위치에 스코프가 지정됩니다.
 
 ```move
 macro fun maybe_div($x: u64, $y: u64): u64 {
@@ -448,13 +389,13 @@ macro fun maybe_div($x: u64, $y: u64): u64 {
 }
 ```
 
-At the call site, `return` will always return from the `macro` body, not from the caller.
+호출 지점에서 `return`은 호출자가 아닌 `macro` 본문에서 항상 반환합니다.
 
 ```move
 let result: vector<u64> = vector[maybe_div!(10, 0)];
 ```
 
-Will expand to
+다음과 같이 확장됩니다:
 
 ```move
 let result: vector<u64> = vector['a: {
@@ -465,11 +406,9 @@ let result: vector<u64> = vector['a: {
 }];
 ```
 
-Where `return 'a 0` will return to the block `'a: { ... }` and not to the caller's body. See the
-section on [labeled control flow](./../control-flow/labeled-control-flow) for more details.
+여기서 `return 'a 0`는 호출자 본문이 아닌 블록 `'a: { ... }`로 반환합니다. 자세한 내용은 [레이블이 지정된 제어 흐름(labeled control flow)](./../control-flow/labeled-control-flow) 섹션을 참조하세요.
 
-Similarly, `return` in a lambda will return from the lambda, not from the `macro` body and not from
-the outer function.
+마찬가지로 람다의 `return`은 `macro` 본문이나 외부 함수가 아닌 람다에서 반환합니다.
 
 ```move
 macro fun apply($f: |u64| -> u64, $x: u64): u64 {
@@ -477,13 +416,13 @@ macro fun apply($f: |u64| -> u64, $x: u64): u64 {
 }
 ```
 
-and
+그리고
 
 ```move
 let result = apply!(|x| { if (x == 0) return 0; x + 1 }, 100);
 ```
 
-will expand to
+다음과 같이 확장됩니다:
 
 ```move
 let result = {
@@ -495,8 +434,7 @@ let result = {
 };
 ```
 
-In addition to returning from the lambda, a label can be used to return to the outer function. In
-the `vector::any` macro, a `return` with a label is used to return from the entire `macro` early
+람다에서 반환하는 것 외에도 레이블을 사용하여 외부 함수로 반환할 수 있습니다. `vector::any` 매크로에서는 레이블이 있는 `return`을 사용하여 전체 `macro`에서 조기에 반환합니다:
 
 ```move
 public macro fun any<$T>($v: &vector<$T>, $f: |&$T| -> bool): bool {
@@ -508,15 +446,11 @@ public macro fun any<$T>($v: &vector<$T>, $f: |&$T| -> bool): bool {
 }
 ```
 
-The `return 'any true` exits from the "loop" early when the condition is met. Otherwise, the macro
-"returns" `false`.
+`return 'any true`는 조건이 충족되면 "루프"에서 조기에 종료합니다. 그렇지 않으면 매크로는 `false`를 "반환"합니다.
 
-### Method Syntax
+### 메서드 구문(Method Syntax)
 
-When applicable, `macro` functions can be called using [method syntax](./../method-syntax). When
-using method syntax, the evaluation of the arguments will change in that the first argument (the
-"receiver" of the method) will be evaluated outside of the macro expansion. This example is
-contrived, but will concisely demonstrate the behavior.
+해당하는 경우 `macro` 함수는 [메서드 구문(method syntax)](./../method-syntax)을 사용하여 호출할 수 있습니다. 메서드 구문을 사용할 때 인자의 평가가 변경되어 첫 번째 인자(메서드의 "수신자")가 매크로 확장 외부에서 평가됩니다. 이 예제는 인위적이지만 동작을 간결하게 보여줍니다.
 
 ```move
 public struct S() has copy, drop;
@@ -527,45 +461,40 @@ public macro fun maybe_s($s: S, $cond: bool): S {
 }
 ```
 
-Even though `foo()` will abort, its return type can be used to start a method call.
+`foo()`가 중단될지라도 반환 타입은 메서드 호출을 시작하는 데 사용될 수 있습니다.
 
-`$s` will not be evaluated if `$cond` is `false`, and under a normal non-method call, an argument of
-`foo()` would not be evaluated and would not abort. The following example demonstrates `$s` not
-being evaluated with an argument of `foo()`.
+`$s`는 `$cond`가 `false`인 경우 평가되지 않으며, 일반 비메서드 호출에서 `foo()`의 인자는 평가되지 않고 중단되지 않습니다. 다음 예제는 `foo()`의 인자로 `$s`가 평가되지 않음을 보여줍니다.
 
 ```move
-maybe_s!(foo(), false) // does not abort
+maybe_s!(foo(), false) // 중단되지 않습니다
 ```
 
-It becomes more clear as to why it does not abort when looking at the expanded form
+확장된 형태를 보면 중단되지 않는 이유가 더 명확해집니다:
 
 ```move
 if (false) foo()
 else S()
 ```
 
-However, when using method syntax, the first argument is evaluated before the macro is expanded. So
-the same argument of `foo()` for `$s` will now be evaluated and will abort.
+그러나 메서드 구문을 사용할 때 첫 번째 인자는 매크로가 확장되기 전에 평가됩니다. 따라서 `$s`에 대한 동일한 `foo()` 인자가 이제 평가되고 중단됩니다.
 
 ```move
-foo().maybe_s!(false) // aborts
+foo().maybe_s!(false) // 중단됩니다
 ```
 
-We can see this more clearly when looking the expanded form
+확장된 형태를 보면 이를 더 명확하게 볼 수 있습니다:
 
 ```move
-let tmp = foo(); // aborts
+let tmp = foo(); // 중단됩니다
 if (false) tmp
 else S()
 ```
 
-Conceptually, the receiver for a method call is bound to a temporary variable before the macro is
-expanded, which forces the evaluation and thus the abort.
+개념적으로 메서드 호출의 수신자는 매크로가 확장되기 전에 임시 변수에 바인딩되어 평가를 강제하고 따라서 중단을 일으킵니다.
 
-### Parameter Limitations
+### 매개변수 제한사항
 
-The parameters of a `macro` function must always be used as expressions. They cannot be used in
-situations where the argument might be re-interpreted. For example, the following is not allowed
+`macro` 함수의 매개변수는 항상 표현식으로 사용되어야 합니다. 인자가 재해석될 수 있는 상황에서는 사용할 수 없습니다. 예를 들어, 다음은 허용되지 않습니다:
 
 ```move
 macro fun no($x: _): _ {
@@ -573,9 +502,7 @@ macro fun no($x: _): _ {
 }
 ```
 
-The reason is that if the argument `$x` was not a reference, it would be borrowed first, which would
-could re-interpret the argument. To get around this limitation, you should bind the argument to a
-local variable.
+그 이유는 인자 `$x`가 참조가 아닌 경우 먼저 차용될 것이고, 이는 인자를 재해석할 수 있기 때문입니다. 이 제한을 우회하려면 인자를 로컬 변수에 바인딩해야 합니다.
 
 ```move
 macro fun yes($x: _): _ {
@@ -584,9 +511,9 @@ macro fun yes($x: _): _ {
 }
 ```
 
-## Examples
+## 예시
 
-### Lazy arguments: assert_eq
+### 지연 인자(Lazy arguments): assert_eq
 
 ```move
 macro fun assert_eq<$T>($left: $T, $right: $T, $code: u64) {
@@ -602,23 +529,19 @@ macro fun assert_eq<$T>($left: $T, $right: $T, $code: u64) {
 }
 ```
 
-In this case the argument to `$code` is not evaluated unless the assertion fails.
+이 경우 `$code`의 인자는 어서션이 실패하지 않는 한 평가되지 않습니다.
 
 ```move
-assert_eq!(vector[true, false], vector[true, false], 1 / 0); // division by zero is not evaluated
+assert_eq!(vector[true, false], vector[true, false], 1 / 0); // 0으로 나누기가 평가되지 않습니다
 ```
 
-### Any integer square root
+### 모든 정수 제곱근
 
-This macro calculates the integer square root for any integer type, besides `u256`.
+이 매크로는 `u256`을 제외한 모든 정수 타입에 대한 정수 제곱근을 계산합니다.
 
-`$T` is the type of the input and `$bitsize` is the number of bits in that type, for example `u8`
-has 8 bits. `$U` should be set to the next larger integer type, for example `u16` for `u8`.
+`$T`는 입력의 타입이고 `$bitsize`는 해당 타입의 비트 수입니다. 예를 들어 `u8`은 8비트를 가집니다. `$U`는 다음으로 큰 정수 타입으로 설정되어야 합니다. 예를 들어 `u8`의 경우 `u16`입니다.
 
-In this `macro`, the type of the integer literals are `1` and `0` are annotated, e.g. `(1: $U)`
-allowing for the type of the literal to differ with each call. Similarly, `as` can be used with the
-type parameters `$T` and `$U`. This macro will then only successfully expand if `$T` and `$U` are
-instantiated with the integer types.
+이 `macro`에서 정수 리터럴 `1`과 `0`의 타입이 주석됩니다. 예: `(1: $U)` 이는 각 호출마다 리터럴의 타입이 다를 수 있도록 합니다. 마찬가지로 `as`는 타입 매개변수 `$T`와 `$U`와 함께 사용할 수 있습니다. 이 매크로는 `$T`와 `$U`가 정수 타입으로 인스턴스화된 경우에만 성공적으로 확장됩니다.
 
 ```move
 macro fun num_sqrt<$T, $U>($x: $T, $bitsize: u8): $T {
@@ -641,9 +564,9 @@ macro fun num_sqrt<$T, $U>($x: $T, $bitsize: u8): $T {
 }
 ```
 
-### Iterating over a vector
+### 벡터 반복
 
-The two `macro`s iterate over a vector, immutably and mutably respectively.
+두 `macro`는 각각 불변 및 가변으로 벡터를 반복합니다.
 
 ```move
 macro fun for_imm<$T>($v: &vector<$T>, $f: |&$T|) {
@@ -667,27 +590,27 @@ macro fun for_mut<$T>($v: &mut vector<$T>, $f: |&mut $T|) {
 }
 ```
 
-A few examples of usage
+사용 예시 몇 가지:
 
 ```move
 fun imm_examples(v: &vector<u64>) {
-    // print all elements
+    // 모든 요소 출력
     for_imm!(v, |x| std::debug::print(x));
 
-    // sum all elements
+    // 모든 요소 합계
     let mut sum = 0;
     for_imm!(v, |x| sum = sum + x);
 
-    // find the max element
+    // 최대 요소 찾기
     let mut max = 0;
     for_imm!(v, |x| if (x > max) max = x);
 }
 
 fun mut_examples(v: &mut vector<u64>) {
-    // increment each element
+    // 각 요소 증가
     for_mut!(v, |x| *x = *x + 1);
 
-    // set each element to the previous value, and the first to last value
+    // 각 요소를 이전 값으로 설정하고, 첫 번째를 마지막 값으로
     let mut prev = v[v.length() - 1];
     for_mut!(v, |x| {
         let tmp = *x;
@@ -695,16 +618,16 @@ fun mut_examples(v: &mut vector<u64>) {
         prev = tmp;
     });
 
-    // set the max element to 0
+    // 최대 요소를 0으로 설정
     let mut max = &mut 0;
     for_mut!(v, |x| if (*x > *max) max = x);
     *max = 0;
 }
 ```
 
-### Non-loop lambda usage
+### 비루프 람다 사용
 
-Lambdas do not need to be used in loops, and are often useful for conditionally applying code.
+람다는 루프에서 사용될 필요가 없으며, 종종 조건부로 코드를 적용하는 데 유용합니다.
 
 ```move
 macro fun inspect<$T>($opt: &Option<$T>, $f: |&$T|) {
@@ -729,17 +652,17 @@ macro fun map<$T, $U>($opt: Option<$T>, $f: |$T| -> $U): Option<$U> {
 }
 ```
 
-And some examples of usage
+그리고 사용 예시 몇 가지:
 
 ```move
 fun examples(opt: Option<u64>) {
-    // print the value if it exists
+    // 값이 존재하면 출력
     inspect!(&opt, |x| std::debug::print(x));
 
-    // check if the value is 0
+    // 값이 0인지 확인
     let is_zero = is_some_and!(&opt, |x| *x == 0);
 
-    // upcast the u64 to a u256
+    // u64를 u256으로 업캐스트
     let str_opt = map!(opt, |x| x as u256);
 }
 ```

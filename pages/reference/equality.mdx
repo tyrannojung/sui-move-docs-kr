@@ -3,20 +3,20 @@ title: 'Equality | Reference'
 description: ''
 ---
 
-# Equality
+# 동등성
 
-Move supports two equality operations `==` and `!=`
+Move는 두 가지 동등성 연산 `==`와 `!=`를 지원합니다
 
-## Operations
+## 연산
 
-| Syntax | Operation | Description                                                                 |
+| 구문 | 연산 | 설명                                                                 |
 | ------ | --------- | --------------------------------------------------------------------------- |
-| `==`   | equal     | Returns `true` if the two operands have the same value, `false` otherwise   |
-| `!=`   | not equal | Returns `true` if the two operands have different values, `false` otherwise |
+| `==`   | 같음     | 두 피연산자가 같은 값을 가지면 `true`를 반환하고, 그렇지 않으면 `false`를 반환   |
+| `!=`   | 같지 않음 | 두 피연산자가 다른 값을 가지면 `true`를 반환하고, 그렇지 않으면 `false`를 반환 |
 
-### Typing
+### 타이핑
 
-Both the equal (`==`) and not-equal (`!=`) operations only work if both operands are the same type
+같음(`==`)과 같지 않음(`!=`) 연산은 모두 두 피연산자가 같은 타입일 때만 작동합니다
 
 ```move
 0 == 0; // `true`
@@ -24,7 +24,7 @@ Both the equal (`==`) and not-equal (`!=`) operations only work if both operands
 b"hello" != x"00"; // `true`
 ```
 
-Equality and non-equality also work over _all_ user defined types!
+동등성과 비동등성은 _모든_ 사용자 정의 타입에서도 작동합니다!
 
 ```move
 module 0::example;
@@ -42,20 +42,18 @@ fun always_false(): bool {
 }
 ```
 
-If the operands have different types, there is a type checking error
+피연산자가 다른 타입을 가지면 타입 검사 오류가 발생합니다
 
 ```move
-1u8 == 1u128; // ERROR!
-//     ^^^^^ expected an argument of type 'u8'
-b"" != 0; // ERROR!
-//     ^ expected an argument of type 'vector<u8>'
+1u8 == 1u128; // 오류!
+//     ^^^^^ 'u8' 타입의 인자가 예상됩니다
+b"" != 0; // 오류!
+//     ^ 'vector<u8>' 타입의 인자가 예상됩니다
 ```
 
-### Typing with references
+### 참조를 사용한 타이핑
 
-When comparing [references](./primitive-types/references), the type of the reference (immutable or
-mutable) does not matter. This means that you can compare an immutable `&` reference with a mutable
-one `&mut` of the same underlying type.
+[참조](./primitive-types/references)를 비교할 때, 참조의 타입(불변 또는 가변)은 중요하지 않습니다. 즉, 동일한 기본 타입의 불변 `&` 참조와 가변 `&mut` 참조를 비교할 수 있습니다.
 
 ```move
 let i = &0;
@@ -67,7 +65,7 @@ m == m; // `true`
 i == i; // `true`
 ```
 
-The above is equivalent to applying an explicit freeze to each mutable reference where needed
+위의 코드는 필요한 곳에서 각 가변 참조에 명시적 freeze를 적용하는 것과 동일합니다
 
 ```move
 let i = &0;
@@ -79,70 +77,61 @@ m == m; // `true`
 i == i; // `true`
 ```
 
-But again, the underlying type must be the same type
+하지만 다시 말해, 기본 타입은 같은 타입이어야 합니다
 
 ```move
 let i = &0;
 let s = &b"";
 
-i == s; // ERROR!
-//   ^ expected an argument of type '&u64'
+i == s; // 오류!
+//   ^ '&u64' 타입의 인자가 예상됩니다
 ```
 
-### Automatic Borrowing
+### 자동 차용
 
-Starting in Move 2024 edition, the `==` and `!=` operators automatically borrow their operands if
-one of the operands is a reference and the other is not. This means that the following code works
-without any errors:
+Move 2024 에디션부터 `==`와 `!=` 연산자는 피연산자 중 하나가 참조이고 다른 하나가 참조가 아닌 경우 피연산자를 자동으로 차용합니다. 이는 다음 코드가 오류 없이 작동한다는 것을 의미합니다:
 
 ```move
 let r = &0;
 
-// In all cases, `0` is automatically borrowed as `&0`
+// 모든 경우에 `0`은 자동으로 `&0`으로 차용됩니다
 r == 0; // `true`
 0 == r; // `true`
 r != 0; // `false`
 0 != r; // `false`
 ```
 
-This automatic borrow is always an immutable borrow.
+이 자동 차용은 항상 불변 차용입니다.
 
-## Restrictions
+## 제한 사항
 
-Both `==` and `!=` consume the value when comparing them. As a result, the type system enforces that
-the type must have [`drop`](./abilities). Recall that without the [`drop` ability](./abilities),
-ownership must be transferred by the end of the function, and such values can only be explicitly
-destroyed within their declaring module. If these were used directly with either equality `==` or
-non-equality `!=`, the value would be destroyed which would break [`drop` ability](./abilities)
-safety guarantees!
+`==`와 `!=` 모두 값을 비교할 때 해당 값을 소비합니다. 결과적으로, 타입 시스템은 타입이 [`drop`](./abilities)을 가져야 한다고 강제합니다. [`drop` ability](./abilities) 없이는 소유권이 함수 끝까지 전송되어야 하고, 그러한 값은 선언된 module 내에서만 명시적으로 파괴될 수 있다는 것을 기억하세요. 이러한 값이 동등성 `==` 또는 비동등성 `!=`와 직접 사용되면, 값이 파괴되어 [`drop` ability](./abilities) 안전성 보장을 깨뜨릴 것입니다!
 
 ```move
 module 0::example;
 
 public struct Coin has store { value: u64 }
 fun invalid(c1: Coin, c2: Coin) {
-    c1 == c2 // ERROR!
-//  ^^    ^^ These assets would be destroyed!
+    c1 == c2 // 오류!
+//  ^^    ^^ 이러한 자산들이 파괴됩니다!
 }
 ```
 
-But, a programmer can _always_ borrow the value first instead of directly comparing the value, and
-reference types have the [`drop` ability](./abilities). For example
+하지만 프로그래머는 값을 직접 비교하는 대신 _항상_ 먼저 값을 차용할 수 있으며, 참조 타입은 [`drop` ability](./abilities)를 가집니다. 예를 들어
 
 ```move
 module 0::example;
 
 public struct Coin has store { value: u64 }
 fun swap_if_equal(c1: Coin, c2: Coin): (Coin, Coin) {
-    let are_equal = &c1 == c2; // valid, note `c2` is automatically borrowed
+    let are_equal = &c1 == c2; // 유효함, `c2`는 자동으로 차용됩니다
     if (are_equal) (c2, c1) else (c1, c2)
 }
 ```
 
-## Avoid Extra Copies
+## 추가 복사 피하기
 
-While a programmer _can_ compare any value whose type has [`drop`](./abilities), a programmer should
-often compare by reference to avoid expensive copies.
+프로그래머는 [`drop`](./abilities)을 가진 타입의 모든 값을 비교_할 수_ 있지만, 비싼 복사를 피하기 위해 종종 참조로 비교해야 합니다.
 
 ```move
 let v1: vector<u8> = function_that_returns_vector();
@@ -158,8 +147,8 @@ assert!(copy s1 == copy s2, 42);
 use_two_foos(s1, s2);
 ```
 
-This code is perfectly acceptable (assuming `Foo` has [`drop`](./abilities)), just not efficient.
-The highlighted copies can be removed and replaced with borrows
+이 코드는 완벽하게 허용됩니다(`Foo`가 [`drop`](./abilities)을 가진다고 가정하면). 단지 효율적이지 않을 뿐입니다.
+강조된 복사는 제거되고 차용으로 대체될 수 있습니다
 
 ```move
 let v1: vector<u8> = function_that_returns_vector();
@@ -175,5 +164,4 @@ assert!(&s1 == &s2, 42);
 use_two_foos(s1, s2);
 ```
 
-The efficiency of the `==` itself remains the same, but the `copy`s are removed and thus the program
-is more efficient.
+`==` 자체의 효율성은 동일하게 유지되지만, `copy`가 제거되어 프로그램이 더 효율적입니다.

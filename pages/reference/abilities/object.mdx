@@ -4,32 +4,30 @@ title: 'Sui Object | Reference'
 
 # Sui Objects
 
-For Sui, `key` is used to signify an _object_. Objects the only way to store data in Sui--allowing
-the data to persist between transactions.
+Sui에서 `key`는 _object_를 나타내는 데 사용됩니다. Object는 Sui에서 데이터를 저장하는 유일한 방법으로, 트랜잭션 간에 데이터가 지속되도록 합니다.
 
-For more details, see the Sui documentation on
+자세한 내용은 다음 Sui 문서를 참조하세요:
 
-- [The Object Model](https://docs.sui.io/concepts/object-model)
-- [Move Rules for Objects](https://docs.sui.io/concepts/sui-move-concepts#global-unique)
-- [Transferring Objects](https://docs.sui.io/concepts/transfers)
+- [Object 모델](https://docs.sui.io/concepts/object-model)
+- [Object에 대한 Move 규칙](https://docs.sui.io/concepts/sui-move-concepts#global-unique)
+- [Object 전송](https://docs.sui.io/concepts/transfers)
 
-## Object Rules
+## Object 규칙
 
-An object is a [`struct`](../structs) with the [`key`](../abilities#key) ability. The first
-field of the struct must be `id: sui::object::UID`. This 32-byte field (a strongly typed wrapper
-around an [`address`](../primitive-types/address)) is then used to uniquely identify the object.
+Object는 [`key`](../abilities#key) ability를 가진 [`struct`](../structs)입니다. 구조체의 첫 번째
+필드는 반드시 `id: sui::object::UID`여야 합니다. 이 32바이트 필드([`address`](../primitive-types/address)의 강타입 래퍼)는
+object를 고유하게 식별하는 데 사용됩니다.
 
-Note that since `sui::object::UID` has only the `store` ability (it does not have `copy` or `drop`),
-no object has `copy` or `drop`.
+`sui::object::UID`는 `store` ability만 가지고 있으므로(`copy`나 `drop`은 없음),
+어떤 object도 `copy`나 `drop`을 가질 수 없습니다.
 
-## Transfer Rules
+## 전송 규칙
 
-Objects can be have their ownership changed and transferred in the `sui::transfer` module. Many
-functions in the module have "public" and "private" variant, where the "private" variant can only be
-called inside of the module that defines the object's type. The "public" variants can be called only
-if the object has `store`.
+Object는 `sui::transfer` module에서 소유권을 변경하고 전송할 수 있습니다. module의 많은
+함수는 "public"과 "private" 변형을 가지고 있으며, "private" 변형은 object의 타입을 정의하는
+module 내부에서만 호출할 수 있습니다. "public" 변형은 object가 `store`를 가진 경우에만 호출할 수 있습니다.
 
-For example if we had two objects `A` and `B` defined in the module `my_module`:
+예를 들어 `my_module` module에서 정의된 두 개의 object `A`와 `B`가 있다면:
 
 ```move
 module a::my_module;
@@ -43,6 +41,6 @@ public struct B has key, store {
 }
 ```
 
-`A` can only be transferred using the `sui::transfer::transfer` inside of `a::my_module`, while `B`
-can be transferred anywhere using `sui::transfer::public_transfer`. These rules are enforced by a
-custom type system (bytecode verifier) rule in Sui.
+`A`는 `a::my_module` 내부에서 `sui::transfer::transfer`를 사용해서만 전송할 수 있지만, `B`는
+`sui::transfer::public_transfer`를 사용하여 어디서든 전송할 수 있습니다. 이러한 규칙은 Sui의
+사용자 정의 타입 시스템(바이트코드 검증자) 규칙에 의해 시행됩니다.

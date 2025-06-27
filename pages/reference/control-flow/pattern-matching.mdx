@@ -3,18 +3,13 @@ title: 'Pattern Matching | Reference'
 description: ''
 ---
 
-# Pattern Matching
+# 패턴 매칭
 
-A `match` expression is a powerful control structure that allows you to compare a value against a
-series of patterns and then execute code based on which pattern matches first. Patterns can be
-anything from simple literals to complex, nested struct and enum definitions. As opposed to `if`
-expressions, which change control flow based on a `bool`-typed test expression, a `match` expression
-operates over a value of any type and selects one of many arms.
+`match` 표현식은 값을 일련의 패턴과 비교한 다음 먼저 일치하는 패턴에 따라 코드를 실행할 수 있게 하는 강력한 제어 구조입니다. 패턴은 단순한 리터럴부터 복잡하고 중첩된 구조체 및 열거형 정의까지 다양할 수 있습니다. `bool` 타입의 테스트 표현식을 기반으로 제어 흐름을 변경하는 `if` 표현식과 달리, `match` 표현식은 모든 타입의 값에 대해 작동하며 여러 분기 중 하나를 선택합니다.
 
-A `match` expression can match Move values as well as mutable or immutable references, binding
-sub-patterns accordingly.
+`match` 표현식은 Move 값뿐만 아니라 가변 또는 불변 참조와도 일치시킬 수 있으며, 그에 따라 하위 패턴을 바인딩합니다.
 
-For example:
+예를 들어:
 
 ```move
 fun run(x: u64): u64 {
@@ -25,19 +20,18 @@ fun run(x: u64): u64 {
     }
 }
 
-run(1); // returns 2
-run(2); // returns 3
-run(3); // returns 3
-run(0); // returns 0
+run(1); // 2를 반환
+run(2); // 3을 반환
+run(3); // 3을 반환
+run(0); // 0을 반환
 ```
 
-## `match` Syntax
+## `match` 구문
 
-A `match` takes an expression and a non-empty series of _match arms_ delimited by commas.
+`match`는 표현식과 쉼표로 구분된 비어있지 않은 일련의 _매치 암(match arms)_을 받습니다.
 
-Each match arm consists of a pattern (`p`), an optional guard (`if (g)` where `g` is an expression
-of type `bool`), an arrow (`=>`), and an arm expression (`e`) to execute when the pattern matches.
-For example,
+각 매치 암은 패턴(`p`), 선택적 가드(`if (g)` 여기서 `g`는 `bool` 타입의 표현식), 화살표(`=>`), 그리고 패턴이 일치할 때 실행할 암 표현식(`e`)으로 구성됩니다.
+예를 들어,
 
 ```move
 match (expression) {
@@ -47,97 +41,91 @@ match (expression) {
 }
 ```
 
-Match arms are checked in order from top to bottom, and the first pattern that matches (with a guard
-expression, if present, that evaluates to `true`) will be executed.
+매치 암은 위에서 아래로 순서대로 검사되며, 일치하는 첫 번째 패턴(가드 표현식이 있는 경우 `true`로 평가되는)이 실행됩니다.
 
-Note that the series of match arms within a `match` must be exhaustive, meaning that every possible
-value of the type being matched must be covered by one of the patterns in the `match`. If the series
-of match arms is not exhaustive, the compiler will raise an error.
+`match` 내의 일련의 매치 암은 완전해야 한다는 점에 유의하세요. 즉, 매치되는 타입의 모든 가능한 값이 `match`의 패턴 중 하나에 의해 포함되어야 합니다. 일련의 매치 암이 완전하지 않으면 컴파일러가 오류를 발생시킵니다.
 
-## Pattern Syntax
+## 패턴 구문
 
-A pattern is matched by a value if the value is equal to the pattern, and where variables and
-wildcards (e.g., `x`, `y`, `_`, or `..`) are "equal" to anything.
+패턴은 값이 패턴과 같고, 변수와 와일드카드(예: `x`, `y`, `_`, 또는 `..`)가 모든 것과 "같다"면 값과 일치합니다.
 
-Patterns are used to match values. Patterns can be
+패턴은 값을 매치하는 데 사용됩니다. 패턴은 다음과 같을 수 있습니다:
 
-| Pattern              | Description                                                            |
+| 패턴              | 설명                                                            |
 | -------------------- | ---------------------------------------------------------------------- |
-| Literal              | A literal value, such as `1`, `true`, `@0x1`                           |
-| Constant             | A constant value, e.g., `MyConstant`                                   |
-| Variable             | A variable, e.g., `x`, `y`, `z`                                        |
-| Wildcard             | A wildcard, e.g., `_`                                                  |
-| Constructor          | A constructor pattern, e.g., `MyStruct { x, y }`, `MyEnum::Variant(x)` |
-| At-pattern           | An at-pattern, e.g., `x @ MyEnum::Variant(..)`                         |
-| Or-pattern           | An or-pattern, e.g., `MyEnum::Variant(..) \| MyEnum::OtherVariant(..)` |
-| Multi-arity wildcard | A multi-arity wildcard, e.g., `MyEnum::Variant(..)`                    |
-| Mutable-binding      | A mutable-binding pattern, e.g., `mut x`                               |
+| 리터럴              | 리터럴 값, 예: `1`, `true`, `@0x1`                           |
+| 상수             | 상수 값, 예: `MyConstant`                                   |
+| 변수             | 변수, 예: `x`, `y`, `z`                                        |
+| 와일드카드             | 와일드카드, 예: `_`                                                  |
+| 생성자          | 생성자 패턴, 예: `MyStruct { x, y }`, `MyEnum::Variant(x)` |
+| At-패턴           | At-패턴, 예: `x @ MyEnum::Variant(..)`                         |
+| Or-패턴           | Or-패턴, 예: `MyEnum::Variant(..) \| MyEnum::OtherVariant(..)` |
+| 다중 항수 와일드카드 | 다중 항수 와일드카드, 예: `MyEnum::Variant(..)`                    |
+| 가변 바인딩      | 가변 바인딩 패턴, 예: `mut x`                               |
 
-Patterns in Move have the following grammar:
+Move의 패턴은 다음과 같은 문법을 가집니다:
 
 ```bnf
 pattern = <literal>
         | <constant>
         | <variable>
         | _
-        | C { <variable> : inner-pattern ["," <variable> : inner-pattern]* } // where C is a struct or enum variant
-        | C ( inner-pattern ["," inner-pattern]* ... )                       // where C is a struct or enum variant
-        | C                                                                  // where C is an enum variant
+        | C { <variable> : inner-pattern ["," <variable> : inner-pattern]* } // C는 구조체 또는 열거형 변형
+        | C ( inner-pattern ["," inner-pattern]* ... )                       // C는 구조체 또는 열거형 변형
+        | C                                                                  // C는 열거형 변형
         | <variable> @ top-level-pattern
         | pattern | pattern
         | mut <variable>
 inner-pattern = pattern
-              | ..     // multi-arity wildcard
+              | ..     // 다중 항수 와일드카드
 ```
 
-Some examples of patterns are:
+패턴의 몇 가지 예는 다음과 같습니다:
 
 ```move
-// literal pattern
+// 리터럴 패턴
 1
 
-// constant pattern
+// 상수 패턴
 MyConstant
 
-// variable pattern
+// 변수 패턴
 x
 
-// wildcard pattern
+// 와일드카드 패턴
 _
 
-// constructor pattern that matches `MyEnum::Variant` with the fields `1` and `true`
+// 필드 `1`과 `true`를 가진 `MyEnum::Variant`와 일치하는 생성자 패턴
 MyEnum::Variant(1, true)
 
-// constructor pattern that matches `MyEnum::Variant` with the fields `1` and binds the second field's value to `x`
+// 필드 `1`을 가진 `MyEnum::Variant`와 일치하고 두 번째 필드의 값을 `x`에 바인딩하는 생성자 패턴
 MyEnum::Variant(1, x)
 
-// multi-arity wildcard pattern that matches multiple fields within the `MyEnum::Variant` variant
+// `MyEnum::Variant` 변형 내의 여러 필드와 일치하는 다중 항수 와일드카드 패턴
 MyEnum::Variant(..)
 
-// constructor pattern that matches the `x` field of `MyStruct` and binds the `y` field to `other_variable`
+// `MyStruct`의 `x` 필드와 일치하고 `y` 필드를 `other_variable`에 바인딩하는 생성자 패턴
 MyStruct { x, y: other_variable }
 
-// at-pattern that matches `MyEnum::Variant` and binds the entire value to `x`
+// `MyEnum::Variant`와 일치하고 전체 값을 `x`에 바인딩하는 at-패턴
 x @ MyEnum::Variant(..)
 
-// or-pattern that matches either `MyEnum::Variant` or `MyEnum::OtherVariant`
+// `MyEnum::Variant` 또는 `MyEnum::OtherVariant`와 일치하는 or-패턴
 MyEnum::Variant(..) | MyEnum::OtherVariant(..)
 
-// same as the above or-pattern, but with explicit wildcards
+// 위의 or-패턴과 동일하지만 명시적인 와일드카드 사용
 MyEnum::Variant(_, _) | MyEnum::OtherVariant(_, _)
 
-// or-pattern that matches either `MyEnum::Variant` or `MyEnum::OtherVariant` and binds the u64 field to `x`
+// `MyEnum::Variant` 또는 `MyEnum::OtherVariant`와 일치하고 u64 필드를 `x`에 바인딩하는 or-패턴
 MyEnum::Variant(x, _) | MyEnum::OtherVariant(_, x)
 
-// constructor pattern that matches `OtherEnum::V` and if the inner `MyEnum` is `MyEnum::Variant`
+// `OtherEnum::V`와 일치하고 내부 `MyEnum`이 `MyEnum::Variant`인 경우의 생성자 패턴
 OtherEnum::V(MyEnum::Variant(..))
 ```
 
-### Patterns and Variables
+### 패턴과 변수
 
-Patterns that contain variables bind them to the match subject or subject subcomponent being
-matched. These variables can then be used either in any match guard expressions, or on the
-right-hand side of the match arm. For example:
+변수를 포함하는 패턴은 매치 대상 또는 매치되는 대상 하위 구성 요소에 변수를 바인딩합니다. 이러한 변수는 매치 가드 표현식이나 매치 암의 오른쪽에서 사용할 수 있습니다. 예를 들어:
 
 ```move
 public struct Wrapper(u64)
@@ -148,16 +136,15 @@ fun add_under_wrapper_unless_equal(wrapper: Wrapper, x: u64): u64 {
         Wrapper(y) => y + x,
     }
 }
-add_under_wrapper_unless_equal(Wrapper(1), 2); // returns Wrapper(3)
-add_under_wrapper_unless_equal(Wrapper(2), 3); // returns Wrapper(5)
-add_under_wrapper_unless_equal(Wrapper(3), 3); // returns Wrapper(3)
+add_under_wrapper_unless_equal(Wrapper(1), 2); // Wrapper(3)을 반환
+add_under_wrapper_unless_equal(Wrapper(2), 3); // Wrapper(5)를 반환
+add_under_wrapper_unless_equal(Wrapper(3), 3); // Wrapper(3)을 반환
 ```
 
-### Combining Patterns
+### 패턴 결합하기
 
-Patterns can be nested, but patterns can also be combined using the or operator (`|`). For example,
-`p1 | p2` succeeds if either pattern `p1` or `p2` matches the subject. This pattern can occur
-anywhere -- either as a top-level pattern or a sub-pattern within another pattern.
+패턴은 중첩될 수 있지만, or 연산자(`|`)를 사용하여 결합할 수도 있습니다. 예를 들어,
+`p1 | p2`는 패턴 `p1` 또는 `p2`가 대상과 일치하면 성공합니다. 이 패턴은 최상위 패턴이나 다른 패턴 내의 하위 패턴으로 어디에나 나타날 수 있습니다.
 
 ```move
 public enum MyEnum has drop {
@@ -173,66 +160,56 @@ fun test_or_pattern(x: u64): u64 {
     }
 }
 
-test_or_pattern(MyEnum::Variant(3, true)); // returns 1
-test_or_pattern(MyEnum::OtherVariant(true, 2)); // returns 1
-test_or_pattern(MyEnum::Variant(8, true)); // returns 2
-test_or_pattern(MyEnum::OtherVariant(false, 7)); // returns 2
-test_or_pattern(MyEnum::OtherVariant(false, 80)); // returns 3
+test_or_pattern(MyEnum::Variant(3, true)); // 1을 반환
+test_or_pattern(MyEnum::OtherVariant(true, 2)); // 1을 반환
+test_or_pattern(MyEnum::Variant(8, true)); // 2를 반환
+test_or_pattern(MyEnum::OtherVariant(false, 7)); // 2를 반환
+test_or_pattern(MyEnum::OtherVariant(false, 80)); // 3을 반환
 ```
 
-### Restrictions on Some Patterns
+### 일부 패턴에 대한 제한 사항
 
-The `mut` and `..` patterns also have specific conditions placed on when, where, and how they can be
-used, as detailed in [Limitations on Specific Patterns](#limitations-on-specific-patterns). At a
-high level, the `mut` modifier can only be used on variable patterns, and the `..` pattern can only
-be used once within a constructor pattern -- and not as a top-level pattern.
+`mut`와 `..` 패턴은 언제, 어디서, 어떻게 사용할 수 있는지에 대한 특정 조건이 있으며, 이는 [특정 패턴에 대한 제한 사항](#limitations-on-specific-patterns)에 자세히 설명되어 있습니다. 높은 수준에서, `mut` 수정자는 변수 패턴에만 사용할 수 있고, `..` 패턴은 생성자 패턴 내에서 한 번만 사용할 수 있으며 최상위 패턴으로는 사용할 수 없습니다.
 
-The following is an _invalid_ usage of the `..` pattern because it is used as a top-level pattern:
+다음은 `..` 패턴의 _잘못된_ 사용 예입니다. 최상위 패턴으로 사용되었기 때문입니다:
 
 ```move
 match (x) {
     .. => 1,
-    // ERROR: `..` pattern can only be used within a constructor pattern
+    // 오류: `..` 패턴은 생성자 패턴 내에서만 사용할 수 있습니다
 }
 
 match (x) {
     MyStruct(.., ..) => 1,
-    // ERROR:    ^^  `..` pattern can only be used once within a constructor pattern
+    // 오류:    ^^  `..` 패턴은 생성자 패턴 내에서 한 번만 사용할 수 있습니다
 }
 ```
 
-### Pattern Typing
+### 패턴 타이핑
 
-Patterns are not expressions, but they are nevertheless typed. This means that the type of a pattern
-must match the type of the value it matches. For example, the pattern `1` has an integer type, the
-pattern `MyEnum::Variant(1, true)` has type `MyEnum`, the pattern `MyStruct { x, y }` has type
-`MyStruct`, and `OtherStruct<bool> { x: true, y: 1}` has type `OtherStruct<bool>`. If you try to
-match on an expression that differs from the type of the pattern in the match, this will result in a
-type error. For example:
+패턴은 표현식이 아니지만 그럼에도 불구하고 타입이 지정됩니다. 이는 패턴의 타입이 매치하는 값의 타입과 일치해야 함을 의미합니다. 예를 들어, 패턴 `1`은 정수 타입을 가지고, 패턴 `MyEnum::Variant(1, true)`는 타입 `MyEnum`을 가지며, 패턴 `MyStruct { x, y }`는 타입 `MyStruct`를 가지고, `OtherStruct<bool> { x: true, y: 1}`는 타입 `OtherStruct<bool>`을 가집니다. 매치의 패턴 타입과 다른 표현식을 매치하려고 하면 타입 오류가 발생합니다. 예를 들어:
 
 ```move
 match (1) {
-    // The `true` literal pattern is of type `bool` so this is a type error.
+    // `true` 리터럴 패턴은 `bool` 타입이므로 이는 타입 오류입니다.
     true => 1,
-    // TYPE ERROR: expected type u64, found bool
+    // 타입 오류: u64 타입을 예상했지만 bool을 찾았습니다
     _ => 2,
 }
 ```
 
-Similarly, the following would also result in a type error because `MyEnum` and `MyStruct` are
-different types:
+유사하게, `MyEnum`과 `MyStruct`는 다른 타입이므로 다음도 타입 오류가 발생합니다:
 
 ```move
 match (MyStruct { x: 0, y: 0 }) {
     MyEnum::Variant(..) => 1,
-    // TYPE ERROR: expected type MyEnum, found MyStruct
+    // 타입 오류: MyEnum 타입을 예상했지만 MyStruct를 찾았습니다
 }
 ```
 
-## Matching
+## 매칭
 
-Prior to delving into the specifics of pattern matching and what it means for a value to "match" a
-pattern, let's examine a few examples to provide an intuition for the concept.
+패턴 매칭의 구체적인 내용과 값이 패턴과 "일치"한다는 것이 무엇을 의미하는지 살펴보기 전에, 개념에 대한 직관을 제공하기 위해 몇 가지 예를 살펴보겠습니다.
 
 ```move
 fun test_lit(x: u64): u8 {
@@ -242,19 +219,19 @@ fun test_lit(x: u64): u8 {
         _ => 4,
     }
 }
-test_lit(1); // returns 2
-test_lit(2); // returns 3
-test_lit(3); // returns 4
-test_lit(10); // returns 4
+test_lit(1); // 2를 반환
+test_lit(2); // 3을 반환
+test_lit(3); // 4를 반환
+test_lit(10); // 4를 반환
 
 fun test_var(x: u64): u64 {
     match (x) {
         y => y,
     }
 }
-test_var(1); // returns 1
-test_var(2); // returns 2
-test_var(3); // returns 3
+test_var(1); // 1을 반환
+test_var(2); // 2를 반환
+test_var(3); // 3을 반환
 ...
 
 const MyConstant: u64 = 10;
@@ -264,9 +241,9 @@ fun test_constant(x: u64): u64 {
         _ => 2,
     }
 }
-test_constant(MyConstant); // returns 1
-test_constant(10); // returns 1
-test_constant(20); // returns 2
+test_constant(MyConstant); // 1을 반환
+test_constant(10); // 1을 반환
+test_constant(20); // 2를 반환
 
 fun test_or_pattern(x: u64): u64 {
     match (x) {
@@ -275,9 +252,9 @@ fun test_or_pattern(x: u64): u64 {
         _ => 3,
     }
 }
-test_or_pattern(3); // returns 1
-test_or_pattern(5); // returns 2
-test_or_pattern(70); // returns 3
+test_or_pattern(3); // 1을 반환
+test_or_pattern(5); // 2를 반환
+test_or_pattern(70); // 3을 반환
 
 fun test_or_at_pattern(x: u64): u64 {
     match (x) {
@@ -286,30 +263,20 @@ fun test_or_at_pattern(x: u64): u64 {
         z => z + 3,
     }
 }
-test_or_pattern(2); // returns 3
-test_or_pattern(5); // returns 7
-test_or_pattern(70); // returns 73
+test_or_pattern(2); // 3을 반환
+test_or_pattern(5); // 7을 반환
+test_or_pattern(70); // 73을 반환
 ```
 
-The most important thing to note from these examples is that a pattern matches a value if the value
-is equal to the pattern, and wildcard/variable patterns match anything. This is true for literals,
-variables, and constants. For example, in the `test_lit` function, the value `1` matches the pattern
-`1`, the value `2` matches the pattern `2`, and the value `3` matches the wildcard `_`. Similarly,
-in the `test_var` function, both the value `1` and the value `2` matches the pattern `y`.
+이러한 예제에서 가장 중요한 점은 값이 패턴과 같으면 패턴이 값과 일치하고, 와일드카드/변수 패턴은 모든 것과 일치한다는 것입니다. 이는 리터럴, 변수, 상수에 해당합니다. 예를 들어, `test_lit` 함수에서 값 `1`은 패턴 `1`과 일치하고, 값 `2`는 패턴 `2`와 일치하며, 값 `3`은 와일드카드 `_`와 일치합니다. 유사하게, `test_var` 함수에서 값 `1`과 값 `2` 모두 패턴 `y`와 일치합니다.
 
-A variable `x` matches (or "equals") any value, and a wildcard `_` matches any value (but only one
-value). Or-patterns are like a logical OR, where a value matches the pattern if it matches any of
-patterns in the or-pattern so `p1 | p2 | p3` should be read "matches p1, or p2, or p3".
+변수 `x`는 모든 값과 일치(또는 "같음")하고, 와일드카드 `_`는 모든 값과 일치합니다(하지만 하나의 값만). Or-패턴은 논리적 OR과 같으며, 값이 or-패턴의 패턴 중 하나와 일치하면 패턴과 일치하므로 `p1 | p2 | p3`는 "p1, 또는 p2, 또는 p3와 일치"로 읽어야 합니다.
 
-### Matching Constructors
+### 생성자 매칭
 
-Pattern matching includes the concept of constructor patterns. These patterns allow you to inspect
-and access deep within both structs and enums, and are one of the most powerful parts of pattern
-matching. Constructor patterns, coupled with variable bindings, allow you to match on values by
-their structure, and pull out the parts of the value you care about for usage on the right-hand side
-of the match arm.
+패턴 매칭에는 생성자 패턴의 개념이 포함됩니다. 이러한 패턴을 사용하면 구조체와 열거형 모두 깊숙이 검사하고 액세스할 수 있으며, 패턴 매칭의 가장 강력한 부분 중 하나입니다. 생성자 패턴은 변수 바인딩과 결합되어 구조별로 값을 매치하고 매치 암의 오른쪽에서 사용하기 위해 관심 있는 값의 부분을 추출할 수 있습니다.
 
-Take the following:
+다음을 살펴보세요:
 
 ```move
 fun f(x: MyEnum) {
@@ -319,20 +286,16 @@ fun f(x: MyEnum) {
         MyEnum::Variant(..) => 3,
         MyEnum::OtherVariant(..) => 4,
 }
-f(MyEnum::Variant(1, true)); // returns 1
-f(MyEnum::Variant(2, true)); // returns 3
-f(MyEnum::OtherVariant(false, 3)); // returns 2
-f(MyEnum::OtherVariant(true, 3)); // returns 2
-f(MyEnum::OtherVariant(true, 2)); // returns 4
+f(MyEnum::Variant(1, true)); // 1을 반환
+f(MyEnum::Variant(2, true)); // 3을 반환
+f(MyEnum::OtherVariant(false, 3)); // 2를 반환
+f(MyEnum::OtherVariant(true, 3)); // 2를 반환
+f(MyEnum::OtherVariant(true, 2)); // 4를 반환
 ```
 
-This is saying that "if `x` is `MyEnum::Variant` with the fields `1` and `true`, then return `1`. If
-it is `MyEnum::OtherVariant` with any value for the first field, and `3` for the second, then return
-`2`. If it is `MyEnum::Variant` with any fields, then return `3`. Finally, if it is
-`MyEnum::OtherVariant` with any fields, then return `4`".
+이는 "`x`가 필드 `1`과 `true`를 가진 `MyEnum::Variant`이면 `1`을 반환합니다. 첫 번째 필드에 대한 임의의 값과 두 번째에 대해 `3`을 가진 `MyEnum::OtherVariant`이면 `2`를 반환합니다. 임의의 필드를 가진 `MyEnum::Variant`이면 `3`을 반환합니다. 마지막으로, 임의의 필드를 가진 `MyEnum::OtherVariant`이면 `4`를 반환합니다"라고 말하고 있습니다.
 
-You can also nest patterns. So, if you wanted to match either 1, 2, or 10, instead of just matching
-1 in the previous `MyEnum::Variant`, you could do so with an or-pattern:
+패턴을 중첩할 수도 있습니다. 따라서 이전 `MyEnum::Variant`에서 1만 매치하는 대신 1, 2 또는 10을 매치하려면 or-패턴으로 이를 수행할 수 있습니다:
 
 ```move
 fun f(x: MyEnum) {
@@ -342,21 +305,17 @@ fun f(x: MyEnum) {
         MyEnum::Variant(..) => 3,
         MyEnum::OtherVariant(..) => 4,
 }
-f(MyEnum::Variant(1, true)); // returns 1
-f(MyEnum::Variant(2, true)); // returns 1
-f(MyEnum::Variant(10, true)); // returns 1
-f(MyEnum::Variant(10, false)); // returns 3
+f(MyEnum::Variant(1, true)); // 1을 반환
+f(MyEnum::Variant(2, true)); // 1을 반환
+f(MyEnum::Variant(10, true)); // 1을 반환
+f(MyEnum::Variant(10, false)); // 3을 반환
 ```
 
-### Ability Constraints
+### Ability 제약
 
-Additionally, match bindings are subject to the same ability restrictions as other aspects of Move.
-In particular, the compiler will signal an error if you try to match a value (not-reference) without
-`drop` using a wildcard, as the wildcard expects to drop the value. Similarly, if you bind a
-non-`drop` value using a binder, it must be used in the right-hand side of the match arm. In
-addition, if you fully destruct that value, you have unpacked it, matching the semantics of
-[non-`drop` struct unpacking](./../structs#destroying-structs-via-pattern-matching). See the
-[abilities section on `drop`](./../abilities#drop) for more details about the `drop` capability.
+또한 매치 바인딩은 Move의 다른 측면과 동일한 ability 제한 사항을 따릅니다.
+특히, 와일드카드가 값을 삭제할 것으로 예상하므로 와일드카드를 사용하여 `drop` 없이 값(참조가 아닌)을 매치하려고 하면 컴파일러가 오류를 표시합니다. 유사하게, 바인더를 사용하여 non-`drop` 값을 바인딩하면 매치 암의 오른쪽에서 사용해야 합니다. 또한 해당 값을 완전히 해체하면 
+[non-`drop` 구조체 언패킹](./../structs#destroying-structs-via-pattern-matching)의 의미와 일치하게 언패킹한 것입니다. `drop` 기능에 대한 자세한 내용은 [`drop`에 대한 abilities 섹션](./../abilities#drop)을 참조하세요.
 
 ```move
 public struct NonDrop(u64)
@@ -365,7 +324,7 @@ fun drop_nondrop(x: NonDrop) {
     match (x) {
         NonDrop(1) => 1,
         _ => 2
-        // ERROR: cannot wildcard match on a non-droppable value
+        // 오류: 드롭할 수 없는 값에 와일드카드 매치를 사용할 수 없습니다
     }
 }
 
@@ -385,28 +344,17 @@ fun use_nondrop(x: NonDrop): NonDrop {
 }
 ```
 
-## Exhaustiveness
+## 완전성
 
-The `match` expression in Move must be _exhaustive_: every possible value of the type being matched
-must be covered by one of the patterns in one of the match's arms. If the series of match arms is
-not exhaustive, the compiler will raise an error. Note that any arm with a guard expression does not
-contribute to match exhaustion, as it might fail to match at runtime.
+Move의 `match` 표현식은 _완전_해야 합니다: 매치되는 타입의 모든 가능한 값이 매치의 암 중 하나의 패턴에 의해 포함되어야 합니다. 일련의 매치 암이 완전하지 않으면 컴파일러가 오류를 발생시킵니다. 가드 표현식이 있는 암은 런타임에 매치에 실패할 수 있으므로 매치 완전성에 기여하지 않습니다.
 
-As an example, a match on a `u8` is exhaustive only if it matches on _every_ number from 0 to 255
-inclusive, unless there is a wildcard or variable pattern present. Similarly, a match on a `bool`
-would need to match on both `true` and `false`, unless there is a wildcard or variable pattern
-present.
+예를 들어, `u8`에 대한 매치는 와일드카드나 변수 패턴이 없는 한 0부터 255까지 _모든_ 숫자를 매치해야만 완전합니다. 유사하게, `bool`에 대한 매치는 와일드카드나 변수 패턴이 없는 한 `true`와 `false` 모두를 매치해야 합니다.
 
-For structs, because there is only one type of constructor for the type, only one constructor needs
-to be matched, but the fields within the struct need to be matched exhaustively as well. Conversely,
-enums may define multiple variants, and each variant must be matched (including any sub-fields) for
-the match to be considered exhaustive.
+구조체의 경우, 타입에 대한 생성자가 하나뿐이므로 하나의 생성자만 매치하면 되지만, 구조체 내의 필드도 완전하게 매치되어야 합니다. 반대로, 열거형은 여러 변형을 정의할 수 있으며, 매치가 완전한 것으로 간주되려면 각 변형(하위 필드 포함)이 매치되어야 합니다.
 
-Because underscores and variables are wildcards that match anything, they count as matching all
-values of the type they are matching on in that position. Additionally, the multi-arity wildcard
-pattern `..` can be used to match on multiple values within a struct or enum variant.
+밑줄과 변수는 해당 위치에서 매치하는 타입의 모든 값과 일치하는 와일드카드이므로 모든 값과 일치하는 것으로 계산됩니다. 또한 다중 항수 와일드카드 패턴 `..`를 사용하여 구조체나 열거형 변형 내의 여러 값을 매치할 수 있습니다.
 
-To see some examples of _non-exhaustive_ matches, consider the following:
+_완전하지 않은_ 매치의 몇 가지 예를 보려면 다음을 고려하세요:
 
 ```move
 public enum MyEnum {
@@ -421,7 +369,7 @@ fun f(x: MyEnum): u8 {
         MyEnum::Variant(1, true) => 1,
         MyEnum::Variant(_, _) => 1,
         MyEnum::OtherVariant(_, 3) => 2,
-        // ERROR: not exhaustive as the value `MyEnum::OtherVariant(_, 4)` is not matched.
+        // 오류: `MyEnum::OtherVariant(_, 4)` 값이 매치되지 않으므로 완전하지 않습니다.
     }
 }
 
@@ -430,13 +378,12 @@ fun match_pair_bool(x: Pair<bool>): u8 {
         Pair(true, true) => 1,
         Pair(true, false) => 1,
         Pair(false, false) => 1,
-        // ERROR: not exhaustive as the value `Pair(false, true)` is not matched.
+        // 오류: `Pair(false, true)` 값이 매치되지 않으므로 완전하지 않습니다.
     }
 }
 ```
 
-These examples can then be made exhaustive by adding a wildcard pattern to the end of the match arm,
-or by fully matching on the remaining values:
+이러한 예제는 매치 암의 끝에 와일드카드 패턴을 추가하거나 나머지 값을 완전히 매치하여 완전하게 만들 수 있습니다:
 
 ```move
 fun f(x: MyEnum): u8 {
@@ -444,7 +391,7 @@ fun f(x: MyEnum): u8 {
         MyEnum::Variant(1, true) => 1,
         MyEnum::Variant(_, _) => 1,
         MyEnum::OtherVariant(_, 3) => 2,
-        // Now exhaustive since this will match all values of MyEnum::OtherVariant
+        // 이제 MyEnum::OtherVariant의 모든 값과 일치하므로 완전합니다
         MyEnum::OtherVariant(..) => 2,
 
     }
@@ -455,19 +402,15 @@ fun match_pair_bool(x: Pair<bool>): u8 {
         Pair(true, true) => 1,
         Pair(true, false) => 1,
         Pair(false, false) => 1,
-        // Now exhaustive since this will match all values of Pair<bool>
+        // 이제 Pair<bool>의 모든 값과 일치하므로 완전합니다
         Pair(false, true) => 1,
     }
 }
 ```
 
-## Guards
+## 가드
 
-As previously mentioned, you can add a guard to a match arm by adding an `if` clause after the
-pattern. This guard will run _after_ the pattern has been matched but _before_ the expression on the
-right hand side of the arrow is evaluated. If the guard expression evaluates to `true` then the
-expression on the right hand side of the arrow will be evaluated, if it evaluates to `false` then it
-will be considered a failed match and the next match arm in the `match` expression will be checked.
+앞서 언급했듯이, 패턴 뒤에 `if` 절을 추가하여 매치 암에 가드를 추가할 수 있습니다. 이 가드는 패턴이 매치된 _후_ 그러나 화살표 오른쪽의 표현식이 평가되기 _전에_ 실행됩니다. 가드 표현식이 `true`로 평가되면 화살표 오른쪽의 표현식이 평가되고, `false`로 평가되면 매치 실패로 간주되어 `match` 표현식의 다음 매치 암이 검사됩니다.
 
 ```move
 fun match_with_guard(x: u64): u64 {
@@ -478,14 +421,11 @@ fun match_with_guard(x: u64): u64 {
     }
 }
 
-match_with_guard(1); // returns 2
-match_with_guard(0); // returns 3
+match_with_guard(1); // 2를 반환
+match_with_guard(0); // 3을 반환
 ```
 
-Guard expressions can reference variables bound in the pattern during evaluation. However, note that
-_variables are only available as immutable reference in guards_ regardless of the pattern being
-matched -- even if there are mutability specifiers on the variable or if the pattern is being
-matched by value.
+가드 표현식은 평가 중에 패턴에 바인딩된 변수를 참조할 수 있습니다. 그러나 패턴에 가변성 지정자가 있거나 패턴이 값으로 매치되는 경우에도 _가드에서 변수는 불변 참조로만 사용 가능_하다는 점에 유의하세요.
 
 ```move
 fun incr(x: &mut u64) {
@@ -495,7 +435,7 @@ fun incr(x: &mut u64) {
 fun match_with_guard_incr(x: u64): u64 {
     match (x) {
         x if ({ incr(&mut x); x == 1 }) => 1,
-        // ERROR:    ^^^ invalid borrow of immutable value
+        // 오류:    ^^^ 불변 값의 잘못된 차용
         _ => 2,
     }
 }
@@ -503,28 +443,23 @@ fun match_with_guard_incr(x: u64): u64 {
 fun match_with_guard_incr2(x: &mut u64): u64 {
     match (x) {
         x if ({ incr(&mut x); x == 1 }) => 1,
-        // ERROR:    ^^^ invalid borrow of immutable value
+        // 오류:    ^^^ 불변 값의 잘못된 차용
         _ => 2,
     }
 }
 ```
 
-Additionally, it is important to note any match arms that have guard expressions will not be
-considered either for exhaustivity purposes because the compiler has no way of evaluating the guard
-expression statically.
+또한 컴파일러가 가드 표현식을 정적으로 평가할 방법이 없기 때문에 가드 표현식이 있는 매치 암은 완전성 목적으로 고려되지 않는다는 점에 유의하는 것이 중요합니다.
 
-## Limitations on Specific Patterns
+## 특정 패턴에 대한 제한 사항
 
-There are some restrictions on when the `..` and `mut` pattern modifiers can be used in a pattern.
+패턴에서 `..`와 `mut` 패턴 수정자를 사용할 수 있는 시기에 대한 몇 가지 제한 사항이 있습니다.
 
-### Mutability Usage
+### 가변성 사용
 
-A `mut` modifier can be placed on a variable pattern to specify that the _variable_ is to be mutated
-in the right-hand expression of the match arm. Note that since the `mut` modifier only signifies
-that the variable is to be mutated, not the underlying data, this can be used on all types of match
-(by value, immutable reference, and mutable reference).
+`mut` 수정자는 변수 패턴에 배치하여 _변수_가 매치 암의 오른쪽 표현식에서 변경될 것임을 지정할 수 있습니다. `mut` 수정자는 기본 데이터가 아닌 변수가 변경될 것임을 나타내므로 모든 유형의 매치(값별, 불변 참조, 가변 참조)에서 사용할 수 있습니다.
 
-Note that the `mut` modifier can only be applied to variables, and not other types of patterns.
+`mut` 수정자는 변수에만 적용할 수 있고 다른 유형의 패턴에는 적용할 수 없습니다.
 
 ```move
 public struct MyStruct(u64)
@@ -532,7 +467,7 @@ public struct MyStruct(u64)
 fun top_level_mut(x: MyStruct) {
     match (x) {
         mut MyStruct(y) => 1,
-        // ERROR: cannot use mut on a non-variable pattern
+        // 오류: 변수가 아닌 패턴에는 mut를 사용할 수 없습니다
     }
 }
 
@@ -565,27 +500,23 @@ fun mut_on_mut(x: &mut MyStruct): u64 {
 
 let mut x = MyStruct(1);
 
-mut_on_mut(&mut x); // returns 2
-x.0; // returns 2
+mut_on_mut(&mut x); // 2를 반환
+x.0; // 2를 반환
 
-mut_on_immut(&x); // returns 3
-x.0; // returns 2
+mut_on_immut(&x); // 3을 반환
+x.0; // 2를 반환
 
-mut_on_value(x); // returns 3
+mut_on_value(x); // 3을 반환
 ```
 
-### `..` Usage
+### `..` 사용
 
-The `..` pattern can only be used within a constructor pattern as a wildcard that matches any number
-of fields -- the the compiler expands the `..` to inserting `_` in any missing fields in the
-constructor pattern (if any). So `MyStruct(_, _, _)` is the same as `MyStruct(..)`,
-`MyStruct(1, _, _)` is the same as `MyStruct(1, ..)`. Because of this, there are some restrictions
-on how, and where the `..` pattern can be used:
+`..` 패턴은 생성자 패턴 내에서만 와일드카드로 사용할 수 있으며, 임의의 수의 필드와 일치합니다 -- 컴파일러는 `..`를 생성자 패턴에서 누락된 필드(있는 경우)에 `_`를 삽입하도록 확장합니다. 따라서 `MyStruct(_, _, _)`는 `MyStruct(..)`와 동일하고,
+`MyStruct(1, _, _)`는 `MyStruct(1, ..)`와 동일합니다. 이 때문에 `..` 패턴을 사용할 수 있는 방법과 위치에 대한 몇 가지 제한 사항이 있습니다:
 
-- It can only be used **once** within the constructor pattern;
-- In positional arguments it can be used at the beginning, middle, or end of the patterns within the
-  constructor;
-- In named arguments it can only be used at the end of the patterns within the constructor;
+- 생성자 패턴 내에서 **한 번만** 사용할 수 있습니다;
+- 위치 인자에서는 생성자 내 패턴의 시작, 중간 또는 끝에서 사용할 수 있습니다;
+- 명명된 인자에서는 생성자 내 패턴의 끝에서만 사용할 수 있습니다;
 
 ```move
 public struct MyStruct(u64, u64, u64, u64) has drop;
@@ -600,11 +531,11 @@ public struct MyStruct2 {
 fun wild_match(x: MyStruct) {
     match (x) {
         MyStruct(.., 1) => 1,
-        // OK! The `..` pattern can be used at the beginning of the constructor pattern
+        // OK! `..` 패턴은 생성자 패턴의 시작 부분에서 사용할 수 있습니다
         MyStruct(1, ..) => 2,
-        // OK! The `..` pattern can be used at the end of the constructor pattern
+        // OK! `..` 패턴은 생성자 패턴의 끝에서 사용할 수 있습니다
         MyStruct(1, .., 1) => 3,
-        // OK! The `..` pattern can be used at the middle of the constructor pattern
+        // OK! `..` 패턴은 생성자 패턴의 중간에서 사용할 수 있습니다
         MyStruct(1, .., 1, 1) => 4,
         MyStruct(..) => 5,
     }

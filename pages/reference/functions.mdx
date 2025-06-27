@@ -1,32 +1,29 @@
 ---
-title: 'Functions | Reference'
+title: '함수 | 참조'
 description: ''
 ---
 
-# Functions
+# 함수
 
-Functions are declared inside of modules and define the logic and behavior of the module. Functions
-can be reused, either being called from other functions or as entry points for execution.
+함수는 모듈 내부에서 선언되며 모듈의 로직과 동작을 정의합니다. 함수는 다른 함수에서 호출되거나 실행의 진입점으로 재사용될 수 있습니다.
 
-## Declaration
+## 선언
 
-Functions are declared with the `fun` keyword followed by the function name, type parameters,
-parameters, a return type, and finally the function body.
+함수는 `fun` 키워드 다음에 함수 이름, 타입 매개변수, 매개변수, 반환 타입, 그리고 마지막으로 함수 본문 순으로 선언됩니다.
 
 ```text
 <visibility>? <entry>? <macro>? fun <identifier><[type_parameters: constraint],*>([identifier: type],*): <return_type> <function_body>
 ```
 
-For example
+예를 들어
 
 ```move
 fun foo<T1, T2>(x: u64, y: T1, z: T2): (T2, T1, u64) { (z, y, x) }
 ```
 
-### Visibility
+### 가시성 (Visibility)
 
-Module functions, by default, can only be called within the same module. These internal (sometimes
-called private) functions cannot be called from other modules or as entry points.
+모듈 함수는 기본적으로 동일한 모듈 내에서만 호출할 수 있습니다. 이러한 내부(때때로 private이라고 불리는) 함수는 다른 모듈에서 호출하거나 진입점으로 사용할 수 없습니다.
 
 ```move
 module a::m {
@@ -42,18 +39,16 @@ module b::other {
 }
 ```
 
-To allow access from other modules, the function must be declared `public` or `public(package)`.
-Tangential to visibility, an [`entry`](#entry-modifier) function can be called as an entry point for
-execution.
+다른 모듈에서 접근을 허용하려면 함수를 `public` 또는 `public(package)`로 선언해야 합니다.
+가시성과 관련하여, [`entry`](#entry-modifier) 함수는 실행의 진입점으로 호출될 수 있습니다.
 
-#### `public` visibility
+#### `public` 가시성
 
-A `public` function can be called by _any_ function defined in _any_ module. As shown in the
-following example, a `public` function can be called by:
+`public` 함수는 _모든_ 모듈에서 정의된 _모든_ 함수에 의해 호출될 수 있습니다. 다음 예제에서 보듯이, `public` 함수는 다음과 같이 호출될 수 있습니다:
 
-- other functions defined in the same module,
-- functions defined in another module, or
-- as an entry point for execution.
+- 동일한 모듈에서 정의된 다른 함수,
+- 다른 모듈에서 정의된 함수, 또는
+- 실행의 진입점으로서.
 
 ```move
 module a::m {
@@ -68,15 +63,14 @@ module b::other {
 }
 ```
 
-Fore more details on the entry point to execution see [the section below](#entry-modifier).
+실행의 진입점에 대한 자세한 내용은 [아래 섹션](#entry-modifier)을 참조하세요.
 
-#### `public(package)` visibility
+#### `public(package)` 가시성
 
-The `public(package)` visibility modifier is a more restricted form of the `public` modifier to give
-more control about where a function can be used. A `public(package)` function can be called by:
+`public(package)` 가시성 수정자는 함수를 사용할 수 있는 위치에 대해 더 많은 제어를 제공하는 `public` 수정자의 더 제한된 형태입니다. `public(package)` 함수는 다음에 의해 호출될 수 있습니다:
 
-- other functions defined in the same module, or
-- other functions defined in the same package (the same address)
+- 동일한 모듈에서 정의된 다른 함수, 또는
+- 동일한 패키지(동일한 주소)에서 정의된 다른 함수
 
 ```move
 module a::m {
@@ -98,25 +92,19 @@ module b::other {
 }
 ```
 
-#### DEPRECATED `public(friend)` visibility
+#### 사용 중단된 `public(friend)` 가시성
 
-Before the addition of `public(package)`, `public(friend)` was used to allow limited public access
-to functions in the same package, but where the list of allowed modules had to be explicitly
-enumerated by the callee's module. see [Friends](./friends) for more details.
+`public(package)`가 추가되기 전에, `public(friend)`는 동일한 패키지의 함수에 대한 제한된 공개 접근을 허용하는 데 사용되었지만, 허용된 모듈 목록은 호출된 모듈에 의해 명시적으로 나열되어야 했습니다. 자세한 내용은 [Friends](./friends)를 참조하세요.
 
-### `entry` modifier
+### `entry` 수정자
 
-In addition to `public` functions, you might have some functions in your modules that you want to
-use as the entry point to execution. The `entry` modifier is designed to allow module functions to
-initiate execution, without having to expose the functionality to other modules.
+`public` 함수 외에도, 실행의 진입점으로 사용하고자 하는 일부 함수가 모듈에 있을 수 있습니다. `entry` 수정자는 다른 모듈에 기능을 노출하지 않고도 모듈 함수가 실행을 시작할 수 있도록 설계되었습니다.
 
-Essentially, the combination of `public` and `entry` functions define the "main" functions of a
-module, and they specify where Move programs can start executing.
+본질적으로, `public`과 `entry` 함수의 조합은 모듈의 "main" 함수를 정의하며, Move 프로그램이 실행을 시작할 수 있는 위치를 지정합니다.
 
-Keep in mind though, an `entry` function _can_ still be called by other Move functions. So while
-they _can_ serve as the start of a Move program, they aren't restricted to that case.
+그러나 `entry` 함수는 여전히 다른 Move 함수에 의해 호출될 수 있다는 점을 명심하세요. 따라서 Move 프로그램의 시작점 역할을 할 수 있지만, 그 경우에만 제한되지는 않습니다.
 
-For example:
+예를 들어:
 
 ```move
 module a::m {
@@ -132,13 +120,11 @@ module a::n {
 }
 ```
 
-`entry` functions may have restrictions on their parameters and return types. Although, these
-restrictions are specific to each individual deployment of Move.
+`entry` 함수는 매개변수와 반환 타입에 제한이 있을 수 있습니다. 하지만 이러한 제한은 Move의 각 개별 배포에 특화되어 있습니다.
 
-[The documentation for `entry` functions on Sui can be found here.](https://docs.sui.io/concepts/sui-move-concepts/entry-functions).
+[Sui의 `entry` 함수에 대한 문서는 여기에서 찾을 수 있습니다.](https://docs.sui.io/concepts/sui-move-concepts/entry-functions)
 
-To enable easier testing, `entry` functions can be called from
-[`#[test]` and `#[test_only]`](./unit-testing) contexts.
+더 쉬운 테스트를 가능하게 하기 위해, `entry` 함수는 [`#[test]`와 `#[test_only]`](./unit-testing) 컨텍스트에서 호출될 수 있습니다.
 
 ```move
 module a::m {
@@ -152,14 +138,9 @@ module a::m_test {
 }
 ```
 
-### `macro` modifier
+### `macro` 수정자
 
-Unlike normal functions, `macro` functions do not exist at runtime. Instead, these functions are
-substituted inline at each call site during compilation. These `macro` functions leverage this
-compilation process to provide functionality beyond standard functions, such as accepting
-higher-order _lambda_-style functions as arguments. These lambda arguments, also expanded during
-compilation, allow you to pass parts of the function body to the macro as arguments. For instance,
-consider the following simple loop macro, where the loop body is supplied as a lambda:
+일반 함수와 달리, `macro` 함수는 런타임에 존재하지 않습니다. 대신, 이러한 함수는 컴파일 중 각 호출 위치에서 인라인으로 대체됩니다. 이러한 `macro` 함수는 이 컴파일 프로세스를 활용하여 고차 _lambda_ 스타일 함수를 인수로 받는 것과 같은 표준 함수 이상의 기능을 제공합니다. 컴파일 중에 확장되는 이러한 람다 인수를 사용하면 함수 본문의 일부를 매크로에 인수로 전달할 수 있습니다. 예를 들어, 루프 본문이 람다로 제공되는 다음의 간단한 루프 매크로를 고려해보세요:
 
 ```move
 macro fun n_times($n: u64, $body: |u64| -> ()) {
@@ -177,12 +158,11 @@ fun example() {
 }
 ```
 
-See the chapter on [macros](./functions/macros) for more information.
+자세한 내용은 [매크로](./functions/macros) 챕터를 참조하세요.
 
-### Name
+### 이름
 
-Function names can start with letters `a` to `z`. After the first character, function names can
-contain underscores `_`, letters `a` to `z`, letters `A` to `Z`, or digits `0` to `9`.
+함수 이름은 문자 `a`부터 `z`로 시작할 수 있습니다. 첫 번째 문자 이후, 함수 이름에는 밑줄 `_`, 문자 `a`부터 `z`, 문자 `A`부터 `Z`, 또는 숫자 `0`부터 `9`가 포함될 수 있습니다.
 
 ```move
 fun fOO() {}
@@ -190,34 +170,34 @@ fun bar_42() {}
 fun bAZ_19() {}
 ```
 
-### Type Parameters
+### 타입 매개변수
 
-After the name, functions can have type parameters
+이름 다음에, 함수는 타입 매개변수를 가질 수 있습니다
 
 ```move
 fun id<T>(x: T): T { x }
 fun example<T1: copy, T2>(x: T1, y: T2): (T1, T1, T2) { (copy x, x, y) }
 ```
 
-For more details, see [Move generics](./generics).
+자세한 내용은 [Move 제네릭](./generics)을 참조하세요.
 
-### Parameters
+### 매개변수
 
-Functions parameters are declared with a local variable name followed by a type annotation
+함수 매개변수는 로컬 변수 이름 다음에 타입 주석으로 선언됩니다
 
 ```move
 fun add(x: u64, y: u64): u64 { x + y }
 ```
 
-We read this as `x` has type `u64`
+이것을 `x`가 타입 `u64`를 가진다고 읽습니다
 
-A function does not have to have any parameters at all.
+함수는 매개변수를 전혀 가지지 않아도 됩니다.
 
 ```move
 fun useless() { }
 ```
 
-This is very common for functions that create new or empty data structures
+이것은 새로운 또는 빈 데이터 구조를 생성하는 함수에서 매우 일반적입니다
 
 ```move
 module a::example;
@@ -229,24 +209,23 @@ fun new_counter(): Counter {
 }
 ```
 
-### Return type
+### 반환 타입
 
-After the parameters, a function specifies its return type.
+매개변수 다음에, 함수는 반환 타입을 지정합니다.
 
 ```move
 fun zero(): u64 { 0 }
 ```
 
-Here `: u64` indicates that the function's return type is `u64`.
+여기서 `: u64`는 함수의 반환 타입이 `u64`임을 나타냅니다.
 
-Using [tuples](./primitive-types/tuples), a function can return multiple values:
+[튜플](./primitive-types/tuples)을 사용하여, 함수는 여러 값을 반환할 수 있습니다:
 
 ```move
 fun one_two_three(): (u64, u64, u64) { (0, 1, 2) }
 ```
 
-If no return type is specified, the function has an implicit return type of unit `()`. These
-functions are equivalent:
+반환 타입이 지정되지 않으면, 함수는 암시적으로 단위 `()`의 반환 타입을 가집니다. 이러한 함수들은 동일합니다:
 
 ```move
 fun just_unit(): () { () }
@@ -254,14 +233,11 @@ fun just_unit() { () }
 fun just_unit() { }
 ```
 
-As mentioned in the [tuples section](./primitive-types/tuples), these tuple "values" do not exist as
-runtime values. This means that a function that returns unit `()` does not return any value during
-execution.
+[튜플 섹션](./primitive-types/tuples)에서 언급했듯이, 이러한 튜플 "값"은 런타임 값으로 존재하지 않습니다. 이는 단위 `()`를 반환하는 함수가 실행 중에 어떤 값도 반환하지 않는다는 것을 의미합니다.
 
-### Function body
+### 함수 본문
 
-A function's body is an expression block. The return value of the function is the last value in the
-sequence
+함수의 본문은 표현식 블록입니다. 함수의 반환 값은 시퀀스의 마지막 값입니다
 
 ```move
 fun example(): u64 {
@@ -271,20 +247,17 @@ fun example(): u64 {
 }
 ```
 
-See [the section below for more information on returns](#returning-values)
+[반환에 대한 자세한 정보는 아래 섹션](#returning-values)을 참조하세요
 
-For more information on expression blocks, see [Move variables](./variables).
+표현식 블록에 대한 자세한 정보는 [Move 변수](./variables)를 참조하세요.
 
-### Native Functions
+### 네이티브 함수 (Native Functions)
 
-Some functions do not have a body specified, and instead have the body provided by the VM. These
-functions are marked `native`.
+일부 함수는 본문이 지정되지 않고, 대신 VM에 의해 본문이 제공됩니다. 이러한 함수는 `native`로 표시됩니다.
 
-Without modifying the VM source code, a programmer cannot add new native functions. Furthermore, it
-is the intent that `native` functions are used for either standard library code or for functionality
-needed for the given Move environment.
+VM 소스 코드를 수정하지 않고는 프로그래머가 새로운 네이티브 함수를 추가할 수 없습니다. 또한, `native` 함수는 표준 라이브러리 코드나 주어진 Move 환경에 필요한 기능을 위해 사용되도록 의도되었습니다.
 
-Most `native` functions you will likely see are in standard library code, such as `vector`
+여러분이 보게 될 대부분의 `native` 함수는 `vector`와 같은 표준 라이브러리 코드에 있습니다
 
 ```move
 module std::vector {
@@ -293,9 +266,9 @@ module std::vector {
 }
 ```
 
-## Calling
+## 호출
 
-When calling a function, the name can be specified either through an alias or fully qualified
+함수를 호출할 때, 이름은 별칭을 통해 지정하거나 완전히 정규화된 형태로 지정할 수 있습니다
 
 ```move
 module a::example {
@@ -313,7 +286,7 @@ module b::other {
 }
 ```
 
-When calling a function, an argument must be given for every parameter.
+함수를 호출할 때, 모든 매개변수에 대해 인수가 제공되어야 합니다.
 
 ```move
 module a::example {
@@ -333,7 +306,7 @@ module b::other {
 }
 ```
 
-Type arguments can be either specified or inferred. Both calls are equivalent.
+타입 인수는 지정하거나 추론될 수 있습니다. 두 호출은 동일합니다.
 
 ```move
 module a::example {
@@ -348,11 +321,11 @@ module b::other {
 }
 ```
 
-For more details, see [Move generics](./generics).
+자세한 내용은 [Move 제네릭](./generics)을 참조하세요.
 
-## Returning values
+## 값 반환하기
 
-The result of a function, its "return value", is the final value of its function body. For example
+함수의 결과, 즉 "반환 값"은 함수 본문의 최종 값입니다. 예를 들어
 
 ```move
 fun add(x: u64, y: u64): u64 {
@@ -360,11 +333,9 @@ fun add(x: u64, y: u64): u64 {
 }
 ```
 
-The return value here is the result of `x + y`.
+여기서 반환 값은 `x + y`의 결과입니다.
 
-[As mentioned above](#function-body), the function's body is an [expression block](./variables). The
-expression block can sequence various statements, and the final expression in the block will be be
-the value of that block
+[위에서 언급했듯이](#function-body), 함수의 본문은 [표현식 블록](./variables)입니다. 표현식 블록은 다양한 문장을 순서대로 실행할 수 있으며, 블록의 최종 표현식이 해당 블록의 값이 됩니다
 
 ```move
 fun double_and_add(x: u64, y: u64): u64 {
@@ -374,20 +345,18 @@ fun double_and_add(x: u64, y: u64): u64 {
 }
 ```
 
-The return value here is the result of `double_x + double_y`
+여기서 반환 값은 `double_x + double_y`의 결과입니다
 
-### `return` expression
+### `return` 표현식
 
-A function implicitly returns the value that its body evaluates to. However, functions can also use
-the explicit `return` expression:
+함수는 본문이 평가하는 값을 암시적으로 반환합니다. 그러나 함수는 명시적인 `return` 표현식을 사용할 수도 있습니다:
 
 ```move
 fun f1(): u64 { return 0 }
 fun f2(): u64 { 0 }
 ```
 
-These two functions are equivalent. In this slightly more involved example, the function subtracts
-two `u64` values, but returns early with `0` if the second value is too large:
+이 두 함수는 동일합니다. 약간 더 복잡한 예제에서, 함수는 두 `u64` 값을 빼지만, 두 번째 값이 너무 크면 `0`으로 조기에 반환합니다:
 
 ```move
 fun safe_sub(x: u64, y: u64): u64 {
@@ -396,10 +365,9 @@ fun safe_sub(x: u64, y: u64): u64 {
 }
 ```
 
-Note that the body of this function could also have been written as `if (y > x) 0 else x - y`.
+이 함수의 본문은 `if (y > x) 0 else x - y`로도 작성될 수 있음을 주목하세요.
 
-However `return` really shines is in exiting deep within other control flow constructs. In this
-example, the function iterates through a vector to find the index of a given value:
+그러나 `return`이 정말 빛을 발하는 것은 다른 제어 흐름 구조 깊숙이에서 종료할 때입니다. 이 예제에서, 함수는 벡터를 반복하여 주어진 값의 인덱스를 찾습니다:
 
 ```move
 use std::vector;
@@ -417,8 +385,7 @@ fun index_of<T>(v: &vector<T>, target: &T): Option<u64> {
 }
 ```
 
-Using `return` without an argument is shorthand for `return ()`. That is, the following two
-functions are equivalent:
+인수 없이 `return`을 사용하는 것은 `return ()`의 단축형입니다. 즉, 다음 두 함수는 동일합니다:
 
 ```move
 fun foo() { return }

@@ -5,56 +5,50 @@ description: ''
 
 # Address
 
-`address` is a built-in type in Move that is used to represent locations (sometimes called accounts)
-in storage. An `address` value is a 256-bit (32 byte) identifier. Move uses addresses to
-differentiate packages of [modules](./../modules), where each package has its own address and
-modules. Specific deployments of Move might also use the `address` value for
-[storage](./../abilities#key) operations.
+`address`는 Move의 내장 타입으로, 스토리지에서 위치(때때로 계정이라고도 함)를 나타내는 데 사용됩니다. 
+`address` 값은 256비트(32바이트) 식별자입니다. Move는 주소를 사용하여 [module](./../modules)의 
+패키지를 구별하며, 각 패키지는 고유한 주소와 module을 가집니다. Move의 특정 배포판에서는 
+[스토리지](./../abilities#key) 작업에도 `address` 값을 사용할 수 있습니다.
 
-> For Sui, `address` is used to represent "accounts", and also objects via strong type wrappers
-> (with `sui::object::UID` and `sui::object::ID`).
+> Sui의 경우, `address`는 "계정"을 나타내는 데 사용되며, 강타입 래퍼(strong type wrapper)를 통해 
+> object를 나타내는 데도 사용됩니다 (`sui::object::UID`와 `sui::object::ID` 사용).
 
-Although an `address` is a 256 bit integer under the hood, Move addresses are intentionally
-opaque---they cannot be created from integers, they do not support arithmetic operations, and they
-cannot be modified. Specific deployments of Move might have `native` functions to enable some of
-these operations (e.g., creating an `address` from bytes `vector<u8>`), but these are not part of
-the Move language itself.
+`address`는 내부적으로 256비트 정수이지만, Move 주소는 의도적으로 불투명(opaque)합니다---정수로부터 
+생성할 수 없고, 산술 연산을 지원하지 않으며, 수정할 수 없습니다. Move의 특정 배포판에서는 이러한 
+작업 중 일부를 가능하게 하는 `native` 함수를 제공할 수 있지만(예: 바이트 `vector<u8>`에서 `address` 생성), 
+이는 Move 언어 자체의 일부가 아닙니다.
 
-While there are runtime address values (values of type `address`), they _cannot_ be used to access
-modules at runtime.
+런타임 주소 값(`address` 타입의 값)이 있지만, 런타임에 module에 접근하는 데는 사용할 _수 없습니다_.
 
-## Addresses and Their Syntax
+## 주소와 구문
 
-Addresses come in two flavors, named or numerical. The syntax for a named address follows the same
-rules for any named identifier in Move. The syntax of a numerical address is not restricted to
-hex-encoded values, and any valid [`u256` numerical value](./integers) can be used as an address
-value, e.g., `42`, `0xCAFE`, and `10_000` are all valid numerical address literals.
+주소에는 명명된 주소(named address)와 숫자 주소(numerical address) 두 가지 형태가 있습니다. 명명된 주소의 
+구문은 Move의 다른 명명된 식별자와 동일한 규칙을 따릅니다. 숫자 주소의 구문은 16진수로 인코딩된 값에 
+제한되지 않으며, 유효한 [`u256` 숫자 값](./integers)은 모두 주소 값으로 사용할 수 있습니다. 
+예를 들어, `42`, `0xCAFE`, `10_000`은 모두 유효한 숫자 주소 리터럴입니다.
 
-To distinguish when an address is being used in an expression context or not, the syntax when using
-an address differs depending on the context where it's used:
+주소가 표현식 컨텍스트에서 사용되는지 아닌지를 구별하기 위해, 주소 사용 구문은 사용되는 컨텍스트에 
+따라 다릅니다:
 
-- When an address is used as an expression, the address must be prefixed by the `@` character, i.e.,
-  [`@<numerical_value>`](./integers) or `@<named_address_identifier>`.
-- Outside of expression contexts, the address may be written without the leading `@` character,
-  i.e., [`<numerical_value>`](./integers) or `<named_address_identifier>`.
+- 주소가 표현식으로 사용될 때는 `@` 문자를 앞에 붙여야 합니다. 즉, 
+  [`@<numerical_value>`](./integers) 또는 `@<named_address_identifier>` 형태입니다.
+- 표현식 컨텍스트가 아닌 곳에서는 `@` 문자 없이 작성할 수 있습니다. 즉, 
+  [`<numerical_value>`](./integers) 또는 `<named_address_identifier>` 형태입니다.
 
-In general, you can think of `@` as an operator that takes an address from being a namespace item to
-being an expression item.
+일반적으로 `@`는 주소를 네임스페이스 항목에서 표현식 항목으로 변환하는 연산자로 생각할 수 있습니다.
 
-## Named Addresses
+## 명명된 주소
 
-Named addresses are a feature that allow identifiers to be used in place of numerical values in any
-spot where addresses are used, and not just at the value level. Named addresses are declared and
-bound as top level elements (outside of modules and scripts) in Move packages, or passed as
-arguments to the Move compiler.
+명명된 주소는 주소가 사용되는 모든 위치에서 숫자 값 대신 식별자를 사용할 수 있게 하는 기능으로, 
+값 수준에서만이 아닙니다. 명명된 주소는 Move 패키지에서 최상위 요소(module과 스크립트 외부)로 
+선언되고 바인딩되거나, Move 컴파일러에 인자로 전달됩니다.
 
-Named addresses only exist at the source language level and will be fully substituted for their
-value at the bytecode level. Because of this, modules and module members should be accessed through
-the module's named address and not through the numerical value assigned to the named address during
-compilation. So while `use my_addr::foo` is equivalent to `use 0x2::foo` (if `my_addr` is assigned
-`0x2`), it is a best practice to always use the `my_addr` name.
+명명된 주소는 소스 언어 수준에서만 존재하며 바이트코드 수준에서는 해당 값으로 완전히 대체됩니다. 
+이 때문에 module과 module 멤버는 컴파일 중에 명명된 주소에 할당된 숫자 값이 아닌 module의 
+명명된 주소를 통해 접근해야 합니다. 따라서 `use my_addr::foo`가 `use 0x2::foo`와 동일하더라도
+(`my_addr`가 `0x2`로 할당된 경우), 항상 `my_addr` 이름을 사용하는 것이 모범 사례입니다.
 
-### Examples
+### 예제
 
 ```move
 // shorthand for
