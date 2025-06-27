@@ -1,0 +1,22 @@
+export default {
+  index: "Move Reference",
+  modules: "Modules",
+  packages: "Packages",
+  "primitive-types": "Primitive Types",
+  variables: "Variables",
+  constants: "Constants",
+  generics: "Generics",
+  equality: "Equality",
+  "abort-and-assert": "Abort and Assert",
+  "control-flow": "Control Flow",
+  functions: "Functions",
+  structs: "Structs",
+  enums: "Enums",
+  abilities: "Abilities",
+  uses: "Uses",
+  friends: "Friends",
+  "method-syntax": "Method Syntax",
+  "index-syntax": "Index Syntax",
+  "unit-testing": "Unit Testing",
+  "coding-conventions": "Coding Conventions"
+}
