@@ -1,23 +1,14 @@
 import React from "react";
 import { DocsThemeConfig } from "nextra-theme-docs";
-import { useRouter } from "next/router";
 import { useTheme } from "nextra-theme-docs";
 
 const config: DocsThemeConfig = {
   logo: () => {
-    const router = useRouter();
     const { theme, resolvedTheme } = useTheme();
-    const pathname = router.pathname;
-    const isReference = pathname.startsWith("/reference");
-    const isBook = pathname.startsWith("/book") || pathname === "/";
     const currentTheme = theme === 'system' ? resolvedTheme : theme;
 
     return (
-      <div key={pathname} style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-        <div 
-          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-          onClick={() => router.push('/book')}
-        >
+      <div style={{ display: 'flex', alignItems: 'center' }}>
           <img
             src={currentTheme === 'dark' ? '/sui-logo-dark.png' : '/sui-logo.png'}
             alt='Sui'
@@ -32,77 +23,6 @@ const config: DocsThemeConfig = {
           >
             Sui Move 한국어 문서
           </span>
-        </div>
-        <div style={{ display: 'flex', gap: '1.5rem' }}>
-          <button
-            onClick={() => {
-              router.push("/book");
-              // Reference 섹션 접기
-              setTimeout(() => {
-                const referenceButton = document.querySelector('.nextra-sidebar-container button[aria-controls*="reference"]');
-                if (referenceButton && referenceButton.getAttribute('aria-expanded') === 'true') {
-                  referenceButton.click();
-                }
-              }, 100);
-            }}
-            style={{
-              padding: '0.375rem 0',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              background: 'transparent',
-              color: isBook ? 'rgb(37, 99, 235)' : 'rgb(107, 114, 128)',
-              transition: 'color 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              if (!isBook) {
-                e.currentTarget.style.color = 'rgb(37, 99, 235)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isBook) {
-                e.currentTarget.style.color = 'rgb(107, 114, 128)';
-              }
-            }}
-          >
-            The Move Book
-          </button>
-          <button
-            onClick={() => {
-              router.push("/reference");
-              // Book 섹션 접기
-              setTimeout(() => {
-                const bookButton = document.querySelector('.nextra-sidebar-container button[aria-controls*="book"]');
-                if (bookButton && bookButton.getAttribute('aria-expanded') === 'true') {
-                  bookButton.click();
-                }
-              }, 100);
-            }}
-            style={{
-              padding: '0.375rem 0',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              background: 'transparent',
-              color: isReference ? 'rgb(37, 99, 235)' : 'rgb(107, 114, 128)',
-              transition: 'color 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              if (!isReference) {
-                e.currentTarget.style.color = 'rgb(37, 99, 235)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isReference) {
-                e.currentTarget.style.color = 'rgb(107, 114, 128)';
-              }
-            }}
-          >
-            Move Reference
-          </button>
-        </div>
       </div>
     );
   },
@@ -160,8 +80,8 @@ const config: DocsThemeConfig = {
   navigation: true,
   sidebar: {
     toggleButton: true,
-    defaultMenuCollapseLevel: 1,
-    autoCollapse: true,
+    defaultMenuCollapseLevel: 2,
+    autoCollapse: false,
   },
   darkMode: true,
 };
