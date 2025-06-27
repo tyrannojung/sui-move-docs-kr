@@ -59,3 +59,19 @@ a:hover {
 .nx-copy-code-button:hover {
   background-color: var(--sui-aqua);
 }
+
+/* 경고 박스 스타일 */
+.warning {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid #f59e0b;
+  background-color: #fef3c7;
+  color: #92400e;
+  margin: 1rem 0;
+}
+
+.dark .warning {
+  background-color: #451a03;
+  color: #fbbf24;
+  border-left-color: #f59e0b;
+}

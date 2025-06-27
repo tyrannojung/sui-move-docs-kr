@@ -32,7 +32,16 @@ const config: DocsThemeConfig = {
         </div>
         <div style={{ display: 'flex', gap: '1.5rem' }}>
           <button
-            onClick={() => router.push("/book")}
+            onClick={() => {
+              router.push("/book");
+              // Reference 섹션 접기
+              setTimeout(() => {
+                const referenceButton = document.querySelector('.nextra-sidebar-container button[aria-controls*="reference"]');
+                if (referenceButton && referenceButton.getAttribute('aria-expanded') === 'true') {
+                  referenceButton.click();
+                }
+              }, 100);
+            }}
             style={{
               padding: '0.375rem 0',
               fontSize: '0.875rem',
@@ -57,7 +66,16 @@ const config: DocsThemeConfig = {
             The Move Book
           </button>
           <button
-            onClick={() => router.push("/reference")}
+            onClick={() => {
+              router.push("/reference");
+              // Book 섹션 접기
+              setTimeout(() => {
+                const bookButton = document.querySelector('.nextra-sidebar-container button[aria-controls*="book"]');
+                if (bookButton && bookButton.getAttribute('aria-expanded') === 'true') {
+                  bookButton.click();
+                }
+              }, 100);
+            }}
             style={{
               padding: '0.375rem 0',
               fontSize: '0.875rem',

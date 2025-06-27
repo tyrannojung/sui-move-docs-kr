@@ -69,8 +69,24 @@ pnpm build
 ## 기술 스택
 
 - [Next.js](https://nextjs.org/) - React 프레임워크
-- [Nextra](https://nextra.site/) - 문서 사이트 프레임워크
+- [Nextra](https://nextra.site/) - 문서 사이트 프레임워크 (v3.0.13)
 - [pnpm](https://pnpm.io/) - 패키지 매니저
+
+## 원본 문서와의 차이점
+
+이 프로젝트는 [MystenLabs/move-book](https://github.com/MystenLabs/move-book)의 한국어 번역입니다.
+
+### 구조적 차이
+- **프레임워크**: 원본은 Docusaurus, 번역본은 Nextra 사용
+- **디렉토리 구조**: 
+  - 원본: `site/` (문서), `packages/` (코드 샘플)
+  - 번역본: `pages/` (통합 구조)
+- **네비게이션**: 상단 탭으로 The Move Book과 Move Reference 분리
+
+### 추가된 기능
+- 한국어 UI 및 네비게이션
+- Sui 브랜드 컬러를 활용한 커스텀 테마
+- 반응형 탭 네비게이션
 
 ## 라이선스
 
