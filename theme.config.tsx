@@ -33,7 +33,15 @@ const config: DocsThemeConfig = {
   docsRepositoryBase: "https://github.com/tyrannojung/sui-move-docs-kr",
   footer: {
     content: (
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
+        <div style={{ fontSize: "0.875rem", color: "#666" }}>
+          <p>
+            © 2025 Sui Move 한국어 문서 기여자들 | 문서는 CC BY 4.0 라이선스를
+            따릅니다
+          </p>
+          <p>© 2025 Orakle 학회. All rights reserved.</p>
+          <p>원본 문서의 저작권은 Mysten Labs에 있습니다.</p>
+        </div>
         <div
           style={{
             display: "flex",
@@ -42,21 +50,13 @@ const config: DocsThemeConfig = {
             padding: "0.75rem 1.5rem",
             backgroundColor: "#1a3a52",
             borderRadius: "8px",
-            width: "fit-content",
+            marginRight: "2rem",
           }}
         >
           <span style={{ color: "#C0E6FF", fontSize: "0.875rem" }}>
             공식 후원사
           </span>
           <img src='/orakle-logo.webp' alt='Orakle' style={{ height: 28 }} />
-        </div>
-        <div style={{ fontSize: "0.875rem", color: "#666" }}>
-          <p>
-            © 2025 Sui Move 한국어 문서 기여자들 | 문서는 CC BY 4.0 라이선스를
-            따릅니다
-          </p>
-          <p>© 2025 Orakle 학회. All rights reserved.</p>
-          <p>원본 문서의 저작권은 Mysten Labs에 있습니다.</p>
         </div>
       </div>
     ),
