@@ -1,8 +1,6 @@
-# Package Manifest
+# 패키지 매니페스트
 
-The `Move.toml` is a manifest file that describes the [package](./packages) and its dependencies.
-It is written in [TOML](https://toml.io/en/) format and contains multiple sections, the most
-important of which are `[package]`, `[dependencies]` and `[addresses]`.
+`Move.toml`은 [패키지](./packages)와 해당 의존성을 설명하는 매니페스트 파일입니다. [TOML](https://toml.io/en/) 형식으로 작성되며 여러 섹션을 포함하는데, 가장 중요한 것은 `[package]`, `[dependencies]`, `[addresses]`입니다.
 
 ```toml
 [package]
@@ -21,50 +19,37 @@ alice = "0xA11CE"
 alice = "0xB0B"
 ```
 
-## Sections
+## 섹션
 
 ### Package
 
-The `[package]` section is used to describe the package. None of the fields in this section are
-published on chain, but they are used in tooling and release management; they also specify the Move
-edition for the compiler.
+`[package]` 섹션은 패키지를 설명하는 데 사용됩니다. 이 섹션의 필드는 체인에 게시되지 않지만 도구 및 릴리스 관리에 사용됩니다. 또한 컴파일러를 위한 Move 에디션을 지정합니다.
 
-- `name` - the name of the package when it is imported;
-- `version` - the version of the package, can be used in release management;
-- `edition` - the edition of the Move language; currently, the only valid value is `2024`.
+- `name` - 패키지를 가져올 때의 이름
+- `version` - 패키지 버전, 릴리스 관리에 사용할 수 있음
+- `edition` - Move 언어의 에디션; 현재 유일한 유효한 값은 `2024`입니다.
 
 {/* published-at */}
 
 ### Dependencies
 
-The `[dependencies]` section is used to specify the dependencies of the project. Each dependency is
-specified as a key-value pair, where the key is the name of the dependency, and the value is the
-dependency specification. The dependency specification can be a git repository URL or a path to the
-local directory.
+`[dependencies]` 섹션은 프로젝트의 의존성을 지정하는 데 사용됩니다. 각 의존성은 키-값 쌍으로 지정되며, 키는 의존성의 이름이고 값은 의존성 사양입니다. 의존성 사양은 git 저장소 URL이거나 로컬 디렉토리 경로일 수 있습니다.
 
 ```toml
-# git repository
+# git 저장소
 Example = { git = "https://github.com/example/example.git", subdir = "path/to/package", rev = "framework/testnet" }
 
-# local directory
+# 로컬 디렉토리
 MyPackage = { local = "../my-package" }
 ```
 
-Packages also import addresses from other packages. For example, the Sui dependency adds the `std`
-and `sui` addresses to the project. These addresses can be used in the code as aliases for the
-addresses.
+패키지는 다른 패키지에서 주소도 가져옵니다. 예를 들어, Sui 의존성은 프로젝트에 `std`와 `sui` 주소를 추가합니다. 이러한 주소는 코드에서 주소의 별칭으로 사용할 수 있습니다.
 
-Starting with version 1.45 of the Sui CLI, the Sui system packages (`std`, `sui`, `system`,
-`bridge`, and `deepbook`) are automatically added as dependencies if none of them are explicitly
-listed.
+Sui CLI 버전 1.45부터 Sui 시스템 패키지(`std`, `sui`, `system`, `bridge`, `deepbook`)는 명시적으로 나열되지 않으면 자동으로 의존성으로 추가됩니다.
 
-### Resolving Version Conflicts with Override
+### Override로 버전 충돌 해결하기
 
-Sometimes dependencies have conflicting versions of the same package. For example, if you have two
-dependencies that use different versions of the Example package, you can override the dependency in
-the `[dependencies]` section. To do so, add the `override` field to the dependency. The version of
-the dependency specified in the `[dependencies]` section will be used instead of the one specified
-in the dependency itself.
+때로는 의존성이 동일한 패키지의 서로 다른 버전을 사용하여 충돌합니다. 예를 들어, Example 패키지의 서로 다른 버전을 사용하는 두 개의 의존성이 있는 경우, `[dependencies]` 섹션에서 의존성을 재정의할 수 있습니다. 이를 위해 의존성에 `override` 필드를 추가합니다. `[dependencies]` 섹션에 지정된 의존성 버전이 의존성 자체에 지정된 버전 대신 사용됩니다.
 
 ```toml
 [dependencies]
@@ -73,39 +58,29 @@ Example = { override = true, git = "https://github.com/example/example.git", sub
 
 ### Dev-dependencies
 
-It is possible to add `[dev-dependencies]` section to the manifest. It is used to override
-dependencies in the dev and test modes. For example, if you want to use a different version of the
-Sui package in the dev mode, you can add a custom dependency specification to the
-`[dev-dependencies]` section.
+매니페스트에 `[dev-dependencies]` 섹션을 추가할 수 있습니다. 이는 dev 및 test 모드에서 의존성을 재정의하는 데 사용됩니다. 예를 들어, dev 모드에서 Sui 패키지의 다른 버전을 사용하려면 `[dev-dependencies]` 섹션에 사용자 정의 의존성 사양을 추가할 수 있습니다.
 
 ### Addresses
 
-The `[addresses]` section is used to add aliases for the addresses. Any address can be specified in
-this section, and then used in the code as an alias. For example, if you add `alice = "0xA11CE"` to
-this section, you can use `alice` as `0xA11CE` in the code.
+`[addresses]` 섹션은 주소의 별칭을 추가하는 데 사용됩니다. 이 섹션에 모든 주소를 지정할 수 있으며, 코드에서 별칭으로 사용할 수 있습니다. 예를 들어, 이 섹션에 `alice = "0xA11CE"`를 추가하면 코드에서 `alice`를 `0xA11CE`로 사용할 수 있습니다.
 
 ### Dev-addresses
 
-The `[dev-addresses]` section is the same as `[addresses]`, but only works for the test and dev
-modes. Important to note that it is impossible to introduce new aliases in this section, only
-override the existing ones. So in the example above, if you add `alice = "0xB0B"` to this section,
-the `alice` address will be `0xB0B` in the test and dev modes, and `0xA11CE` in the regular build.
+`[dev-addresses]` 섹션은 `[addresses]`와 동일하지만 test 및 dev 모드에서만 작동합니다. 중요한 점은 이 섹션에서 새로운 별칭을 도입할 수 없고 기존 별칭만 재정의할 수 있다는 것입니다. 따라서 위의 예에서 이 섹션에 `alice = "0xB0B"`를 추가하면, test 및 dev 모드에서 `alice` 주소는 `0xB0B`가 되고 일반 빌드에서는 `0xA11CE`가 됩니다.
 
-## TOML Styles
+## TOML 스타일
 
-The TOML format supports two styles for tables: inline and multiline. The examples above are using
-the inline style, but it is also possible to use the multiline style. You wouldn't want to use it
-for the `[package]` section, but it can be useful for the dependencies.
+TOML 형식은 테이블에 대해 인라인과 멀티라인 두 가지 스타일을 지원합니다. 위의 예제는 인라인 스타일을 사용하지만 멀티라인 스타일을 사용할 수도 있습니다. `[package]` 섹션에는 사용하고 싶지 않겠지만 의존성에는 유용할 수 있습니다.
 
 ```toml
-# Inline style
+# 인라인 스타일
 [dependencies]
 Example = { override = true, git = "https://github.com/example/example.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 MyPackage = { local = "../my-package" }
 ```
 
 ```toml
-# Multiline style
+# 멀티라인 스타일
 [dependencies.Example]
 override = true
 git = "https://github.com/example/example.git"
@@ -116,6 +91,6 @@ rev = "framework/testnet"
 local = "../my-package"
 ```
 
-## Further Reading
+## 더 읽어보기
 
-- [Packages](./../../reference/packages) in the Move Reference.
+- Move 레퍼런스의 [패키지](./../../reference/packages)

@@ -1,9 +1,6 @@
-# Transaction
+# 트랜잭션
 
-Transaction is a fundamental concept in the blockchain world. It is a way to interact with a
-blockchain. Transactions are used to change the state of the blockchain, and they are the only way
-to do so. In Move, transactions are used to call functions in a package, deploy new packages, and
-upgrade existing ones.
+트랜잭션은 블록체인 세계의 기본 개념입니다. 블록체인과 상호작용하는 방법입니다. 트랜잭션은 블록체인의 상태를 변경하는 데 사용되며, 그렇게 할 수 있는 유일한 방법입니다. Move에서 트랜잭션은 패키지의 함수를 호출하고, 새 패키지를 배포하고, 기존 패키지를 업그레이드하는 데 사용됩니다.
 
 {/*
 
@@ -16,46 +13,38 @@ upgrade existing ones.
 
  */}
 
-## Transaction Structure
+## 트랜잭션 구조
 
-> Every transaction explicitly specifies the objects it operates on!
+> 모든 트랜잭션은 작동하는 object를 명시적으로 지정합니다!
 
-Transactions consist of:
+트랜잭션은 다음으로 구성됩니다:
 
-- a sender - the [account](./what-is-an-account) that _signs_ the transaction;
-- a list (or a chain) of commands - the operations to be executed;
-- command inputs - the arguments for the commands: either `pure` - simple values like numbers or
-  strings, or `object` - objects that the transaction will access;
-- a gas object - the `Coin` object used to pay for the transaction;
-- gas price and budget - the cost of the transaction;
+- 발신자 - 트랜잭션에 _서명_하는 [계정](./what-is-an-account)
+- 명령어 목록(또는 체인) - 실행할 작업들
+- 명령어 입력 - 명령어의 인자: `pure` - 숫자나 문자열 같은 단순 값, 또는 `object` - 트랜잭션이 액세스할 object
+- 가스 object - 트랜잭션 비용을 지불하는 데 사용되는 `Coin` object
+- 가스 가격과 예산 - 트랜잭션 비용
 
-## Inputs
+## 입력
 
-Transaction inputs are the arguments for the transaction and are split between 2 types:
+트랜잭션 입력은 트랜잭션의 인자이며 2가지 타입으로 나뉩니다:
 
-- Pure arguments: These are mostly [primitive types](../move-basics/primitive-types) with some extra
-  additions. A pure argument can be: - [`bool`](../move-basics/primitive-types#booleans). -
-  [unsigned integer](../move-basics/primitive-types#integer-types) (`u8`, `u16`, `u32`, `u64`,
-  `u128`, `u256`). - [`address`](../move-basics/address). -
-  [`std::string::String`](../move-basics/string), UTF8 strings. -
-  [`std::ascii::String`](../move-basics/string#ascii-strings), ASCII strings. -
-  [`vector<T>`](../move-basics/vector), where `T` is a pure type. -
-  [`std::option::Option<T>`](../move-basics/option), where `T` is a pure type. -
-  [`std::object::ID`](../storage/uid-and-id), typically points to an object. See also
-  [What is an Object](../object/object-model).
-- Object arguments: These are objects or references of objects that the transaction will access. An
-  object argument needs to be either a shared object, a frozen object, or an object that the
-  transaction sender owns for the transaction to be successful. For more see
-  [Object Model](../object).
+- Pure 인자: 대부분 [기본 타입](../move-basics/primitive-types)이며 몇 가지 추가 사항이 있습니다. pure 인자는 다음이 될 수 있습니다:
+  - [`bool`](../move-basics/primitive-types#booleans)
+  - [부호 없는 정수](../move-basics/primitive-types#integer-types) (`u8`, `u16`, `u32`, `u64`, `u128`, `u256`)
+  - [`address`](../move-basics/address)
+  - [`std::string::String`](../move-basics/string), UTF8 문자열
+  - [`std::ascii::String`](../move-basics/string#ascii-strings), ASCII 문자열
+  - [`vector<T>`](../move-basics/vector), 여기서 `T`는 pure 타입
+  - [`std::option::Option<T>`](../move-basics/option), 여기서 `T`는 pure 타입
+  - [`std::object::ID`](../storage/uid-and-id), 일반적으로 object를 가리킴. [Object란 무엇인가](../object/object-model)도 참조
+- Object 인자: 트랜잭션이 액세스할 object 또는 object의 참조입니다. object 인자는 트랜잭션이 성공하려면 공유 object, 동결된 object, 또는 트랜잭션 발신자가 소유한 object여야 합니다. 자세한 내용은 [Object 모델](../object)을 참조하세요.
 
-## Commands
+## 명령어
 
-Sui transactions may consist of multiple commands. Each command is a single built-in command (like
-publishing a package) or a call to a function in an already published package. The commands are
-executed in the order they are listed in the transaction, and they can use the results of the
-previous commands, forming a chain. Transaction either succeeds or fails as a whole.
+Sui 트랜잭션은 여러 명령어로 구성될 수 있습니다. 각 명령어는 단일 내장 명령어(패키지 게시 등)이거나 이미 게시된 패키지의 함수 호출입니다. 명령어는 트랜잭션에 나열된 순서대로 실행되며, 이전 명령어의 결과를 사용하여 체인을 형성할 수 있습니다. 트랜잭션은 전체적으로 성공하거나 실패합니다.
 
-Schematically, a transaction looks like this (in pseudo-code):
+개략적으로 트랜잭션은 다음과 같습니다(의사 코드):
 
 ```
 Inputs:
@@ -67,35 +56,29 @@ Commands:
 - TransferObjects(item, sender)
 ```
 
-In this example, the transaction consists of three commands:
+이 예에서 트랜잭션은 세 가지 명령어로 구성됩니다:
 
-1. `SplitCoins` - a built-in command that splits a new coin from the passed object, in this case,
-   the `Gas` object;
-2. `MoveCall` - a command that calls a function `purchase` in a package `0xAAA`, module `market`
-   with the given arguments - the `payment` object;
-3. `TransferObjects` - a built-in command that transfers the object to the recipient.
+1. `SplitCoins` - 전달된 object에서 새 코인을 분할하는 내장 명령어, 이 경우 `Gas` object
+2. `MoveCall` - 주어진 인자(payment object)로 패키지 `0xAAA`의 `market` module에서 `purchase` 함수를 호출하는 명령어
+3. `TransferObjects` - object를 수신자에게 전송하는 내장 명령어
 
 {/*
 > There are multiple different implementations of transaction building, for example
 */}
 
-## Transaction Effects
+## 트랜잭션 효과
 
-Transaction effects are the changes that a transaction makes to the blockchain state. More
-specifically, a transaction can change the state in the following ways:
+트랜잭션 효과는 트랜잭션이 블록체인 상태에 가하는 변경사항입니다. 보다 구체적으로, 트랜잭션은 다음과 같은 방법으로 상태를 변경할 수 있습니다:
 
-- use the gas object to pay for the transaction;
-- create, update, or delete objects;
-- emit events;
+- 가스 object를 사용하여 트랜잭션 비용 지불
+- object 생성, 업데이트 또는 삭제
+- 이벤트 발생
 
-The result of the executed transaction consists of different parts:
+실행된 트랜잭션의 결과는 다른 부분으로 구성됩니다:
 
-- Transaction Digest - the hash of the transaction which is used to identify the transaction;
-- Transaction Data - the inputs, commands and gas object used in the transaction;
-- Transaction Effects - the status and the "effects" of the transaction, more specifically: the
-  status of the transaction, updates to objects and their new versions, the gas object used, the gas
-  cost of the transaction, and the events emitted by the transaction;
-- Events - the custom [events](./../programmability/events) emitted by the transaction;
-- Object Changes - the changes made to the objects, including the _change of ownership_;
-- Balance Changes - the changes made to the aggregate balances of the account involved in the
-  transaction;
+- 트랜잭션 다이제스트 - 트랜잭션을 식별하는 데 사용되는 트랜잭션의 해시
+- 트랜잭션 데이터 - 트랜잭션에 사용된 입력, 명령어 및 가스 object
+- 트랜잭션 효과 - 트랜잭션의 상태와 "효과", 보다 구체적으로: 트랜잭션 상태, object 업데이트 및 새 버전, 사용된 가스 object, 트랜잭션의 가스 비용, 트랜잭션에서 발생한 이벤트
+- 이벤트 - 트랜잭션에서 발생한 사용자 정의 [이벤트](./../programmability/events)
+- Object 변경사항 - _소유권 변경_을 포함한 object에 대한 변경사항
+- 잔액 변경사항 - 트랜잭션에 관련된 계정의 총 잔액에 대한 변경사항

@@ -1,4 +1,4 @@
-# Package
+# 패키지
 
 {/*
 
@@ -16,16 +16,11 @@
 
 */}
 
-Move is a language for writing smart contracts - programs that are stored and run on the blockchain.
-A single program is organized into a package. A package is published on the blockchain and is
-identified by an [address](./address). A published package can be interacted with by sending
-[transactions](./what-is-a-transaction) calling its functions. It can also act as a dependency for
-other packages.
+Move는 스마트 컨트랙트를 작성하기 위한 언어입니다 - 블록체인에 저장되고 실행되는 프로그램입니다. 단일 프로그램은 패키지로 구성됩니다. 패키지는 블록체인에 게시되며 [주소](./address)로 식별됩니다. 게시된 패키지는 해당 함수를 호출하는 [트랜잭션](./what-is-a-transaction)을 전송하여 상호작용할 수 있습니다. 또한 다른 패키지의 의존성으로 작동할 수도 있습니다.
 
-> To create a new package, use the `sui move new` command. To learn more about the command, run
-> `sui move new --help`.
+> 새 패키지를 생성하려면 `sui move new` 명령어를 사용하세요. 명령어에 대해 더 알아보려면 `sui move new --help`를 실행하세요.
 
-Package consists of modules - separate scopes that contain functions, types, and other items.
+패키지는 module로 구성됩니다 - 함수, 타입 및 기타 항목을 포함하는 별도의 스코프입니다.
 
 ```
 package 0x...
@@ -37,11 +32,9 @@ package 0x...
         fun hello_package()
 ```
 
-## Package Structure
+## 패키지 구조
 
-Locally, a package is a directory with a `Move.toml` file and a `sources` directory. The `Move.toml`
-file - called the "package manifest" - contains metadata about the package, and the `sources`
-directory contains the source code for the modules. Package usually looks like this:
+로컬에서 패키지는 `Move.toml` 파일과 `sources` 디렉토리가 있는 디렉토리입니다. `Move.toml` 파일 - "패키지 매니페스트"라고 불림 - 은 패키지에 대한 메타데이터를 포함하고, `sources` 디렉토리는 module의 소스 코드를 포함합니다. 패키지는 일반적으로 다음과 같습니다:
 
 ```
 sources/
@@ -55,16 +48,11 @@ examples/
 Move.toml
 ```
 
-The `tests` directory is optional and contains tests for the package. Code placed into the `tests`
-directory is not published on-chain and is only available in tests. The `examples` directory can be
-used for code examples, and is also not published on-chain.
+`tests` 디렉토리는 선택 사항이며 패키지에 대한 테스트를 포함합니다. `tests` 디렉토리에 배치된 코드는 체인에 게시되지 않으며 테스트에서만 사용할 수 있습니다. `examples` 디렉토리는 코드 예제에 사용할 수 있으며, 역시 체인에 게시되지 않습니다.
 
-## Published Package
+## 게시된 패키지
 
-During development, package doesn't have an address and it needs to be set to `0x0`. Once a package
-is published, it gets a single unique [address](./address) on the blockchain containing its modules'
-bytecode. A published package becomes _immutable_ and can be interacted with by sending
-transactions.
+개발 중에는 패키지에 주소가 없으며 `0x0`으로 설정해야 합니다. 패키지가 게시되면 module의 바이트코드를 포함하는 블록체인에서 단일 고유 [주소](./address)를 얻습니다. 게시된 패키지는 _불변_이 되며 트랜잭션을 전송하여 상호작용할 수 있습니다.
 
 ```
 0x...
@@ -72,8 +60,8 @@ transactions.
     another_module: <bytecode>
 ```
 
-## Links
+## 링크
 
-- [Package Manifest](./manifest)
-- [Address](./address)
-- [Packages](./../../reference/packages) in the Move Reference.
+- [패키지 매니페스트](./manifest)
+- [주소](./address)
+- Move 레퍼런스의 [패키지](./../../reference/packages)
