@@ -1,16 +1,16 @@
-# Publisher Authority
+# Publisher 권한
 
-In application design and development, it is often needed to prove publisher authority. This is
-especially important in the context of digital assets, where the publisher may enable or disable
-certain features for their assets. The Publisher Object is an object, defined in the
-[Sui Framework](./sui-framework), that allows the publisher to prove their _authority over a type_.
+애플리케이션 설계와 개발에서 게시자(publisher) 권한을 증명해야 하는 경우가 자주 있습니다. 이는
+특히 디지털 자산의 맥락에서 중요한데, 게시자가 자신의 자산에 대해 특정 기능을 활성화하거나 비활성화할 수 있기 때문입니다.
+Publisher Object는 [Sui 프레임워크](./sui-framework)에 정의된 object로,
+게시자가 _타입에 대한 권한_을 증명할 수 있게 해줍니다.
 
-## Definition
+## 정의
 
-The Publisher object is defined in the `sui::package` module of the Sui Framework. It is a very
-simple, non-generic object that can be initialized once per module (and multiple times per package)
-and is used to prove the authority of the publisher over a type. To claim a Publisher object, the
-publisher must present a [One Time Witness](./one-time-witness) to the `package::claim` function.
+Publisher object는 Sui 프레임워크의 `sui::package` 모듈에 정의되어 있습니다. 이는 매우
+간단한 비제네릭 object로, 모듈당 한 번(패키지당 여러 번) 초기화할 수 있으며
+게시자의 타입에 대한 권한을 증명하는 데 사용됩니다. Publisher object를 청구하려면
+게시자는 `package::claim` 함수에 [One Time Witness](./one-time-witness)를 제시해야 합니다.
 
 ```move
 module sui::package;
@@ -22,48 +22,75 @@ public struct Publisher has key, store {
 }
 ```
 
-> If you're not familiar with the One Time Witness, you can read more about it
-> [here](./one-time-witness).
+> One Time Witness에 익숙하지 않다면
+> [여기](./one-time-witness)에서 자세히 읽을 수 있습니다.
 
-Here's a simple example of claiming a `Publisher` object in a module:
+다음은 모듈에서 `Publisher` object를 청구하는 간단한 예시입니다:
 
-```move file=packages/samples/sources/programmability/publisher.move anchor=publisher
+```move
+module book::publisher;
 
+use sui::package::{Self, Publisher};
+
+/// 모듈에서 정의된 어떤 타입입니다.
+public struct Book {}
+
+/// 모듈의 OTW입니다.
+public struct PUBLISHER has drop {}
+
+/// One Time Witness를 사용하여 Publisher object를 청구합니다.
+fun init(otw: PUBLISHER, ctx: &mut TxContext) {
+    // Publisher object를 청구합니다.
+    let publisher: Publisher = sui::package::claim(otw, ctx);
+
+    // 보통 발신자에게 전송됩니다.
+    // 다른 object에 저장할 수도 있습니다.
+    transfer::public_transfer(publisher, ctx.sender())
+}
 ```
 
-## Usage
+## 사용법
 
-The Publisher object has two functions associated with it which are used to prove the publisher's
-authority over a type:
+Publisher object는 게시자의 타입에 대한 권한을 증명하는 데 사용되는 두 가지 함수가 있습니다:
 
-```move file=packages/samples/sources/programmability/publisher.move anchor=use_publisher
+```move
+// 타입이 같은 모듈에서 왔는지 확인하므로, `Publisher`가
+// 해당 타입에 대한 권한을 가집니다.
+assert!(publisher.from_module<Book>());
 
+// 타입이 같은 패키지에서 왔는지 확인하므로, `Publisher`가
+// 해당 타입에 대한 권한을 가집니다.
+assert!(publisher.from_package<Book>());
 ```
 
-## Publisher as Admin Role
+## 관리자 역할로서의 Publisher
 
-For small applications or simple use cases, the Publisher object can be used as an admin
-[capability](./capability). While in the broader context, the Publisher object has control over
-system configurations, it can also be used to manage the application's state.
+작은 애플리케이션이나 간단한 사용 사례의 경우, Publisher object를 관리자
+[capability](./capability)로 사용할 수 있습니다. 더 넓은 맥락에서 Publisher object는
+시스템 구성에 대한 제어권을 가지지만, 애플리케이션의 상태를 관리하는 데도 사용할 수 있습니다.
 
-```move file=packages/samples/sources/programmability/publisher.move anchor=publisher_as_admin
+```move
+/// Publisher object로 제한된 애플리케이션의 일부 작업입니다.
+public fun admin_action(cap: &Publisher, /* app objects... */ param: u64) {
+    assert!(cap.from_module<Book>(), ENotAuthorized);
 
+    // 애플리케이션별 작업 수행
+}
 ```
 
-However, Publisher misses some native properties of [Capabilities](./capability), such as type
-safety and expressiveness. The signature for the `admin_action` is not very explicit, can be called
-by anyone else. And due to `Publisher` object being standard, there now is a risk of unauthorized
-access if the `from_module` check is not performed. So it's important to be cautious when using the
-`Publisher` object as an admin role.
+그러나 Publisher는 타입 안전성과 표현력과 같은 [Capabilities](./capability)의 일부 기본 속성이 부족합니다.
+`admin_action`의 시그니처는 명시적이지 않으며 다른 사람이 호출할 수 있습니다.
+그리고 `Publisher` object가 표준이므로 `from_module` 확인을 수행하지 않으면 무단 액세스의 위험이 있습니다.
+따라서 `Publisher` object를 관리자 역할로 사용할 때는 주의해야 합니다.
 
-## Role on Sui
+## Sui에서의 역할
 
-Publisher is required for certain features on Sui. [Object Display](./display) can be created only
-by the Publisher, and TransferPolicy - an important component of the Kiosk system - also requires
-the Publisher object to prove ownership of the type.
+Publisher는 Sui의 특정 기능에 필요합니다. [Object Display](./display)는 Publisher에 의해서만 생성될 수 있으며,
+Kiosk 시스템의 중요한 구성 요소인 TransferPolicy도 타입의 소유권을 증명하기 위해
+Publisher object가 필요합니다.
 
-## Next Steps
+## 다음 단계
 
-In the next chapter we will cover the first feature that requires the Publisher object - Object
-Display - a way to describe objects for clients, and standardize metadata. A must-have for
-user-friendly applications.
+다음 장에서는 Publisher object가 필요한 첫 번째 기능인 Object Display를 다룹니다.
+이는 클라이언트를 위해 object를 설명하고 메타데이터를 표준화하는 방법입니다.
+사용자 친화적인 애플리케이션을 위한 필수 기능입니다.

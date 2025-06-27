@@ -1,78 +1,78 @@
-# Sui Framework
+# Sui 프레임워크
 
-Sui Framework is a default dependency set in the [Package Manifest](./../concepts/manifest). It
-depends on the [Standard Library](./../move-basics/standard-library) and provides Sui-specific
-features, including the interaction with the storage, and Sui-specific native types and modules.
+Sui 프레임워크는 [패키지 매니페스트](./../concepts/manifest)에 설정된 기본 의존성입니다. 이는
+[표준 라이브러리](./../move-basics/standard-library)에 의존하며 스토리지와의 상호작용,
+Sui 특화 네이티브 타입과 모듈을 포함한 Sui 특화 기능들을 제공합니다.
 
-_For convenience, we grouped the modules in the Sui Framework into multiple categories. But they're
-still part of the same framework._
+_편의를 위해 Sui 프레임워크의 모듈들을 여러 카테고리로 그룹화했습니다. 하지만 이들은
+여전히 동일한 프레임워크의 일부입니다._
 
-## Core
+## 코어
 
 {/* Custom CSS addition in the theme/custom.css  */}
 <div class="modules-table">
 
-| Module                                                                                         | Description                                                             | Chapter                                          |
+| 모듈                                                                                           | 설명                                                                    | 챕터                                             |
 | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ |
-| [sui::address](https://docs.sui.io/references/framework/sui/address)                           | Adds conversion methods to the [address type](./../move-basics/address) | [Address](./../move-basics/address)              |
-| [sui::transfer](https://docs.sui.io/references/framework/sui/transfer)                         | Implements the storage operations for Objects                           | [It starts with an Object](./../object)          |
-| [sui::tx_context](https://docs.sui.io/references/framework/sui/tx_context)                     | Contains the `TxContext` struct and methods to read it                  | [Transaction Context](./transaction-context)     |
-| [sui::object](https://docs.sui.io/references/framework/sui/object)                             | Defines the `UID` and `ID` type, required for creating objects          | [It starts with an Object](./../object)          |
-| [sui::clock](https://docs.sui.io/references/framework/sui/clock)                               | Defines the `Clock` type and its methods                                | [Epoch and Time](./epoch-and-time)               |
-| [sui::dynamic_field](https://docs.sui.io/references/framework/sui/dynamic_field)               | Implements methods to add, use and remove dynamic fields                | [Dynamic Fields](./dynamic-fields)               |
-| [sui::dynamic_object_field](https://docs.sui.io/references/framework/sui/dynamic_object_field) | Implements methods to add, use and remove dynamic object fields         | [Dynamic Object Fields](./dynamic-object-fields) |
-| [sui::event](https://docs.sui.io/references/framework/sui/event)                               | Allows emitting events for off-chain listeners                          | [Events](./events)                               |
-| [sui::package](https://docs.sui.io/references/framework/sui/package)                           | Defines the `Publisher` type and package upgrade methods                | [Publisher](./publisher), Package Upgrades       |
-| [sui::display](https://docs.sui.io/references/framework/sui/display)                           | Implements the `Display` object and ways to create and update it        | [Display](./display)                             |
+| [sui::address](https://docs.sui.io/references/framework/sui/address)                           | [address 타입](./../move-basics/address)에 변환 메서드를 추가합니다     | [주소](./../move-basics/address)                 |
+| [sui::transfer](https://docs.sui.io/references/framework/sui/transfer)                         | Object를 위한 스토리지 작업을 구현합니다                                | [Object로 시작하기](./../object)                 |
+| [sui::tx_context](https://docs.sui.io/references/framework/sui/tx_context)                     | `TxContext` struct와 이를 읽는 메서드를 포함합니다                      | [트랜잭션 컨텍스트](./transaction-context)       |
+| [sui::object](https://docs.sui.io/references/framework/sui/object)                             | object 생성에 필요한 `UID`와 `ID` 타입을 정의합니다                     | [Object로 시작하기](./../object)                 |
+| [sui::clock](https://docs.sui.io/references/framework/sui/clock)                               | `Clock` 타입과 메서드를 정의합니다                                      | [에포크와 시간](./epoch-and-time)                |
+| [sui::dynamic_field](https://docs.sui.io/references/framework/sui/dynamic_field)               | 동적 필드를 추가, 사용, 제거하는 메서드를 구현합니다                    | [동적 필드](./dynamic-fields)                    |
+| [sui::dynamic_object_field](https://docs.sui.io/references/framework/sui/dynamic_object_field) | 동적 object 필드를 추가, 사용, 제거하는 메서드를 구현합니다             | [동적 Object 필드](./dynamic-object-fields)      |
+| [sui::event](https://docs.sui.io/references/framework/sui/event)                               | 오프체인 리스너를 위한 이벤트 발생을 허용합니다                         | [이벤트](./events)                               |
+| [sui::package](https://docs.sui.io/references/framework/sui/package)                           | `Publisher` 타입과 패키지 업그레이드 메서드를 정의합니다                | [Publisher](./publisher), 패키지 업그레이드      |
+| [sui::display](https://docs.sui.io/references/framework/sui/display)                           | `Display` object와 이를 생성하고 업데이트하는 방법을 구현합니다         | [Display](./display)                             |
 
 </div>
 
-## Collections
+## 컬렉션
 
 <div class="modules-table">
 
-| Module                                                                         | Description                                                       | Chapter                                      |
+| 모듈                                                                           | 설명                                                              | 챕터                                         |
 | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------------------------------------------- |
-| [sui::vec_set](https://docs.sui.io/references/framework/sui/vec_set)           | Implements a set type                                             | [Collections](./collections)                 |
-| [sui::vec_map](https://docs.sui.io/references/framework/sui/vec_map)           | Implements a map with vector keys                                 | [Collections](./collections)                 |
-| [sui::table](https://docs.sui.io/references/framework/sui/table)               | Implements the `Table` type and methods to interact with it       | [Dynamic Collections](./dynamic-collections) |
-| [sui::linked_table](https://docs.sui.io/references/framework/sui/linked_table) | Implements the `LinkedTable` type and methods to interact with it | [Dynamic Collections](./dynamic-collections) |
-| [sui::bag](https://docs.sui.io/references/framework/sui/bag)                   | Implements the `Bag` type and methods to interact with it         | [Dynamic Collections](./dynamic-collections) |
-| [sui::object_table](https://docs.sui.io/references/framework/sui/object_table) | Implements the `ObjectTable` type and methods to interact with it | [Dynamic Collections](./dynamic-collections) |
-| [sui::object_bag](https://docs.sui.io/references/framework/sui/object_bag)     | Implements the `ObjectBag` type and methods to interact with it   | [Dynamic Collections](./dynamic-collections) |
+| [sui::vec_set](https://docs.sui.io/references/framework/sui/vec_set)           | set 타입을 구현합니다                                             | [컬렉션](./collections)                      |
+| [sui::vec_map](https://docs.sui.io/references/framework/sui/vec_map)           | 벡터 키를 가진 map을 구현합니다                                   | [컬렉션](./collections)                      |
+| [sui::table](https://docs.sui.io/references/framework/sui/table)               | `Table` 타입과 이와 상호작용하는 메서드를 구현합니다              | [동적 컬렉션](./dynamic-collections)         |
+| [sui::linked_table](https://docs.sui.io/references/framework/sui/linked_table) | `LinkedTable` 타입과 이와 상호작용하는 메서드를 구현합니다        | [동적 컬렉션](./dynamic-collections)         |
+| [sui::bag](https://docs.sui.io/references/framework/sui/bag)                   | `Bag` 타입과 이와 상호작용하는 메서드를 구현합니다                | [동적 컬렉션](./dynamic-collections)         |
+| [sui::object_table](https://docs.sui.io/references/framework/sui/object_table) | `ObjectTable` 타입과 이와 상호작용하는 메서드를 구현합니다        | [동적 컬렉션](./dynamic-collections)         |
+| [sui::object_bag](https://docs.sui.io/references/framework/sui/object_bag)     | `ObjectBag` 타입과 이와 상호작용하는 메서드를 구현합니다          | [동적 컬렉션](./dynamic-collections)         |
 
 </div>
 
-## Utilities
+## 유틸리티
 
 <div class="modules-table">
 
-| Module                                                             | Description                                                | Chapter                                 |
+| 모듈                                                               | 설명                                                       | 챕터                                    |
 | ------------------------------------------------------------------ | ---------------------------------------------------------- | --------------------------------------- |
-| [sui::bcs](https://docs.sui.io/references/framework/sui/bcs)       | Implements the BCS encoding and decoding functions         | [Binary Canonical Serialization](./bcs) |
-| [sui::borrow](https://docs.sui.io/references/framework/sui/borrow) | Implements the borrowing mechanic for borrowing by _value_ | [Hot Potato](./hot-potato-pattern)      |
-| [sui::hex](https://docs.sui.io/references/framework/sui/hex)       | Implements the hex encoding and decoding functions         | -                                       |
-| [sui::types](https://docs.sui.io/references/framework/sui/types)   | Provides a way to check if the type is a One-Time-Witness  | [One Time Witness](./one-time-witness)  |
+| [sui::bcs](https://docs.sui.io/references/framework/sui/bcs)       | BCS 인코딩과 디코딩 함수를 구현합니다                      | [바이너리 표준 직렬화](./bcs)           |
+| [sui::borrow](https://docs.sui.io/references/framework/sui/borrow) | _값_으로 빌리기 위한 차용 메커니즘을 구현합니다            | [Hot Potato](./hot-potato-pattern)      |
+| [sui::hex](https://docs.sui.io/references/framework/sui/hex)       | hex 인코딩과 디코딩 함수를 구현합니다                      | -                                       |
+| [sui::types](https://docs.sui.io/references/framework/sui/types)   | 타입이 One-Time-Witness인지 확인하는 방법을 제공합니다     | [One Time Witness](./one-time-witness)  |
 
 </div>
 
-## Exported Addresses
+## 내보낸 주소
 
-Sui Framework exports two named addresses: `sui = 0x2` and `std = 0x1` from the std dependency.
+Sui 프레임워크는 두 개의 명명된 주소를 내보냅니다: `sui = 0x2`와 std 의존성에서 가져온 `std = 0x1`.
 
 ```toml
 [addresses]
 sui = "0x2"
 
-# Exported from the MoveStdlib dependency
+# MoveStdlib 의존성에서 내보냄
 std = "0x1"
 ```
 
-## Implicit Imports
+## 암시적 임포트
 
-Just like with [Standard Library](./../move-basics/standard-library#implicit-imports), some of the
-modules and types are imported implicitly in the Sui Framework. This is the list of modules and
-types that are available without explicit `use` import:
+[표준 라이브러리](./../move-basics/standard-library#implicit-imports)와 마찬가지로, Sui 프레임워크에서도
+일부 모듈과 타입이 암시적으로 임포트됩니다. 다음은 명시적인 `use` 임포트 없이도
+사용할 수 있는 모듈과 타입의 목록입니다:
 
 - sui::object
 - sui::object::ID
@@ -81,10 +81,10 @@ types that are available without explicit `use` import:
 - sui::tx_context::TxContext
 - sui::transfer
 
-## Source Code
+## 소스 코드
 
-The source code of the Sui Framework is available in the
-[Sui repository](https://github.com/MystenLabs/sui/tree/main/crates/sui-framework/packages/sui-framework/sources).
+Sui 프레임워크의 소스 코드는
+[Sui 저장소](https://github.com/MystenLabs/sui/tree/main/crates/sui-framework/packages/sui-framework/sources)에서 확인할 수 있습니다.
 
 {/*
 

@@ -1,69 +1,138 @@
-# Pattern: Capability
+# 패턴: Capability
 
-In programming, a _capability_ is a token that gives the owner the right to perform a specific
-action. It is a pattern that is used to control access to resources and operations. A simple example
-of a capability is a key to a door. If you have the key, you can open the door. If you don't have
-the key, you can't open the door. A more practical example is an Admin Capability which allows the
-owner to perform administrative operations, which regular users cannot.
+프로그래밍에서 _capability_는 소유자에게 특정 작업을 수행할 권한을 부여하는 토큰입니다.
+이는 리소스와 작업에 대한 접근을 제어하는 데 사용되는 패턴입니다. Capability의 간단한 예는
+문의 열쇠입니다. 열쇠가 있으면 문을 열 수 있습니다. 열쇠가 없으면 문을 열 수 없습니다.
+더 실용적인 예는 소유자가 일반 사용자는 할 수 없는 관리 작업을 수행할 수 있게 하는
+Admin Capability입니다.
 
-## Capability is an Object
+## Capability는 Object입니다
 
-In the [Sui Object Model](./../object/), capabilities are represented as objects. An owner of an
-object can pass this object to a function to prove that they have the right to perform a specific
-action. Due to strict typing, the function taking a capability as an argument can only be called
-with the correct capability.
+[Sui Object 모델](./../object/)에서 capability는 object로 표현됩니다. Object의 소유자는
+특정 작업을 수행할 권한이 있음을 증명하기 위해 이 object를 함수에 전달할 수 있습니다.
+엄격한 타입 지정으로 인해 capability를 인자로 받는 함수는 올바른 capability로만
+호출할 수 있습니다.
 
-> There's a convention to name capabilities with the `Cap` suffix, for example, `AdminCap` or
+> Capability를 `Cap` 접미사로 명명하는 관례가 있습니다. 예: `AdminCap` 또는
 > `KioskOwnerCap`.
 
-```move file=packages/samples/sources/programmability/capability.move anchor=main
+```move
+module book::capability;
 
+use std::string::String;
+use sui::event;
+
+/// 시스템에서 새 계정을 생성할 권한을 애플리케이션 관리자에게
+/// 부여하는 capability입니다.
+public struct AdminCap has key, store { id: UID }
+
+/// 시스템의 사용자 계정입니다.
+public struct Account has key, store {
+    id: UID,
+    name: String
+}
+
+/// 데이터가 없는 간단한 `Ping` 이벤트입니다.
+public struct Ping has copy, drop { by: ID }
+
+/// 시스템에 새 계정을 생성합니다. 첫 번째 인자로 `AdminCap` capability를
+/// 전달해야 합니다.
+public fun new(_: &AdminCap, name: String, ctx: &mut TxContext): Account {
+    Account {
+        id: object::new(ctx),
+        name,
+    }
+}
+
+/// Account와 다른 object들도 애플리케이션에서 Capability로 사용될 수 있습니다.
+/// 예를 들어, 이벤트를 발생시키기 위해.
+public fun send_ping(acc: &Account) {
+    event::emit(Ping {
+        by: acc.id.to_inner()
+    })
+}
+
+/// 계정 이름을 업데이트합니다. `Account` 소유자만 호출할 수 있습니다.
+public fun update(account: &mut Account, name: String) {
+    account.name = name;
+}
 ```
 
-## Using `init` for Admin Capability
+## Admin Capability를 위한 `init` 사용
 
-A very common practice is to create a single `AdminCap` object on package publish. This way, the
-application can have a setup phase where the admin account prepares the state of the application.
+패키지 게시 시 단일 `AdminCap` object를 생성하는 것은 매우 일반적인 관행입니다.
+이렇게 하면 애플리케이션이 관리자 계정이 애플리케이션의 상태를 준비하는 설정 단계를
+가질 수 있습니다.
 
-```move file=packages/samples/sources/programmability/capability-2.move anchor=admin_cap
+```move
+module book::admin_cap;
 
+/// 시스템에서 관리자 권한을 부여하는 capability입니다.
+/// `init` 함수에서 단 한 번만 생성됩니다.
+public struct AdminCap has key { id: UID }
+
+/// 패키지 게시 시 AdminCap object를 생성하고
+/// 패키지 소유자에게 전송합니다.
+fun init(ctx: &mut TxContext) {
+    transfer::transfer(
+        AdminCap { id: object::new(ctx) },
+        ctx.sender()
+    )
+}
 ```
 
-## Address Check vs Capability
+## 주소 확인 vs Capability
 
-Utilizing objects as capabilities is a relatively new concept in blockchain programming. And in
-other smart-contract languages, authorization is often performed by checking the address of the
-sender. This pattern is still viable on Sui, however, overall recommendation is to use capabilities
-for better security, discoverability, and code organization.
+Object를 capability로 활용하는 것은 블록체인 프로그래밍에서 상대적으로 새로운 개념입니다.
+다른 스마트 컨트랙트 언어에서는 종종 발신자의 주소를 확인하여 인증을 수행합니다.
+이 패턴은 Sui에서도 여전히 사용 가능하지만, 전반적인 권장 사항은 더 나은 보안,
+발견 가능성 및 코드 구성을 위해 capability를 사용하는 것입니다.
 
-Let's look at how the `new` function that creates a user would look like if it was using the address
-check:
+주소 확인을 사용하는 경우 사용자를 생성하는 `new` 함수가 어떻게 보이는지 살펴보겠습니다:
 
-```move file=packages/samples/sources/programmability/capability-3.move anchor=with_address
+```move
+/// 무단 접근에 대한 오류 코드입니다.
+const ENotAuthorized: u64 = 0;
 
+/// 애플리케이션 관리자 주소입니다.
+const APPLICATION_ADMIN: address = @0xa11ce;
+
+/// 시스템에 새 사용자를 생성합니다. 발신자가 애플리케이션
+/// 관리자여야 합니다.
+public fun new(ctx: &mut TxContext): User {
+    assert!(ctx.sender() == APPLICATION_ADMIN, ENotAuthorized);
+    User { id: object::new(ctx) }
+}
 ```
 
-And now, let's see how the same function would look like with the capability:
+이제 capability를 사용한 동일한 함수가 어떻게 보이는지 살펴보겠습니다:
 
-```move file=packages/samples/sources/programmability/capability-4.move anchor=with_capability
+```move
+/// 소유자에게 시스템에서 새 사용자를 생성할 권한을 부여합니다.
+public struct AdminCap {}
 
+/// 시스템에 새 사용자를 생성합니다. 첫 번째 인자로 `AdminCap` capability를
+/// 전달해야 합니다.
+public fun new(_: &AdminCap, ctx: &mut TxContext): User {
+    User { id: object::new(ctx) }
+}
 ```
 
-Using capabilities has several advantages over the address check:
+Capability 사용은 주소 확인에 비해 여러 장점이 있습니다:
 
-- Migration of admin rights is easier with capabilities due to them being objects. In case of
-  address, if the admin address changes, all the functions that check the address need to be
-  updated - hence, require a package upgrade.
-- Function signatures are more descriptive with capabilities. It is clear that the `new` function
-  requires the `AdminCap` to be passed as an argument. And this function can't be called without it.
-- Object Capabilities don't require extra checks in the function body, and hence, decrease the
-  chance of a developer mistake.
-- An owned Capability also serves in discovery. The owner of the AdminCap can see the object in
-  their account (via a Wallet or Explorer), and know that they have the admin rights. This is less
-  transparent with the address check.
+- Capability는 object이기 때문에 관리자 권한의 이전이 더 쉽습니다. 주소의 경우
+  관리자 주소가 변경되면 해당 주소를 확인하는 모든 함수를 업데이트해야 하므로
+  패키지 업그레이드가 필요합니다.
+- Capability를 사용하면 함수 시그니처가 더 설명적입니다. `new` 함수가 `AdminCap`을
+  인자로 전달받아야 한다는 것이 명확합니다. 그리고 이 함수는 그것 없이는 호출할 수 없습니다.
+- Object Capability는 함수 본문에서 추가 확인이 필요하지 않으므로 개발자 실수의
+  가능성을 줄입니다.
+- 소유된 Capability는 발견에도 도움이 됩니다. AdminCap의 소유자는 자신의 계정에서
+  object를 볼 수 있고(Wallet 또는 Explorer를 통해) 관리자 권한이 있음을 알 수 있습니다.
+  이것은 주소 확인보다 투명합니다.
 
-However, the address approach has its own advantages. For example, if an address is multisig, and
-transaction building gets more complex, it might be easier to check the address. Also, if there's a
-central object of the application that is used in every function, it can store the admin address,
-and this would simplify migration. The central object approach is also valuable for revokable
-capabilities, where the admin can revoke the capability from the user.
+그러나 주소 접근 방식도 나름의 장점이 있습니다. 예를 들어, 주소가 멀티시그이고
+트랜잭션 구축이 더 복잡해지면 주소를 확인하는 것이 더 쉼 수 있습니다. 또한
+모든 함수에서 사용되는 애플리케이션의 중앙 object가 있다면 관리자 주소를 저장할 수 있고
+이는 마이그레이션을 단순화합니다. 중앙 object 접근 방식은 관리자가 사용자로부터
+capability를 취소할 수 있는 취소 가능한 capability에도 유용합니다.

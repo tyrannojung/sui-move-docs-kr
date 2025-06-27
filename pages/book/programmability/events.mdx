@@ -1,46 +1,72 @@
-# Events
+# 이벤트
 
-Events are a way to notify off-chain listeners about on-chain events. They are used to emit
-additional information about the transaction that is not stored - and, hence, can't be accessed -
-on-chain. Events are emitted by the `sui::event` module located in the
-[Sui Framework](./sui-framework).
+이벤트는 온체인 이벤트에 대해 오프체인 리스너에게 알리는 방법입니다. 이벤트는 저장되지 않아
+온체인에서 접근할 수 없는 트랜잭션에 대한 추가 정보를 발행하는 데 사용됩니다.
+이벤트는 [Sui 프레임워크](./sui-framework)에 위치한 `sui::event` 모듈에 의해 발행됩니다.
 
-> Any custom type with the [copy](./../move-basics/copy-ability) and
-> [drop](./../move-basics/drop-ability) abilities can be emitted as an event. Sui Verifier requires
-> the type to be internal to the module.
+> [copy](./../move-basics/copy-ability)와 [drop](./../move-basics/drop-ability) 능력을 가진
+> 모든 사용자 정의 타입은 이벤트로 발행될 수 있습니다. Sui Verifier는
+> 타입이 모듈 내부에 있어야 한다고 요구합니다.
 
 ```move
 module sui::event;
 
-/// Emit a custom Move event, sending the data off-chain.
+/// 사용자 정의 Move 이벤트를 발행하여 데이터를 오프체인으로 전송합니다.
 ///
-/// Used for creating custom indexes and tracking on-chain
-/// activity in a way that suits a specific application the most.
+/// 특정 애플리케이션에 가장 적합한 방식으로 사용자 정의 인덱스를 생성하고
+/// 온체인 활동을 추적하는 데 사용됩니다.
 ///
-/// The type `T` is the main way to index the event, and can contain
-/// phantom parameters, eg `emit(MyEvent<phantom T>)`.
+/// 타입 `T`는 이벤트를 인덱싱하는 주요 방법이며, 팬텀 매개변수를
+/// 포함할 수 있습니다. 예: `emit(MyEvent<phantom T>)`.
 public native fun emit<T: copy + drop>(event: T);
 ```
 
-## Emitting Events
+## 이벤트 발행하기
 
-Events are emitted using the `emit` function in the `sui::event` module. The function takes a single
-argument - the event to be emitted. The event data is passed by value,
+이벤트는 `sui::event` 모듈의 `emit` 함수를 사용하여 발행됩니다. 이 함수는 단일 인자,
+즉 발행할 이벤트를 받습니다. 이벤트 데이터는 값으로 전달됩니다.
 
-```move file=packages/samples/sources/programmability/events.move anchor=emit
+```move
+module book::events;
 
+use sui::coin::Coin;
+use sui::sui::SUI;
+use sui::event;
+
+/// 구매할 수 있는 아이템입니다.
+public struct Item has key { id: UID }
+
+/// 아이템이 구매될 때 발행되는 이벤트입니다. 아이템의 ID와
+/// 구매 가격을 포함합니다.
+public struct ItemPurchased has copy, drop {
+    item: ID,
+    price: u64
+}
+
+/// 아이템 구매를 수행하는 마켓플레이스 함수입니다.
+public fun purchase(coin: Coin<SUI>, ctx: &mut TxContext) {
+    let item = Item { id: object::new(ctx) };
+
+    // `ItemPurchased`의 인스턴스를 생성하고 `event::emit`에 전달합니다.
+    event::emit(ItemPurchased {
+        item: object::id(&item),
+        price: coin.value()
+    });
+
+    // 예제를 간단하게 유지하기 위해 나머지 구현을 생략합니다.
+    abort
+}
 ```
 
-The Sui Verifier requires the type passed to the `emit` function to be _internal to the module_. So
-emitting a type from another module will result in a compilation error. Primitive types, although
-they match the _copy_ and _drop_ requirement, are not allowed to be emitted as events.
+Sui Verifier는 `emit` 함수에 전달되는 타입이 _모듈 내부에_ 있어야 한다고 요구합니다. 따라서
+다른 모듈의 타입을 발행하면 컴파일 오류가 발생합니다. 기본 타입은 _copy_와 _drop_ 요구사항을
+충족하지만 이벤트로 발행할 수 없습니다.
 
-## Event Structure
+## 이벤트 구조
 
-Events are a part of the transaction result and are stored in the _transaction effects_. As such,
-they natively have the `sender` field which is the address who sent the transaction. So adding a
-"sender" field to the event is not necessary. Similarly, event metadata contains the timestamp. But
-it is important to note that the timestamp is relative to the node and may vary a little from node
-to node.
+이벤트는 트랜잭션 결과의 일부이며 _transaction effects_에 저장됩니다. 따라서
+이벤트는 기본적으로 트랜잭션을 보낸 주소인 `sender` 필드를 가지고 있습니다. 그래서 이벤트에
+"sender" 필드를 추가할 필요가 없습니다. 마찬가지로 이벤트 메타데이터에는 타임스탬프가 포함되어 있습니다.
+그러나 타임스탬프는 노드에 상대적이며 노드마다 약간 다를 수 있다는 점에 유의해야 합니다.
 
 {/* ## Reliability */}

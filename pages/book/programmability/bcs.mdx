@@ -1,38 +1,36 @@
 # Binary Canonical Serialization
 
-Binary Canonical Serialization (BCS) is a binary encoding format for structured data. It was
-originally designed in Diem, and became the standard serialization format for Move. BCS is simple,
-efficient, deterministic, and easy to implement in any programming language.
+Binary Canonical Serialization (BCS)는 구조화된 데이터를 위한 바이너리 인코딩 형식입니다.
+원래 Diem에서 설계되었으며 Move의 표준 직렬화 형식이 되었습니다. BCS는 단순하고
+효율적이며 결정적이고 모든 프로그래밍 언어에서 쉽게 구현할 수 있습니다.
 
-> The full format specification is available in the
-> [BCS repository](https://github.com/zefchain/bcs).
+> 전체 형식 사양은 [BCS 저장소](https://github.com/zefchain/bcs)에서 확인할 수 있습니다.
 
-## Format
+## 형식
 
-BCS is a binary format that supports unsigned integers up to 256 bits, options, booleans, unit
-(empty value), fixed and variable-length sequences, and maps. The format is designed to be
-deterministic, meaning that the same data will always be serialized to the same bytes.
+BCS는 최대 256비트까지의 부호 없는 정수, 옵션, 불리언, unit(빈 값),
+고정 및 가변 길이 시퀀스, 그리고 맵을 지원하는 바이너리 형식입니다. 이 형식은
+결정적으로 설계되어 동일한 데이터가 항상 동일한 바이트로 직렬화됩니다.
 
-> "BCS is not a self-describing format. As such, in order to deserialize a message, one must know
-> the message type and layout ahead of time" from the [README](https://github.com/zefchain/bcs)
+> "BCS는 자기 설명적 형식이 아닙니다. 따라서 메시지를 역직렬화하려면
+> 메시지 타입과 레이아웃을 미리 알아야 합니다" - [README](https://github.com/zefchain/bcs)에서
 
-Integers are stored in little-endian format, and variable-length integers are encoded using a
-variable-length encoding scheme. Sequences are prefixed with their length as ULEB128, enumerations
-are stored as the index of the variant followed by the data, and maps are stored as an ordered
-sequence of key-value pairs.
+정수는 리틀 엔디안 형식으로 저장되고, 가변 길이 정수는 가변 길이 인코딩 체계를 사용하여
+인코딩됩니다. 시퀀스는 ULEB128로 길이가 접두사로 붙고, 열거형은 변형의 인덱스와
+데이터가 이어서 저장되며, 맵은 정렬된 키-값 쌍의 시퀀스로 저장됩니다.
 
-Structs are treated as a sequence of fields, and the fields are serialized in the order they are
-defined in the struct. The fields are serialized using the same rules as the top-level data.
+Struct는 필드의 시퀀스로 처리되며, 필드는 struct에 정의된 순서대로 직렬화됩니다.
+필드는 최상위 레벨 데이터와 동일한 규칙을 사용하여 직렬화됩니다.
 
-## Using BCS
+## BCS 사용하기
 
-The [Sui Framework](./sui-framework) includes the sui::bcs module for encoding and decoding data.
-Encoding functions are native to the VM, and decoding functions are implemented in Move.
+[Sui 프레임워크](./sui-framework)는 데이터 인코딩과 디코딩을 위한 sui::bcs 모듈을 포함합니다.
+인코딩 함수는 VM에 네이티브이고, 디코딩 함수는 Move로 구현되어 있습니다.
 
-## Encoding
+## 인코딩
 
-To encode data, use the `bcs::to_bytes` function, which converts data references into byte vectors.
-This function supports encoding any types, including structs.
+데이터를 인코딩하려면 데이터 참조를 바이트 벡터로 변환하는 `bcs::to_bytes` 함수를 사용합니다.
+이 함수는 struct를 포함한 모든 타입의 인코딩을 지원합니다.
 
 ```move
 module std::bcs;
@@ -40,80 +38,147 @@ module std::bcs;
 public native fun to_bytes<T>(t: &T): vector<u8>;
 ```
 
-The following example shows how to encode a struct using BCS. The `to_bytes` function can take any
-value and encode it as a vector of bytes.
+다음 예시는 BCS를 사용하여 struct를 인코딩하는 방법을 보여줍니다. `to_bytes` 함수는 모든 값을 받아
+바이트 벡터로 인코딩할 수 있습니다.
 
-```move file=packages/samples/sources/programmability/bcs.move anchor=encode
+```move
+use sui::bcs;
 
+// 0x01 - 값이 1인 단일 바이트 (또는 false의 경우 0)
+let bool_bytes = bcs::to_bytes(&true);
+// 0x2a - 단지 단일 바이트
+let u8_bytes = bcs::to_bytes(&42u8);
+// 0x2a00000000000000 - 8바이트
+let u64_bytes = bcs::to_bytes(&42u64);
+// address는 32바이트의 고정 시퀀스입니다
+// 0x0000000000000000000000000000000000000000000000000000000000000002
+let addr = bcs::to_bytes(&@sui);
 ```
 
-### Encoding a Struct
+### Struct 인코딩하기
 
-Structs encode similarly to simple types. Here is how to encode a struct using BCS:
+Struct는 단순한 타입과 유사하게 인코딩됩니다. 다음은 BCS를 사용하여 struct를 인코딩하는 방법입니다:
 
-```move file=packages/samples/sources/programmability/bcs.move anchor=encode_struct
+```move
+let data = CustomData {
+    num: 42,
+    string: b"hello, world!".to_string(),
+    value: true
+};
 
+let struct_bytes = bcs::to_bytes(&data);
+
+let mut custom_bytes = vector[];
+custom_bytes.append(bcs::to_bytes(&42u8));
+custom_bytes.append(bcs::to_bytes(&b"hello, world!".to_string()));
+custom_bytes.append(bcs::to_bytes(&true));
+
+// struct는 단지 필드의 시퀀스이므로 바이트가 동일해야 합니다!
+assert!(&struct_bytes == &custom_bytes);
 ```
 
-## Decoding
+## 디코딩
 
-Because BCS does not self-describe and Move is statically typed, decoding requires prior knowledge
-of the data type. The `sui::bcs` module provides various functions to assist with this process.
+BCS는 자기 설명적이지 않고 Move가 정적 타입이므로, 디코딩에는 데이터 타입에 대한 사전 지식이 필요합니다.
+`sui::bcs` 모듈은 이 프로세스를 돕기 위한 다양한 함수를 제공합니다.
 
 ### Wrapper API
 
-BCS is implemented as a wrapper in Move. The decoder takes the bytes by value, and then allows the
-caller to _peel off_ the data by calling different decoding functions, prefixed with `peel_*`. The
-data is split off the bytes, and the remainder bytes are kept in the wrapper until the
-`into_remainder_bytes` function is called.
+BCS는 Move에서 wrapper로 구현됩니다. 디코더는 바이트를 값으로 받은 다음,
+`peel_*`로 시작하는 다양한 디코딩 함수를 호출하여 호출자가 데이터를 _벗겨낼_ 수 있게 합니다.
+데이터는 바이트에서 분리되고, 나머지 바이트는 `into_remainder_bytes` 함수가 호출될 때까지
+wrapper에 보관됩니다.
 
-```move file=packages/samples/sources/programmability/bcs.move anchor=decode
+```move
+use sui::bcs;
 
+// BCS 인스턴스는 항상 가변으로 선언되어야 합니다
+let mut bcs = bcs::new(x"010000000000000000");
+
+// 동일한 바이트를 다르게 읽을 수 있습니다. 예: Option<u64>
+let value: Option<u64> = bcs.peel_option_u64();
+
+assert!(value.is_some());
+assert!(value.borrow() == &0);
+
+let remainder = bcs.into_remainder_bytes();
+
+assert!(remainder.length() == 0);
 ```
 
-There is a common practice to use multiple variables in a single `let` statement during decoding. It
-makes code a little bit more readable and helps to avoid unnecessary copying of the data.
+디코딩 중에 단일 `let` 문에서 여러 변수를 사용하는 것이 일반적인 관행입니다.
+코드를 좀 더 읽기 쉽게 만들고 데이터의 불필요한 복사를 피하는 데 도움이 됩니다.
 
-```move file=packages/samples/sources/programmability/bcs.move anchor=chain_decode
+```move
+let mut bcs = bcs::new(x"0101010F0000000000F00000000000");
 
+// 순서에 주의하세요!!!
+// 여러 값을 벗겨내는 편리한 방법
+let (bool_value, u8_value, u64_value) = (
+    bcs.peel_bool(),
+    bcs.peel_u8(),
+    bcs.peel_u64()
+);
 ```
 
-### Decoding Vectors
+### 벡터 디코딩하기
 
-While most of the primitive types have a dedicated decoding function, vectors need special handling,
-which depends on the type of the elements. For vectors, first you need to decode the length of the
-vector, and then decode each element in a loop.
+대부분의 기본 타입은 전용 디코딩 함수를 가지고 있지만, 벡터는 요소의 타입에 따라
+특별한 처리가 필요합니다. 벡터의 경우, 먼저 벡터의 길이를 디코딩한 다음
+루프에서 각 요소를 디코딩해야 합니다.
 
-```move file=packages/samples/sources/programmability/bcs.move anchor=decode_vector
+```move
+let mut bcs = bcs::new(x"0101010F0000000000F00000000000");
 
+// bcs.peel_vec_length()는 벡터의 길이를 벗겨냅니다 :)
+let mut len = bcs.peel_vec_length();
+let mut vec = vector[];
+
+// 그런 다음 데이터 타입에 따라 반복합니다
+while (len > 0) {
+    vec.push_back(bcs.peel_u64()); // 또는 다른 타입
+    len = len - 1;
+};
+
+assert!(vec.length() == 1);
 ```
 
-For most common scenarios, `bcs` module provides a basic set of functions for decoding vectors:
+가장 일반적인 시나리오의 경우, `bcs` 모듈은 벡터를 디코딩하기 위한 기본 함수 세트를 제공합니다:
 
 - `peel_vec_address(): vector<address>`
 - `peel_vec_bool(): vector<bool>`
 - `peel_vec_u8(): vector<u8>`
 - `peel_vec_u64(): vector<u64>`
 - `peel_vec_u128(): vector<u128>`
-- `peel_vec_vec_u8(): vector<vector<u8>>` - vector of byte vectors
+- `peel_vec_vec_u8(): vector<vector<u8>>` - 바이트 벡터의 벡터
 
-### Decoding Option
+### Option 디코딩하기
 
 {/*
-> Coincidentally, Option, being a vector in Move, overlaps with the representation of an enum with a
-> single variant in BCS, and makes Option in Rust fully compatible with the one in Move.
+> 우연히도 Move에서 Option은 벡터이므로 BCS에서 단일 변형을 가진 열거형의 표현과 겹치며,
+> Rust의 Option을 Move의 Option과 완전히 호환되게 만듭니다.
 */}
 
-[Option](./../move-basics/option) is represented as a vector of either 0 or 1 element. To read an
-option, you would treat it like a vector and check its length (first byte - either 1 or 0).
+[Option](./../move-basics/option)은 0 또는 1개의 요소를 가진 벡터로 표현됩니다.
+Option을 읽으려면 벡터처럼 취급하고 길이(첫 번째 바이트 - 1 또는 0)를 확인해야 합니다.
 
-```move file=packages/samples/sources/programmability/bcs.move anchor=decode_option
+```move
+let mut bcs = bcs::new(x"00");
+let is_some = bcs.peel_bool();
 
+assert!(is_some == false);
+
+let mut bcs = bcs::new(x"0101");
+let is_some = bcs.peel_bool();
+let value = bcs.peel_u8();
+
+assert!(is_some == true);
+assert!(value == 1);
 ```
 
-> If you need to decode an option of a custom type, use the method in the code snippet above.
+> 사용자 정의 타입의 Option을 디코딩해야 하는 경우, 위 코드 스니펫의 방법을 사용하세요.
 
-The most common scenarios, `bcs` module provides a basic set of functions for decoding Option's:
+가장 일반적인 시나리오의 경우, `bcs` 모듈은 Option을 디코딩하기 위한 기본 함수 세트를 제공합니다:
 
 - `peel_option_address(): Option<address>`
 - `peel_option_bool(): Option<bool>`
@@ -121,18 +186,27 @@ The most common scenarios, `bcs` module provides a basic set of functions for de
 - `peel_option_u64(): Option<u64>`
 - `peel_option_u128(): Option<u128>`
 
-### Decoding Structs
+### Struct 디코딩하기
 
-Structs are decoded field by field, and there is no standard function to automatically decode bytes
-into a Move struct, and it would have been a violation of the Move's type system. Instead, you need
-to decode each field manually.
+Struct는 필드별로 디코딩되며, 바이트를 Move struct로 자동 디코딩하는 표준 함수는 없습니다.
+이는 Move의 타입 시스템을 위반하는 것이 될 수 있습니다. 대신 각 필드를
+수동으로 디코딩해야 합니다.
 
-```move file=packages/samples/sources/programmability/bcs.move anchor=decode_struct
+```move
+// 어떤 바이트들...
+let mut bcs = bcs::new(x"0101010F0000000000F00000000000");
 
+let (age, is_active, name) = (
+    bcs.peel_u8(),
+    bcs.peel_bool(),
+    bcs.peel_vec_u8().to_string()
+);
+
+let user = User { age, is_active, name };
 ```
 
-## Summary
+## 요약
 
-Binary Canonical Serialization is an efficient binary format for structured data, ensuring
-consistent serialization across platforms. The Sui Framework provides comprehensive tools for
-working with BCS, allowing extensive functionality through built-in functions.
+Binary Canonical Serialization은 구조화된 데이터를 위한 효율적인 바이너리 형식으로,
+플랫폼 간 일관된 직렬화를 보장합니다. Sui 프레임워크는 BCS 작업을 위한 포괄적인 도구를 제공하여
+내장 함수를 통해 광범위한 기능을 허용합니다.

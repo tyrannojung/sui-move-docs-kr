@@ -1,183 +1,291 @@
-# Dynamic Fields
+# 동적 필드
 
-Sui Object model allows objects to be attached to other objects as _dynamic fields_. The behavior is
-similar to how a `Map` works in other programming languages. However, unlike a `Map` which in Move
-would be strictly typed (we have covered it in the [Collections](./collections) section), dynamic
-fields allow attaching objects of any type. A similar approach from the world of frontend
-development would be a JavaScript Object type which allows storing any type of data dynamically.
+Sui Object 모델은 object를 다른 object에 _동적 필드_로 첨부할 수 있게 합니다. 이 동작은
+다른 프로그래밍 언어에서 `Map`이 작동하는 방식과 유사합니다. 그러나 Move에서는 엄격하게
+타입화된 `Map`([컬렉션](./collections) 섹션에서 다루었습니다)과 달리, 동적 필드는
+모든 타입의 object를 첨부할 수 있습니다. 프론트엔드 개발 세계의 유사한 접근 방식은
+동적으로 모든 타입의 데이터를 저장할 수 있는 JavaScript Object 타입입니다.
 
-> There's no limit to the number of dynamic fields that can be attached to an object. Thus, dynamic
-> fields can be used to store large amounts of data that don't fit into the object limit size.
+> object에 첨부할 수 있는 동적 필드의 수에는 제한이 없습니다. 따라서 동적 필드는
+> object 크기 제한에 맞지 않는 대량의 데이터를 저장하는 데 사용할 수 있습니다.
 
-Dynamic Fields allow for a wide range of applications, from splitting data into smaller parts to
-avoid [object size limit](./../guides/building-against-limits) to attaching objects as a part of
-application logic.
+동적 필드는 [object 크기 제한](./../guides/building-against-limits)을 피하기 위해 데이터를
+더 작은 부분으로 분할하는 것부터 애플리케이션 로직의 일부로 object를 첨부하는 것까지
+광범위한 애플리케이션을 가능하게 합니다.
 
-## Definition
+## 정의
 
-Dynamic Fields are defined in the `sui::dynamic_field` module of the
-[Sui Framework](./sui-framework). They are attached to object's `UID` via a _name_, and can be
-accessed using that name. There can be only one field with a given name attached to an object.
+동적 필드는 [Sui 프레임워크](./sui-framework)의 `sui::dynamic_field` 모듈에 정의되어 있습니다.
+이들은 _이름_을 통해 object의 `UID`에 첨부되며, 해당 이름을 사용하여 접근할 수 있습니다.
+object에는 주어진 이름을 가진 필드가 하나만 첨부될 수 있습니다.
 
 ```move
 module sui::dynamic_field;
 
-/// Internal object used for storing the field and value
+/// 필드와 값을 저장하는 데 사용되는 내부 object
 public struct Field<Name: copy + drop + store, Value: store> has key {
-    /// Determined by the hash of the object ID, the field name
-    /// value and it's type, i.e. hash(parent.id || name || Name)
+    /// object ID, 필드 이름 값과 타입의 해시로 결정됩니다.
+    /// 즉, hash(parent.id || name || Name)
     id: UID,
-    /// The value for the name of this field
+    /// 이 필드의 이름에 대한 값
     name: Name,
-    /// The value bound to this field
+    /// 이 필드에 바인딩된 값
     value: Value,
 }
 ```
 
-As the definition shows, dynamic fields are stored in an internal `Field` object, which has the
-`UID` generated in a deterministic way based on the object ID, the field name, and the field type.
-The `Field` object contains the field name and the value bound to it. The constraints on the `Name`
-and `Value` type parameters define the abilities that the key and value must have.
+정의에서 볼 수 있듯이, 동적 필드는 내부 `Field` object에 저장되며, object ID, 필드 이름,
+필드 타입을 기반으로 결정론적 방식으로 생성된 `UID`를 가집니다. `Field` object는
+필드 이름과 이에 바인딩된 값을 포함합니다. `Name`과 `Value` 타입 매개변수의 제약은
+키와 값이 가져야 하는 능력을 정의합니다.
 
-## Usage
+## 사용법
 
-The methods available for dynamic fields are straightforward: a field can be added with `add`,
-removed with `remove`, and read with `borrow` and `borrow_mut`. Additionally, the `exists_` method
-can be used to check if a field exists (for stricter checks with type, there is an
-`exists_with_type` method).
+동적 필드에 사용할 수 있는 메서드는 간단합니다: 필드는 `add`로 추가하고, `remove`로 제거하며,
+`borrow`와 `borrow_mut`로 읽을 수 있습니다. 또한 `exists_` 메서드를 사용하여 필드가
+존재하는지 확인할 수 있습니다(타입을 포함한 더 엄격한 검사를 위해서는 `exists_with_type`
+메서드가 있습니다).
 
-```move file=packages/samples/sources/programmability/dynamic-fields.move anchor=usage
+```move
+module book::dynamic_fields;
 
+// `dynamic_field`의 매우 일반적인 별칭은 `df`입니다.
+// 모듈 이름이 꽤 길기 때문입니다.
+use sui::dynamic_field as df;
+use std::string::String;
+
+/// 동적 필드를 첨부할 object입니다.
+public struct Character has key {
+    id: UID
+}
+
+// 캐릭터에 첨부할 수 있는 다양한 액세서리 목록입니다.
+// 이들은 `store` 능력을 가져야 합니다.
+public struct Hat has key, store { id: UID, color: u32 }
+public struct Mustache has key, store { id: UID }
+
+#[test]
+fun test_character_and_accessories() {
+    let ctx = &mut tx_context::dummy();
+    let mut character = Character { id: object::new(ctx) };
+
+    // 캐릭터의 UID에 모자를 첨부합니다
+    df::add(
+        &mut character.id,
+        b"hat_key",
+        Hat { id: object::new(ctx), color: 0xFF0000 }
+    );
+
+    // 마찬가지로, 캐릭터의 UID에 콧수염을 첨부합니다
+    df::add(
+        &mut character.id,
+        b"mustache_key",
+        Mustache { id: object::new(ctx) }
+    );
+
+    // 모자와 콧수염이 캐릭터에 첨부되었는지 확인합니다
+    //
+    assert!(df::exists_(&character.id, b"hat_key"), 0);
+    assert!(df::exists_(&character.id, b"mustache_key"), 1);
+
+    // 모자의 색상을 수정합니다
+    let hat: &mut Hat = df::borrow_mut(&mut character.id, b"hat_key");
+    hat.color = 0x00FF00;
+
+    // 캐릭터에서 모자와 콧수염을 제거합니다
+    let hat: Hat = df::remove(&mut character.id, b"hat_key");
+    let mustache: Mustache = df::remove(&mut character.id, b"mustache_key");
+
+    // 모자와 콧수염이 더 이상 캐릭터에 첨부되지 않았는지 확인합니다
+    assert!(!df::exists_(&character.id, b"hat_key"), 0);
+    assert!(!df::exists_(&character.id, b"mustache_key"), 1);
+
+    sui::test_utils::destroy(character);
+    sui::test_utils::destroy(mustache);
+    sui::test_utils::destroy(hat);
+}
 ```
 
-In the example above, we define a `Character` object and two different types of accessories that
-could never be put together in a vector. However, dynamic fields allow us to store them together in
-a single object. Both objects are attached to the `Character` via a `vector<u8>` (bytestring
-literal), and can be accessed using their respective names.
+위의 예제에서, 우리는 `Character` object와 벡터에 함께 넣을 수 없는 두 가지 다른 타입의
+액세서리를 정의합니다. 그러나 동적 필드를 사용하면 단일 object에 함께 저장할 수 있습니다.
+두 object는 `vector<u8>`(바이트문자열 리터럴)을 통해 `Character`에 첨부되며,
+각각의 이름을 사용하여 접근할 수 있습니다.
 
-As you can see, when we attached the accessories to the Character, we passed them _by value_. In
-other words, both values were moved to a new scope, and their ownership was transferred to the
-`Character` object. If we changed the ownership of `Character` object, the accessories would have
-been moved with it.
+보시다시피, 액세서리를 Character에 첨부할 때 _값으로_ 전달했습니다. 다시 말해,
+두 값은 새로운 스코프로 이동되었고, 소유권은 `Character` object로 이전되었습니다.
+`Character` object의 소유권을 변경하면 액세서리도 함께 이동됩니다.
 
-And the last important property of dynamic fields we should highlight is that they are _accessed
-through their parent_. This means that the `Hat` and `Mustache` objects are not directly accessible
-and follow the same rules as the parent object.
+그리고 우리가 강조해야 할 동적 필드의 마지막 중요한 속성은 _부모를 통해 접근_된다는 것입니다.
+이는 `Hat`과 `Mustache` object가 직접 접근할 수 없으며 부모 object와 동일한 규칙을
+따른다는 것을 의미합니다.
 
-## Foreign Types as Dynamic Fields
+## 동적 필드로서의 외부 타입
 
-Dynamic fields allow objects to carry data of any type, including those defined in other modules.
-This is possible due to their generic nature and relatively weak constraints on the type parameters.
-Let's illustrate this by attaching a few different values to a `Character` object.
+동적 필드는 다른 모듈에서 정의된 타입을 포함하여 모든 타입의 데이터를 전달할 수 있게 합니다.
+이는 제네릭 특성과 타입 매개변수에 대한 상대적으로 약한 제약 때문에 가능합니다.
+`Character` object에 몇 가지 다른 값을 첨부하여 이를 설명해 보겠습니다.
 
-```move file=packages/samples/sources/programmability/dynamic-fields.move anchor=foreign_types
+```move
+let mut character = Character { id: object::new(ctx) };
 
+// `vector<u8>` 이름을 통해 `String`을 첨부합니다
+df::add(&mut character.id, b"string_key", b"Hello, World!".to_string());
+
+// `u32` 이름을 통해 `u64`를 첨부합니다
+df::add(&mut character.id, 1000u32, 1_000_000_000u64);
+
+// `bool` 이름을 통해 `bool`을 첨부합니다
+df::add(&mut character.id, true, false);
 ```
 
-In this example we showed how different types can be used for both _name_ and the _value_ of a
-dynamic field. The `String` is attached via a `vector<u8>` name, the `u64` is attached via a `u32`
-name, and the `bool` is attached via a `bool` name. Anything is possible with dynamic fields!
+이 예제에서 우리는 동적 필드의 _이름_과 _값_ 모두에 서로 다른 타입을 사용할 수 있음을
+보여주었습니다. `String`은 `vector<u8>` 이름을 통해 첨부되고, `u64`는 `u32` 이름을 통해
+첨부되며, `bool`은 `bool` 이름을 통해 첨부됩니다. 동적 필드로는 모든 것이 가능합니다!
 
-## Orphaned Dynamic Fields
+## 고아 동적 필드
 
-> To prevent orphaned dynamic fields, please, use [Dynamic Collection Types](./dynamic-collections)
-> such as `Bag` as they track the dynamic fields and won't allow unpacking if there are attached
-> fields.
+> 고아 동적 필드를 방지하려면 `Bag`과 같은 [동적 컬렉션 타입](./dynamic-collections)을
+> 사용하세요. 이들은 동적 필드를 추적하고 첨부된 필드가 있으면 언패킹을 허용하지 않습니다.
 
-The `object::delete()` function, which is used to delete a UID, does not track the dynamic fields,
-and cannot prevent dynamic fields from becoming orphaned. Once the parent UID is deleted, the
-dynamic fields are not automatically deleted, and they become orphaned. This means that the dynamic
-fields are still stored in the blockchain, but they will never become accessible again.
+UID를 삭제하는 데 사용되는 `object::delete()` 함수는 동적 필드를 추적하지 않으며,
+동적 필드가 고아가 되는 것을 방지할 수 없습니다. 부모 UID가 삭제되면 동적 필드는
+자동으로 삭제되지 않고 고아가 됩니다. 이는 동적 필드가 여전히 블록체인에 저장되어 있지만
+다시는 접근할 수 없게 된다는 것을 의미합니다.
 
-```move file=packages/samples/sources/programmability/dynamic-fields.move anchor=orphan_fields
+```move
+let hat = Hat { id: object::new(ctx), color: 0xFF0000 };
+let mut character = Character { id: object::new(ctx) };
 
+// `vector<u8>` 이름을 통해 `Hat`을 첨부합니다
+df::add(&mut character.id, b"hat_key", hat);
+
+// ! 코드에서 이렇게 하지 마세요
+// ! 위험 - 부모 object 삭제
+let Character { id } = character;
+id.delete();
+
+// ...`Hat`은 이제 림보에 갇혔습니다, 다시는 접근할 수 없습니다
 ```
 
-Orphaned objects are not a subject to storage rebate, and the storage fees will remain unclaimed.
-One way to avoid orphaned dynamic fields during unpacking of an object is to return the `UID` and
-store it somewhere temporarily until the dynamic fields are removed and handled properly.
+고아 object는 스토리지 리베이트의 대상이 아니며, 스토리지 수수료는 청구되지 않은 상태로
+남게 됩니다. object 언패킹 중에 고아 동적 필드를 피하는 한 가지 방법은 `UID`를 반환하고
+동적 필드가 제거되고 적절히 처리될 때까지 어딘가에 임시로 저장하는 것입니다.
 
-## Custom Type as a Field Name
+## 필드 이름으로 사용자 정의 타입
 
-In the examples above, we used primitive types as field names since they have the required set of
-abilities. But dynamic fields get even more interesting when we use custom types as field names.
-This allows for a more structured way of storing data, and also allows for protecting the field
-names from being accessed by other modules.
+위의 예제에서 우리는 필수 능력 집합을 가지고 있기 때문에 원시 타입을 필드 이름으로
+사용했습니다. 하지만 사용자 정의 타입을 필드 이름으로 사용하면 동적 필드가 훨씬 더
+흥미로워집니다. 이를 통해 데이터를 저장하는 더 구조화된 방법이 가능하고, 필드 이름이
+다른 모듈에서 접근되는 것을 보호할 수도 있습니다.
 
-```move file=packages/samples/sources/programmability/dynamic-fields.move anchor=custom_type
+```move
+/// 필드가 있는 사용자 정의 타입입니다.
+public struct AccessoryKey has copy, drop, store { name: String }
 
+/// 빈 키, 한 번만 첨부할 수 있습니다.
+public struct MetadataKey has copy, drop, store {}
 ```
 
-Two field names that we defined above are `AccessoryKey` and `MetadataKey`. The `AccessoryKey` has a
-`String` field in it, hence it can be used multiple times with different `name` values. The
-`MetadataKey` is an empty key, and can be attached only once.
+위에서 정의한 두 필드 이름은 `AccessoryKey`와 `MetadataKey`입니다. `AccessoryKey`는
+`String` 필드를 가지고 있으므로 다른 `name` 값으로 여러 번 사용할 수 있습니다.
+`MetadataKey`는 빈 키이며 한 번만 첨부할 수 있습니다.
 
-```move file=packages/samples/sources/programmability/dynamic-fields.move anchor=custom_type_usage
+```move
+let mut character = Character { id: object::new(ctx) };
 
+// `AccessoryKey { name: b"hat" }`를 통해 첨부합니다
+df::add(
+    &mut character.id,
+    AccessoryKey { name: b"hat".to_string() },
+    Hat { id: object::new(ctx), color: 0xFF0000 }
+);
+// `AccessoryKey { name: b"mustache" }`를 통해 첨부합니다
+df::add(
+    &mut character.id,
+    AccessoryKey { name: b"mustache".to_string() },
+    Mustache { id: object::new(ctx) }
+);
+
+// `MetadataKey`를 통해 첨부합니다
+df::add(&mut character.id, MetadataKey {}, 42);
 ```
 
-As you can see, custom types do work as field names but as long as they can be _constructed_ by the
-module, in other words - if they are _internal_ to the module and defined in it. This limitation on
-struct packing can open up new ways in the design of the application.
+보시다시피, 사용자 정의 타입은 필드 이름으로 작동하지만 모듈에서 _구성_될 수 있는 한,
+즉 모듈 _내부_에 있고 모듈에서 정의된 경우에만 작동합니다. struct 패킹에 대한 이러한
+제한은 애플리케이션 설계에서 새로운 방법을 열 수 있습니다.
 
-This approach is used in the Object Capability{/*[]](./object-capability)*/} pattern, where an
-application can authorize a foreign object to perform operations in it while not exposing the
-capabilities to other modules.
+이 접근 방식은 Object Capability{/*[]](./object-capability)*/} 패턴에서 사용되며,
+여기서 애플리케이션은 외부 object가 다른 모듈에 기능을 노출하지 않으면서 작업을
+수행할 수 있도록 권한을 부여할 수 있습니다.
 
-## Exposing UID
+## UID 노출
 
 <div className="warning">
 
-Mutable access to `UID` is a security risk. Exposing `UID` of your type as a mutable reference can
-lead to unwanted modifications or removal of the object's dynamic fields. Additionally, it affects
-the Transfer to Object{/*[](./../storage/transfer-to-object)*/} and
-[Dynamic Object Fields](./dynamic-object-fields). Make sure to understand the implications before
-exposing the `UID` as a mutable reference.
+`UID`에 대한 가변 접근은 보안 위험입니다. 타입의 `UID`를 가변 참조로 노출하면
+object의 동적 필드가 원치 않게 수정되거나 제거될 수 있습니다. 또한 Transfer to Object{/*[](./../storage/transfer-to-object)*/}와
+[동적 Object 필드](./dynamic-object-fields)에도 영향을 미칩니다. `UID`를 가변 참조로
+노출하기 전에 그 의미를 이해해야 합니다.
 
 </div>
 
-Because dynamic fields are attached to `UID`s, their usage in other modules depends on whether the
-`UID` can be accessed. By default struct visibility protects the `id` field and won't let other
-modules access it directly. However, if there's a public accessor method that returns a reference to
-`UID`, dynamic fields can be read in other modules.
+동적 필드는 `UID`에 첨부되기 때문에, 다른 모듈에서의 사용은 `UID`에 접근할 수 있는지
+여부에 따라 달라집니다. 기본적으로 struct 가시성은 `id` 필드를 보호하고 다른 모듈이
+직접 접근하지 못하게 합니다. 그러나 `UID`에 대한 참조를 반환하는 public 접근자 메서드가
+있다면 다른 모듈에서 동적 필드를 읽을 수 있습니다.
 
-```move file=packages/samples/sources/programmability/dynamic-fields.move anchor=exposed_uid
-
+```move
+/// 캐릭터의 UID를 노출하여 다른 모듈이 동적 필드를 읽을 수 있게 합니다.
+public fun uid(c: &Character): &UID {
+    &c.id
+}
 ```
 
-In the example above, we show how to expose the `UID` of a `Character` object. This solution may
-work for some applications, however, it is important to remember that exposed `UID` allows reading
-_any_ dynamic field attached to the object.
+위의 예제에서 `Character` object의 `UID`를 노출하는 방법을 보여줍니다. 이 솔루션은
+일부 애플리케이션에 작동할 수 있지만, 노출된 `UID`는 object에 첨부된 _모든_ 동적 필드를
+읽을 수 있게 한다는 점을 기억하는 것이 중요합니다.
 
-If you need to expose the `UID` only within the package, use a restrictive visibility, like
-`public(package)`, or even better - use more specific accessor methods that would allow only reading
-specific fields.
+패키지 내에서만 `UID`를 노출해야 한다면 `public(package)`와 같은 제한적인 가시성을
+사용하거나, 더 나은 방법으로 특정 필드만 읽을 수 있게 하는 더 구체적인 접근자 메서드를
+사용하세요.
 
-```move file=packages/samples/sources/programmability/dynamic-fields.move anchor=exposed_uid_measures
+```move
+/// 같은 패키지의 모듈만 UID에 접근할 수 있게 합니다.
+public(package) fun uid_package(c: &Character): &UID {
+    &c.id
+}
 
+/// 캐릭터에서 동적 필드를 빌릴 수 있게 합니다.
+public fun borrow<Name: copy + store + drop, Value: store>(
+    c: &Character,
+    n: Name
+): &Value {
+    df::borrow(&c.id, n)
+}
 ```
 
-## Dynamic Fields vs Fields
+## 동적 필드 vs 필드
 
-Dynamic Fields are more expensive than regular fields, as they require additional storage and costs
-for accessing them. Their flexibility comes at a price, and it is important to understand the
-implications when making a decision between using dynamic fields and regular fields.
+동적 필드는 추가 스토리지와 접근 비용이 필요하므로 일반 필드보다 비쌉니다.
+그들의 유연성에는 대가가 따르며, 동적 필드와 일반 필드 사용 사이에서 결정을 내릴 때
+그 의미를 이해하는 것이 중요합니다.
 
-## Limits
+## 제한사항
 
-Dynamic Fields are not subject to the [object size limit](./../guides/building-against-limits), and
-can be used to store large amounts of data. However, they are still subject to the
-[dynamic fields created limit](./../guides/building-against-limits), which is set to 1000 fields per
-transaction.
+동적 필드는 [object 크기 제한](./../guides/building-against-limits)의 대상이 아니며,
+대량의 데이터를 저장하는 데 사용할 수 있습니다. 그러나 여전히
+[동적 필드 생성 제한](./../guides/building-against-limits)의 대상이며,
+이는 트랜잭션당 1000개 필드로 설정되어 있습니다.
 
-## Applications
+## 애플리케이션
 
-Dynamic Fields can play a crucial role in applications of any complexity. They open up a variety of
-different use cases, from storing heterogeneous data to attaching objects as part of the application
-logic. They allow for certain [upgradeability practices](./../guides/upgradeability-practices) based
-on the ability to define them _later_ and change the type of the field.
+동적 필드는 모든 복잡성의 애플리케이션에서 중요한 역할을 할 수 있습니다. 이들은
+이질적인 데이터 저장부터 애플리케이션 로직의 일부로 object를 첨부하는 것까지
+다양한 사용 사례를 열어줍니다. 이들은 _나중에_ 정의하고 필드의 타입을 변경할 수 있는
+능력을 기반으로 특정 [업그레이드 가능성 관행](./../guides/upgradeability-practices)을
+허용합니다.
 
-## Next Steps
+## 다음 단계
 
-In the next section we will cover [Dynamic Object Fields](./dynamic-object-fields) and explain how
-they differ from dynamic fields, and what are the implications of using them.
+다음 섹션에서는 [동적 Object 필드](./dynamic-object-fields)를 다루고 동적 필드와
+어떻게 다른지, 그리고 사용할 때의 의미는 무엇인지 설명합니다.

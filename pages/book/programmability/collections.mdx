@@ -1,79 +1,141 @@
-# Collections
+# 컬렉션
 
-Collection types are a fundamental part of any programming language. They are used to store a
-collection of data, such as a list of items. The `vector` type has already been covered in the
-[vector section](./../move-basics/vector), and in this chapter we will cover the vector-based
-collection types offered by the [Sui Framework](./sui-framework).
+컬렉션 타입은 모든 프로그래밍 언어의 기본적인 부분입니다. 이들은 항목 목록과 같은
+데이터 모음을 저장하는 데 사용됩니다. `vector` 타입은 이미
+[벡터 섹션](./../move-basics/vector)에서 다루었으며, 이 챕터에서는
+[Sui 프레임워크](./sui-framework)에서 제공하는 벡터 기반 컬렉션 타입을 다룹니다.
 
-## Vector
+## 벡터
 
-While we have previously covered the `vector` type in the [vector section](./../move-basics/vector),
-it is worth going over it again in a new context. This time we will cover the usage of the `vector`
-type in objects and how it can be used in an application.
+이전에 [벡터 섹션](./../move-basics/vector)에서 `vector` 타입을 다루었지만,
+새로운 맥락에서 다시 살펴볼 가치가 있습니다. 이번에는 object에서 `vector`
+타입의 사용법과 애플리케이션에서 어떻게 사용할 수 있는지를 다룹니다.
 
-```move file=packages/samples/sources/programmability/collections.move anchor=vector
+```move
+module book::collections_vector;
 
+use std::string::String;
+
+/// `BookStore`에서 판매할 수 있는 책
+public struct Book has key, store {
+    id: UID,
+    name: String
+}
+
+/// `Book`을 판매하는 BookStore
+public struct BookStore has key, store {
+    id: UID,
+    books: vector<Book>
+}
 ```
 
 ## VecSet
 
-`VecSet` is a collection type that stores a set of unique items. It is similar to a `vector`, but it
-does not allow duplicate items. This property makes it useful for storing a collection of unique
-items, such as a list of IDs or addresses.
+`VecSet`은 고유한 항목의 집합을 저장하는 컬렉션 타입입니다. `vector`와 유사하지만
+중복 항목을 허용하지 않습니다. 이러한 속성은 ID나 주소 목록과 같은 고유한 항목의
+모음을 저장하는 데 유용합니다.
 
-```move file=packages/samples/sources/programmability/collections-2.move anchor=vec_set
+```move
+module book::collections_vec_set;
 
+use sui::vec_set::{Self, VecSet};
+
+public struct App has drop {
+    /// struct 정의에서 사용된 `VecSet`
+    subscribers: VecSet<address>
+}
+
+#[test]
+fun vec_set_playground() {
+    let set = vec_set::empty<u8>(); // 빈 set 생성
+    let mut set = vec_set::singleton(1); // 단일 항목으로 set 생성
+
+    set.insert(2); // set에 항목 추가
+    set.insert(3);
+
+    assert!(set.contains(&1)); // 항목이 set에 있는지 확인
+    assert!(set.size() == 3); // set의 항목 수 가져오기
+    assert!(!set.is_empty()); // set이 비어있는지 확인
+
+    set.remove(&2); // set에서 항목 제거
+}
 ```
 
-VecSet will fail on attempt to insert an item that already exists in the set.
+VecSet은 이미 set에 존재하는 항목을 삽입하려고 하면 실패합니다.
 
 ## VecMap
 
-`VecMap` is a collection type that stores a map of key-value pairs. It is similar to a `VecSet`, but
-it allows you to associate a value with each item in the set. This makes it useful for storing a
-collection of key-value pairs, such as a list of addresses and their balances, or a list of user IDs
-and their associated data.
+`VecMap`은 키-값 쌍의 맵을 저장하는 컬렉션 타입입니다. `VecSet`과 유사하지만
+set의 각 항목에 값을 연결할 수 있습니다. 이는 주소와 잔액 목록이나 사용자 ID와
+관련 데이터 목록과 같은 키-값 쌍의 모음을 저장하는 데 유용합니다.
 
-Keys in a `VecMap` are unique, and each key can only be associated with a single value. If you try
-to insert a key-value pair with a key that already exists in the map, the old value will be replaced
-with the new value.
+`VecMap`의 키는 고유하며, 각 키는 단일 값에만 연결될 수 있습니다. 맵에 이미 존재하는
+키로 키-값 쌍을 삽입하려고 하면 이전 값이 새 값으로 대체됩니다.
 
-```move file=packages/samples/sources/programmability/collections-3.move anchor=vec_map
+```move
+module book::collections_vec_map;
 
+use std::string::String;
+use sui::vec_map::{Self, VecMap};
+
+public struct Metadata has drop {
+    name: String,
+    /// struct 정의에서 사용된 `VecMap`
+    attributes: VecMap<String, String>
+}
+
+#[test]
+fun vec_map_playground() {
+    let mut map = vec_map::empty(); // 빈 map 생성
+
+    map.insert(2, b"two".to_string()); // map에 키-값 쌍 추가
+    map.insert(3, b"three".to_string());
+
+    assert!(map.contains(&2)); // 키가 map에 있는지 확인
+
+    map.remove(&2); // map에서 키-값 쌍 제거
+}
 ```
 
-## Limitations
+## 제한사항
 
-Standard collection types are a great way to store typed data with guaranteed safety and
-consistency. However, they are limited by the type of data they can store - the type system won't
-allow you to store a wrong type in a collection; and they're limited in size - by the object size
-limit. They will work for relatively small-sized sets and lists, but for larger collections you may
-need to use a different approach.
+표준 컬렉션 타입은 보장된 안전성과 일관성으로 타입화된 데이터를 저장하는 훌륭한 방법입니다.
+그러나 저장할 수 있는 데이터 타입에 제한이 있습니다 - 타입 시스템은 컬렉션에 잘못된 타입을
+저장하는 것을 허용하지 않습니다. 그리고 크기에도 제한이 있습니다 - object 크기 제한에 의해
+제한됩니다. 상대적으로 작은 크기의 set과 리스트에는 작동하지만, 더 큰 컬렉션의 경우
+다른 접근 방식이 필요할 수 있습니다.
 
-Another limitations on collection types is inability to compare them. Because the order of insertion
-is not guaranteed, an attempt to compare a `VecSet` to another `VecSet` may not yield the expected
-results.
+컬렉션 타입의 또 다른 제한사항은 비교할 수 없다는 것입니다. 삽입 순서가 보장되지 않기 때문에
+`VecSet`을 다른 `VecSet`과 비교하려는 시도는 예상한 결과를 얻지 못할 수 있습니다.
 
-> This behavior is caught by the linter and will emit a warning: _Comparing collections of type
-> 'sui::vec_set::VecSet' may yield unexpected result_
+> 이 동작은 린터에 의해 포착되어 경고를 표시합니다: _'sui::vec_set::VecSet' 타입의
+> 컬렉션을 비교하면 예상치 못한 결과가 발생할 수 있습니다_
 
-```move file=packages/samples/sources/programmability/collections-4.move anchor=vec_set_comparison
+```move
+let mut set1 = vec_set::empty();
+set1.insert(1);
+set1.insert(2);
 
+let mut set2 = vec_set::empty();
+set2.insert(2);
+set2.insert(1);
+
+assert!(set1 == set2); // 실패!
 ```
 
-In the example above, the comparison will fail because the order of insertion is not guaranteed, and
-the two `VecSet` instances may have different orders of elements. And the comparison will fail even
-if the two `VecSet` instances contain the same elements.
+위의 예제에서 비교는 실패합니다. 삽입 순서가 보장되지 않고 두 `VecSet` 인스턴스가
+서로 다른 요소 순서를 가질 수 있기 때문입니다. 두 `VecSet` 인스턴스가 동일한 요소를
+포함하더라도 비교는 실패합니다.
 
-## Summary
+## 요약
 
-- Vector is a native type that allows storing a list of items.
-- VecSet is built on top of vector and allows storing sets of unique items.
-- VecMap is used to store key-value pairs in a map-like structure.
-- Vector-based collections are strictly typed and limited by the object size limit and are best
-  suited for small-sized sets and lists.
+- Vector는 항목 목록을 저장할 수 있는 네이티브 타입입니다.
+- VecSet은 vector 위에 구축되어 고유한 항목의 집합을 저장할 수 있습니다.
+- VecMap은 맵과 같은 구조에서 키-값 쌍을 저장하는 데 사용됩니다.
+- 벡터 기반 컬렉션은 엄격하게 타입화되고 object 크기 제한에 의해 제한되며
+  작은 크기의 set과 리스트에 가장 적합합니다.
 
-## Next Steps
+## 다음 단계
 
-In the next section we will cover the [Wrapper Type Pattern](./wrapper-type-pattern) - a design
-pattern often used with collection types to extend or restrict their behavior.
+다음 섹션에서는 [Wrapper Type 패턴](./wrapper-type-pattern)을 다룹니다 - 컬렉션 타입과
+함께 자주 사용되어 동작을 확장하거나 제한하는 디자인 패턴입니다.

@@ -1,100 +1,98 @@
-# Pattern: Witness
+# 패턴: Witness
 
-Witness is a pattern of proving an existence by constructing a proof. In the context of programming,
-witness is a way to prove a certain property of a system by providing a value that can only be
-constructed if the property holds.
+Witness는 증명을 구성하여 존재를 증명하는 패턴입니다. 프로그래밍의 맥락에서
+witness는 속성이 유지될 때만 구성할 수 있는 값을 제공하여 시스템의 특정 속성을 증명하는 방법입니다.
 
-## Witness in Move
+## Move에서의 Witness
 
-In the [Struct](./../move-basics/struct) section we have shown that a struct can only be created -
-or _packed_ - by the module defining it. Hence, in Move, a module proves ownership of the type by
-constructing it. This is one of the most important patterns in Move, and it is widely used for
-generic type instantiation and authorization.
+[Struct](./../move-basics/struct) 섹션에서 struct는 이를 정의하는 모듈에서만 생성되거나
+_패킹_될 수 있음을 보여주었습니다. 따라서 Move에서 모듈은 타입을 구성하여 타입의 소유권을 증명합니다.
+이는 Move에서 가장 중요한 패턴 중 하나이며, 제네릭 타입 인스턴스화와 권한 부여에 널리 사용됩니다.
 
-Practically speaking, for the witness to be used, there has to be a function that expects a witness
-as an argument. In the example below it is the `new` function that expects a witness of the `T` type
-to create a `Instance<T>` instance.
+실질적으로 witness가 사용되려면 witness를 인자로 기대하는 함수가 있어야 합니다.
+아래 예제에서는 `Instance<T>` 인스턴스를 생성하기 위해 `T` 타입의 witness를 기대하는
+`new` 함수입니다.
 
-> It is often the case that the witness struct is not stored, and for that the function may require
-> the [Drop](./../move-basics/drop-ability) ability for the type.
+> witness struct가 저장되지 않는 경우가 많으며, 이를 위해 함수는 타입에 대해
+> [Drop](./../move-basics/drop-ability) 능력을 요구할 수 있습니다.
 
 ```move
 module book::witness;
 
-/// A struct that requires a witness to be created.
+/// witness가 필요한 struct입니다.
 public struct Instance<T> { t: T }
 
-/// Create a new instance of `Instance<T>` with the provided T.
+/// 제공된 T로 `Instance<T>`의 새 인스턴스를 생성합니다.
 public fun new<T>(witness: T): Instance<T> {
     Instance { t: witness }
 }
 ```
 
-The only way to construct an `Instance<T>` is to call the `new` function with an instance of the
-type `T`. This is a basic example of the witness pattern in Move. A module providing a witness often
-has a matching implementation, like the module `book::witness_source` below:
+`Instance<T>`를 구성하는 유일한 방법은 타입 `T`의 인스턴스로 `new` 함수를 호출하는 것입니다.
+이는 Move에서 witness 패턴의 기본 예제입니다. witness를 제공하는 모듈은 종종
+아래의 `book::witness_source` 모듈과 같은 매칭 구현을 가집니다:
 
 ```move
 module book::witness_source;
 
 use book::witness::{Self, Instance};
 
-/// A struct used as a witness.
+/// witness로 사용되는 struct입니다.
 public struct W {}
 
-/// Create a new instance of `Instance<W>`.
+/// `Instance<W>`의 새 인스턴스를 생성합니다.
 public fun new_instance(): Instance<W> {
     witness::new(W {})
 }
 ```
 
-The instance of the struct `W` is passed into the `new_instance` function to create an
-`Instance<W>`, thereby proving that the module `book::witness_source` owns the type `W`.
+struct `W`의 인스턴스가 `new_instance` 함수에 전달되어 `Instance<W>`를 생성하며,
+이로써 `book::witness_source` 모듈이 타입 `W`를 소유함을 증명합니다.
 
-## Instantiating a Generic Type
+## 제네릭 타입 인스턴스화
 
-Witness allows generic types to be instantiated with a concrete type. This is useful for inheriting
-associated behaviors from the type with an option to extend them, if the module provides the ability
-to do so.
+Witness는 제네릭 타입을 구체적인 타입으로 인스턴스화할 수 있게 합니다. 이는 모듈이
+그렇게 할 수 있는 능력을 제공한다면, 타입에서 관련 동작을 상속하고 확장할 수 있는 옵션과 함께
+유용합니다.
 
 ```move
 module sui::balance;
 
-/// A Supply of T. Used for minting and burning.
+/// T의 Supply. 민팅과 소각에 사용됩니다.
 public struct Supply<phantom T> has store {
     value: u64,
 }
 
-/// Create a new supply for type T with the provided witness.
+/// 제공된 witness로 타입 T를 위한 새 supply를 생성합니다.
 public fun create_supply<T: drop>(_w: T): Supply<T> {
     Supply { value: 0 }
 }
 
-/// Get the `Supply` value.
+/// `Supply` 값을 가져옵니다.
 public fun supply_value<T>(supply: &Supply<T>): u64 {
     supply.value
 }
 ```
 
-In the example above, which is borrowed from the [`balance` module][balance-framework] of the
-[Sui Framework](./sui-framework), the `Supply` a generic struct that can be constructed only by
-supplying a witness of the type `T`. The witness is taken by value and _discarded_ - hence the `T`
-must have the [drop](./../move-basics/drop-ability) ability.
+위의 예제는 [Sui 프레임워크](./sui-framework)의 [`balance` 모듈][balance-framework]에서
+차용한 것으로, `Supply`는 타입 `T`의 witness를 제공해야만 구성할 수 있는 제네릭 struct입니다.
+witness는 값으로 취해지고 _버려집니다_ - 따라서 `T`는 [drop](./../move-basics/drop-ability) 능력을
+가져야 합니다.
 
 [balance-framework]: https://docs.sui.io/references/framework/sui/balance
 
-The instantiated `Supply<T>` can then be used to mint new `Balance<T>`'s, where `T` is the type of
-the supply.
+인스턴스화된 `Supply<T>`는 새로운 `Balance<T>`를 민팅하는 데 사용될 수 있으며,
+여기서 `T`는 supply의 타입입니다.
 
 ```move
 module sui::balance;
 
-/// Storable balance.
+/// 저장 가능한 잔액.
 public struct Balance<phantom T> has store {
     value: u64,
 }
 
-/// Increase supply by `value` and create a new `Balance<T>` with this value.
+/// supply를 `value`만큼 증가시키고 이 값으로 새 `Balance<T>`를 생성합니다.
 public fun increase_supply<T>(self: &mut Supply<T>, value: u64): Balance<T> {
     assert!(value < (18446744073709551615u64 - self.value), EOverflow);
     self.value = self.value + value;
@@ -104,17 +102,16 @@ public fun increase_supply<T>(self: &mut Supply<T>, value: u64): Balance<T> {
 
 ## One Time Witness
 
-While a struct can be created any number of times, there are cases where a struct should be
-guaranteed to be created only once. For this purpose, Sui provides the "One-Time Witness" - a
-special witness that can only be used once. We explain it in more detail in the
-[next section](./one-time-witness).
+struct는 여러 번 생성될 수 있지만, struct가 단 한 번만 생성되도록 보장해야 하는 경우가 있습니다.
+이를 위해 Sui는 "One-Time Witness"를 제공합니다 - 단 한 번만 사용할 수 있는 특별한 witness입니다.
+[다음 섹션](./one-time-witness)에서 더 자세히 설명합니다.
 
-## Summary
+## 요약
 
-- Witness is a pattern of proving a certain property by constructing a proof.
-- In Move, a module proves ownership of a type by constructing it.
-- Witness is often used for generic type instantiation and authorization.
+- Witness는 증명을 구성하여 특정 속성을 증명하는 패턴입니다.
+- Move에서 모듈은 타입을 구성하여 타입의 소유권을 증명합니다.
+- Witness는 종종 제네릭 타입 인스턴스화와 권한 부여에 사용됩니다.
 
-## Next Steps
+## 다음 단계
 
-In the next section, we will learn about the [One Time Witness](./one-time-witness) pattern.
+다음 섹션에서는 [One Time Witness](./one-time-witness) 패턴에 대해 배웁니다.

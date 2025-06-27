@@ -4,6 +4,5 @@ export default {
   "upgradeability-practices": "Upgradability Practices",
   "building-against-limits": "Building Against Limits",
   "better-error-handling": "Better Error Handling",
-  "code-quality-checklist": "Code Quality Checklist",
-  "open-sourcing-libraries": "Open-sourcing Libraries"
+  "code-quality-checklist": "Code Quality Checklist"
 }

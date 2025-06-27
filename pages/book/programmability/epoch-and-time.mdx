@@ -1,69 +1,80 @@
-# Epoch and Time
+# 에포크와 시간
 
-Sui has two ways of accessing the current time: `Epoch` and `Time`. The former represents
-operational periods in the system and changed roughly every 24 hours. The latter represents the
-current time in milliseconds since the Unix Epoch. Both can be accessed freely in the program.
+Sui는 현재 시간에 접근하는 두 가지 방법을 제공합니다: `Epoch`와 `Time`. 전자는
+시스템의 운영 기간을 나타내며 대략 24시간마다 변경됩니다. 후자는
+Unix Epoch 이후의 현재 시간을 밀리초 단위로 나타냅니다. 둘 다 프로그램에서 자유롭게 접근할 수 있습니다.
 
-## Epoch
+## 에포크
 
-Epochs are used to separate the system into operational periods. During an epoch the validator set
-is fixed, however, at the epoch boundary, the validator set can be changed. Epochs play a crucial
-role in the consensus algorithm and are used to determine the current validator set. They are also
-used as measurement in the staking mechanism.
+에포크는 시스템을 운영 기간으로 구분하는 데 사용됩니다. 에포크 동안 검증자 집합은
+고정되어 있지만, 에포크 경계에서는 검증자 집합이 변경될 수 있습니다. 에포크는 합의 알고리즘에서
+중요한 역할을 하며 현재 검증자 집합을 결정하는 데 사용됩니다. 또한
+스테이킹 메커니즘에서 측정 단위로도 사용됩니다.
 
-Epoch can be read from the [transaction context](./transaction-context):
+에포크는 [트랜잭션 컨텍스트](./transaction-context)에서 읽을 수 있습니다:
 
-```move file=packages/samples/sources/programmability/epoch-and-time.move anchor=epoch
-
+```move
+public fun current_epoch(ctx: &TxContext) {
+    let epoch = ctx.epoch();
+    // ...
+}
 ```
 
-It is also possible to get the unix timestamp of the epoch start:
+에포크 시작의 unix 타임스탬프를 가져올 수도 있습니다:
 
-```move file=packages/samples/sources/programmability/epoch-and-time.move anchor=epoch_start
-
+```move
+public fun current_epoch_start(ctx: &TxContext) {
+    let epoch_start = ctx.epoch_timestamp_ms();
+    // ...
+}
 ```
 
-Normally, epochs are used in staking and system operations, however, in custom scenarios they can be
-used to emulate 24h periods. They are critical if an application relies on the staking logic or
-needs to know the current validator set.
+일반적으로 에포크는 스테이킹과 시스템 운영에 사용되지만, 맞춤 시나리오에서는
+24시간 기간을 에뮬레이트하는 데 사용할 수 있습니다. 애플리케이션이 스테이킹 로직에 의존하거나
+현재 검증자 집합을 알아야 하는 경우 에포크는 매우 중요합니다.
 
-## Time
+## 시간
 
-For a more precise time measurement, Sui provides the `Clock` object. It is a system object that is
-updated during checkpoints by the system, which stores the current time in milliseconds since the
-Unix Epoch. The `Clock` object is defined in the `sui::clock` module and has a reserved address
-`0x6`.
+보다 정밀한 시간 측정을 위해 Sui는 `Clock` object를 제공합니다. 이는 시스템에 의해
+체크포인트 중에 업데이트되는 시스템 object로, Unix Epoch 이후의 현재 시간을
+밀리초 단위로 저장합니다. `Clock` object는 `sui::clock` 모듈에 정의되어 있으며
+예약된 주소 `0x6`을 가지고 있습니다.
 
-Clock is a shared object, but a transaction attempting to access it mutably will fail. This
-limitation allows parallel access to the `Clock` object, which is important for maintaining
-performance.
+Clock은 공유 object이지만, 이를 가변적으로 접근하려는 트랜잭션은 실패합니다. 이러한
+제한은 `Clock` object에 대한 병렬 접근을 허용하며, 이는 성능 유지에 중요합니다.
 
 ```move
 module sui::clock;
 
-/// Singleton shared object that exposes time to Move calls.  This
-/// object is found at address 0x6, and can only be read (accessed
-/// via an immutable reference) by entry functions.
+/// Move 호출에 시간을 노출하는 싱글톤 공유 object입니다. 이
+/// object는 주소 0x6에서 찾을 수 있으며, entry 함수에 의해서만
+/// 읽을 수 있습니다(불변 참조를 통해 접근).
 ///
-/// Entry Functions that attempt to accept `Clock` by mutable
-/// reference or value will fail to verify, and honest validators
-/// will not sign or execute transactions that use `Clock` as an
-/// input parameter, unless it is passed by immutable reference.
+/// `Clock`을 가변 참조나 값으로 받으려는 Entry 함수는 검증에
+/// 실패하며, 정직한 검증자들은 불변 참조로 전달되지 않는 한
+/// `Clock`을 입력 매개변수로 사용하는 트랜잭션에 서명하거나
+/// 실행하지 않습니다.
 public struct Clock has key {
     id: UID,
-    /// The clock's timestamp, which is set automatically by a
-    /// system transaction every time consensus commits a
-    /// schedule, or by `sui::clock::increment_for_testing` during
-    /// testing.
+    /// 합의가 스케줄을 커밋할 때마다 시스템 트랜잭션에 의해
+    /// 자동으로 설정되거나, 테스트 중에는
+    /// `sui::clock::increment_for_testing`에 의해 설정되는
+    /// 시계의 타임스탬프입니다.
     timestamp_ms: u64,
 }
 ```
 
-There is only one public function available in the `Clock` module - `timestamp_ms`. It returns the
-current time in milliseconds since the Unix Epoch.
+`Clock` 모듈에서 사용할 수 있는 유일한 public 함수는 `timestamp_ms`입니다. 이는
+Unix Epoch 이후의 현재 시간을 밀리초 단위로 반환합니다.
 
-```move file=packages/samples/sources/programmability/epoch-and-time.move anchor=clock
+```move
+use sui::clock::Clock;
 
+/// Clock은 불변 참조로 전달되어야 합니다.
+public fun current_time(clock: &Clock) {
+    let time = clock.timestamp_ms();
+    // ...
+}
 ```
 
 {/* TODO:

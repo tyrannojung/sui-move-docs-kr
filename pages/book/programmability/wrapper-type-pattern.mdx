@@ -1,57 +1,88 @@
-# Pattern: Wrapper type
+# 패턴: Wrapper Type
 
-Sometimes, there’s a need to create a new type that behaves similarly to an existing type but with
-certain modifications or restrictions. For example, you might want to create a
-[collection type](./collections) that behaves like a vector but doesn’t allow modifying the elements
-after they’ve been inserted. The wrapper type pattern is an effective way to achieve this.
+때로는 기존 타입과 유사하게 동작하지만 특정 수정사항이나 제한사항이 있는 새로운 타입을
+만들어야 할 필요가 있습니다. 예를 들어, 벡터처럼 동작하지만 삽입 후 요소를 수정할 수 없는
+[컬렉션 타입](./collections)을 만들고 싶을 수 있습니다. Wrapper type 패턴은 이를 달성하는
+효과적인 방법입니다.
 
-## Definition
+## 정의
 
-The wrapper type pattern is a design pattern in which you create a new type that wraps an existing
-type. The wrapper type is distinct from the original but can be converted to and from it.
+Wrapper type 패턴은 기존 타입을 감싸는 새로운 타입을 만드는 디자인 패턴입니다.
+Wrapper 타입은 원본과 구별되지만 서로 변환할 수 있습니다.
 
-Often, it is implemented as a positional struct with a single field.
+종종 단일 필드를 가진 위치 struct로 구현됩니다.
 
-```move file=packages/samples/sources/programmability/wrapper-type-pattern.move anchor=main
+```move
+module book::wrapper_type_pattern;
 
+/// Wrapper type 패턴을 사용한 매우 간단한 스택 구현.
+/// 요소를 팝하지 않는 한 요소에 접근할 수 없습니다.
+public struct Stack<T>(vector<T>) has copy, store, drop;
+
+/// 값을 감싸서 새 인스턴스를 생성합니다.
+public fun new<T>(value: vector<T>): Stack<T> {
+    Stack(value)
+}
+
+/// 스택에 요소를 push합니다.
+public fun push_back<T>(v: &mut Stack<T>, el: T) {
+    v.0.push_back(el);
+}
+
+/// 스택에서 요소를 pop합니다. `vector`와 달리, 이 함수는
+/// 스택이 비어있어도 실패하지 않고 대신 `None`을 반환합니다.
+public fun pop_back<T>(v: &mut Stack<T>): Option<T> {
+    if (v.0.length() == 0) option::none()
+    else option::some(v.0.pop_back())
+}
+
+/// 스택의 크기를 가져옵니다.
+public fun size<T>(v: &Stack<T>): u64 {
+    v.0.length()
+}
 ```
 
-## Common Practices
+## 일반적인 관행
 
-In cases where the goal is to extend the behavior of an existing type, it is common to provide
-accessors for the wrapped type. This approach allows users to access the underlying type directly
-when needed. For example, in the following code, we provide the `inner()`, `inner_mut()`, and
-`into_inner()` methods for the Stack type.
+기존 타입의 동작을 확장하는 것이 목표인 경우, 감싸진 타입에 대한 접근자를 제공하는 것이
+일반적입니다. 이 접근 방식은 필요할 때 사용자가 기본 타입에 직접 접근할 수 있게 합니다.
+예를 들어, 다음 코드에서는 Stack 타입에 `inner()`, `inner_mut()`, `into_inner()`
+메서드를 제공합니다.
 
-```move file=packages/samples/sources/programmability/wrapper-type-pattern.move anchor=common
+```move
+/// `Stack`의 내용을 읽을 수 있게 합니다.
+public fun inner<T>(v: &Stack<T>): &vector<T> { &v.0 }
 
+/// `Stack`의 내용에 가변 접근을 허용합니다.
+public fun inner_mut<T>(v: &mut Stack<T>): &mut vector<T> { &mut v.0 }
+
+/// `Stack`을 기본 `vector`로 해체합니다.
+public fun into_inner<T>(v: Stack<T>): vector<T> {
+    let Stack(inner) = v;
+    inner
+}
 ```
 
-## Advantages
+## 장점
 
-The wrapper type pattern offers several benefits:
+Wrapper type 패턴은 여러 이점을 제공합니다:
 
-- Custom Functions: It allows you to define custom functions for an existing type.
-- Robust Function Signatures: It constrains function signatures to the new type, thereby making the
-  code more robust.
-- Improved Readability: It often increases the readability of the code by providing a more
-  descriptive type name.
+- 맞춤 함수: 기존 타입에 대해 맞춤 함수를 정의할 수 있습니다.
+- 강력한 함수 시그니처: 함수 시그니처를 새 타입으로 제한하여 코드를 더 견고하게 만듭니다.
+- 향상된 가독성: 더 설명적인 타입 이름을 제공하여 코드의 가독성을 향상시킵니다.
 
-## Disadvantages
+## 단점
 
-The wrapper type pattern is powerful in two scenarios—when you want to limit the behavior of an
-existing type while providing a custom interface to the same data structure, and when you want to
-extend the behavior of an existing type. However, it does have some limitations:
+Wrapper type 패턴은 두 가지 시나리오에서 강력합니다 - 같은 데이터 구조에 맞춤 인터페이스를
+제공하면서 기존 타입의 동작을 제한하고 싶을 때, 그리고 기존 타입의 동작을 확장하고 싶을 때입니다.
+그러나 몇 가지 제한사항이 있습니다:
 
-- Verbosity: It can be verbose to implement, especially if you want to expose all the methods of the
-  wrapped type.
-- Sparse Implementation: The implementation can be quite minimal, as it often just forwards calls to
-  the wrapped type.
+- 장황함: 특히 감싸진 타입의 모든 메서드를 노출하려는 경우 구현이 장황할 수 있습니다.
+- 희소한 구현: 구현이 종종 감싸진 타입으로 호출을 전달하는 정도로 매우 최소화될 수 있습니다.
 
-## Next Steps
+## 다음 단계
 
-The wrapper type pattern is very useful, particularly when used in conjunction with collection
-types, as demonstrated in the previous section. In the next section, we will cover
-[Dynamic Fields](./dynamic-fields) — an important primitive that enables
-[Dynamic Collections](./dynamic-collections), a way to store large collections of data in a more
-flexible, albeit more expensive, way.
+Wrapper type 패턴은 특히 이전 섹션에서 보여준 것처럼 컬렉션 타입과 함께 사용할 때
+매우 유용합니다. 다음 섹션에서는 [동적 필드](./dynamic-fields)를 다룹니다 -
+[동적 컬렉션](./dynamic-collections)을 가능하게 하는 중요한 기본 요소로, 더 비용이 들지만
+더 유연한 방식으로 대량의 데이터 컬렉션을 저장하는 방법입니다.

@@ -1,136 +1,193 @@
-# Dynamic Collections
+# 동적 컬렉션
 
-[Sui Framework](./sui-framework) offers a variety of collection types that build on the
-[dynamic fields](./dynamic-fields) and [dynamic object fields](./dynamic-object-fields) concepts.
-These collections are designed to be a safer and more understandable way to store and manage dynamic
-fields and objects.
+[Sui 프레임워크](./sui-framework)는 [동적 필드](./dynamic-fields)와 
+[동적 object 필드](./dynamic-object-fields) 개념을 기반으로 하는 다양한 컬렉션 타입을 제공합니다.
+이러한 컬렉션은 동적 필드와 object를 저장하고 관리하는 더 안전하고 이해하기 쉬운 방법으로 설계되었습니다.
 
-For each collection type we will specify the primitive they use, and the specific features they
-offer.
+각 컬렉션 타입에 대해 사용하는 기본 요소와 제공하는 특정 기능을 명시하겠습니다.
 
-> Unlike dynamic (object) fields which operate on UID, collection types have their own type and
-> allow calling [associated functions](./../move-basics/struct-methods).
+> UID에서 작동하는 동적 (object) 필드와 달리, 컬렉션 타입은 자체 타입을 가지며
+> [관련 함수](./../move-basics/struct-methods)를 호출할 수 있습니다.
 
-## Common Concepts
+## 공통 개념
 
-All of the collection types share the same set of methods, which are:
+모든 컬렉션 타입은 동일한 메서드 집합을 공유합니다:
 
-- `add` - adds a field to the collection
-- `remove` - removes a field from the collection
-- `borrow` - borrows a field from the collection
-- `borrow_mut` - borrows a mutable reference to a field from the collection
-- `contains` - checks if a field exists in the collection
-- `length` - returns the number of fields in the collection
-- `is_empty` - checks if the `length` is 0
+- `add` - 컬렉션에 필드를 추가합니다
+- `remove` - 컬렉션에서 필드를 제거합니다
+- `borrow` - 컬렉션에서 필드를 빌립니다
+- `borrow_mut` - 컬렉션에서 필드에 대한 가변 참조를 빌립니다
+- `contains` - 컬렉션에 필드가 존재하는지 확인합니다
+- `length` - 컬렉션의 필드 수를 반환합니다
+- `is_empty` - `length`가 0인지 확인합니다
 
-All collection types support index syntax for `borrow` and `borrow_mut` methods. If you see square
-brackets in the examples, they are translated into `borrow` and `borrow_mut` calls.
+모든 컬렉션 타입은 `borrow`와 `borrow_mut` 메서드에 대해 인덱스 구문을 지원합니다.
+예제에서 대괄호를 보면 `borrow`와 `borrow_mut` 호출로 변환됩니다.
 
 ```move
 let hat: &Hat = &bag[b"key"];
 let hat_mut: &mut Hat = &mut bag[b"key"];
 
-// is equivalent to
+// 다음과 동일합니다
 let hat: &Hat = bag.borrow(b"key");
 let hat_mut: &mut Hat = bag.borrow_mut(b"key");
 ```
 
-In the examples we won't focus on these functions, but rather on the differences between the
-collection types.
+예제에서는 이러한 함수에 초점을 맞추지 않고 컬렉션 타입 간의 차이점에 초점을 맞출 것입니다.
 
 ## Bag
 
-Bag, as the name suggests, acts as a "bag" of heterogeneous values. It is a simple, non-generic type
-that can store any data. Bag will never allow orphaned fields, as it tracks the number of fields and
-can't be destroyed if it's not empty.
+Bag은 이름에서 알 수 있듯이 이질적인 값의 "가방" 역할을 합니다. 어떤 데이터든 저장할 수 있는
+단순한 비제네릭 타입입니다. Bag은 필드 수를 추적하고 비어 있지 않으면 삭제할 수 없으므로
+고아 필드를 절대 허용하지 않습니다.
 
 ```move
 module sui::bag;
 
 public struct Bag has key, store {
-    /// the ID of this bag
+    /// 이 bag의 ID
     id: UID,
-    /// the number of key-value pairs in the bag
+    /// bag의 키-값 쌍의 수
     size: u64,
 }
 ```
 
-_See [full documentation for sui::bag][bag-framework] module._
+_[sui::bag][bag-framework] 모듈의 전체 문서를 참조하세요._
 
-Due to Bag storing any types, the extra methods it offers is:
+Bag이 모든 타입을 저장하기 때문에 제공하는 추가 메서드는:
 
-- `contains_with_type` - checks if a field exists with a specific type
+- `contains_with_type` - 특정 타입의 필드가 존재하는지 확인합니다
 
-Used as a struct field:
+struct 필드로 사용:
 
-```move file=packages/samples/sources/programmability/dynamic-collections.move anchor=bag_struct
+```move
+/// `sui::bag` 모듈에서 가져옵니다.
+use sui::bag::{Self, Bag};
 
+/// struct 필드로서의 `Bag` 예제입니다.
+public struct Carrier has key {
+    id: UID,
+    bag: Bag
+}
 ```
 
-Using the Bag:
+Bag 사용하기:
 
-```move file=packages/samples/sources/programmability/dynamic-collections.move anchor=bag_usage
+```move
+let mut bag = bag::new(ctx);
 
+// bag은 요소 수를 얻는 `length` 함수를 가집니다
+assert!(bag.length() == 0, 0);
+
+bag.add(b"my_key", b"my_value".to_string());
+
+// length가 1로 변경되었습니다
+assert!(bag.length() == 1, 1);
+
+// 순서대로: `borrow`, `borrow_mut` 그리고 `remove`
+// 값 타입을 지정해야 합니다
+let field_ref: &String = &bag[b"my_key"];
+let field_mut: &mut String = &mut bag[b"my_key"];
+let field: String = bag.remove(b"my_key");
+
+// length가 다시 0이 되었습니다 - 언팩할 수 있습니다
+bag.destroy_empty();
 ```
 
 ## ObjectBag
 
-Defined in the `sui::object_bag` module. Identical to [Bag](#bag), but uses
-[dynamic object fields](./dynamic-object-fields) internally. Can only store objects as values.
+`sui::object_bag` 모듈에 정의되어 있습니다. [Bag](#bag)과 동일하지만
+내부적으로 [동적 object 필드](./dynamic-object-fields)를 사용합니다. 값으로 object만 저장할 수 있습니다.
 
 ## Table
 
-Table is a typed dynamic collection that has a fixed type for keys and values. It is defined in the
-`sui::table` module.
+Table은 키와 값에 대해 고정된 타입을 가진 타입화된 동적 컬렉션입니다.
+`sui::table` 모듈에 정의되어 있습니다.
 
 ```move
 module sui::table;
 
 public struct Table<phantom K: copy + drop + store, phantom V: store> has key, store {
-    /// the ID of this table
+    /// 이 table의 ID
     id: UID,
-    /// the number of key-value pairs in the table
+    /// table의 키-값 쌍의 수
     size: u64,
 }
 ```
 
-_See [full documentation for sui::table][table-framework] module._
+_[sui::table][table-framework] 모듈의 전체 문서를 참조하세요._
 
-Used as a struct field:
+struct 필드로 사용:
 
-```move file=packages/samples/sources/programmability/dynamic-collections.move anchor=table_struct
+```move
+/// `sui::table` 모듈에서 가져옵니다.
+use sui::table::{Self, Table};
 
+/// `store`를 가진 일부 레코드 타입
+public struct Record has store { /* ... */ }
+
+/// struct 필드로서의 `Table` 예제입니다.
+public struct UserRegistry has key {
+    id: UID,
+    table: Table<address, Record>
+}
 ```
 
-Using the Table:
+Table 사용하기:
 
-```move file=packages/samples/sources/programmability/dynamic-collections.move anchor=table_usage
+```move
+#[test] fun test_table() {
+let ctx = &mut tx_context::dummy();
 
+// Table은 키와 값에 대해 명시적인 타입 매개변수가 필요합니다
+// ...하지만 초기화 시에만 한 번 필요합니다.
+let mut table = table::new<address, String>(ctx);
+
+// table은 요소 수를 얻는 `length` 함수를 가집니다
+assert!(table.length() == 0, 0);
+
+table.add(@0xa11ce, b"my_value".to_string());
+table.add(@0xb0b, b"another_value".to_string());
+
+// length가 2로 변경되었습니다
+assert!(table.length() == 2, 2);
+
+// 순서대로: `borrow`, `borrow_mut` 그리고 `remove`
+let addr_ref = &table[@0xa11ce];
+let addr_mut = &mut table[@0xa11ce];
+
+// 두 값을 모두 제거합니다
+let _addr = table.remove(@0xa11ce);
+let _addr = table.remove(@0xb0b);
+
+// length가 다시 0이 되었습니다 - 언팩할 수 있습니다
+table.destroy_empty();
+}
 ```
 
 ## ObjectTable
 
-Defined in the `sui::object_table` module. Identical to [Table](#table), but uses
-[dynamic object fields](./dynamic-object-fields) internally. Can only store objects as values.
+`sui::object_table` 모듈에 정의되어 있습니다. [Table](#table)과 동일하지만
+내부적으로 [동적 object 필드](./dynamic-object-fields)를 사용합니다. 값으로 object만 저장할 수 있습니다.
 
-## Summary
+## 요약
 
-- [Bag](#bag) - a simple collection that can store any type of data.
-- [ObjectBag](#objectbag) - a collection that can store only objects.
-- [Table](#table) - a typed dynamic collection that has a fixed type for keys and values.
-- [ObjectTable](#objecttable) - same as Table, but can only store objects.
+- [Bag](#bag) - 모든 타입의 데이터를 저장할 수 있는 단순한 컬렉션입니다.
+- [ObjectBag](#objectbag) - object만 저장할 수 있는 컬렉션입니다.
+- [Table](#table) - 키와 값에 대해 고정된 타입을 가진 타입화된 동적 컬렉션입니다.
+- [ObjectTable](#objecttable) - Table과 동일하지만 object만 저장할 수 있습니다.
 {/* [Linked Table](#linkedtable) */}
 
 ## LinkedTable
 
-This section is coming soon!
+이 섹션은 곧 추가될 예정입니다!
 
-## Further Reading
+## 더 읽어보기
 
-- [sui::table][table-framework] module documentation.
-- [sui::object_table][object-table-framework] module documentation.
-- [sui::bag][bag-framework] module documentation.
-- [sui::object_bag][object-bag-framework] module documentation.
+- [sui::table][table-framework] 모듈 문서.
+- [sui::object_table][object-table-framework] 모듈 문서.
+- [sui::bag][bag-framework] 모듈 문서.
+- [sui::object_bag][object-bag-framework] 모듈 문서.
 
 [table-framework]: https://docs.sui.io/references/framework/sui/table
 [object-table-framework]: https://docs.sui.io/references/framework/sui/object_table
@@ -139,9 +196,9 @@ This section is coming soon!
 
 {/* TODO! */}
 
-{/* ## Choosing a Collection Type
+{/* ## 컬렉션 타입 선택하기
 
-Depending on the needs of your project, you may choose to */}
+프로젝트의 필요에 따라 다음을 선택할 수 있습니다 */}
 
 {/* ## LinkedTable
 

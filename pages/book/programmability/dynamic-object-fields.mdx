@@ -1,93 +1,131 @@
-# Dynamic Object Fields
+# 동적 Object 필드
 
-> This section expands on the [Dynamic Fields](./dynamic-fields). Please, read it first to
-> understand the basics of dynamic fields.
+> 이 섹션은 [동적 필드](./dynamic-fields)를 확장합니다. 동적 필드의 기본을 이해하기 위해
+> 먼저 읽어주세요.
 
-Another variation of dynamic fields is _dynamic object fields_, which have certain differences from
-regular dynamic fields. In this section, we will cover the specifics of dynamic object fields and
-explain how they differ from regular dynamic fields.
+동적 필드의 또 다른 변형은 _동적 object 필드_로, 일반 동적 필드와 특정한 차이점이 있습니다.
+이 섹션에서는 동적 object 필드의 세부사항을 다루고 일반 동적 필드와 어떻게 다른지 설명합니다.
 
-> General recommendation is to avoid using dynamic object fields in favor of (just) dynamic fields,
-> especially if there's no need for direct discovery through the ID. The extra costs of dynamic
-> object fields may not be justified by the benefits they provide.
+> 일반적인 권장사항은 특히 ID를 통한 직접 탐색이 필요하지 않은 경우, 동적 object 필드 대신
+> (단순한) 동적 필드를 사용하는 것입니다. 동적 object 필드의 추가 비용이 제공하는 이점으로
+> 정당화되지 않을 수 있습니다.
 
-## Definition
+## 정의
 
-Dynamic Object Fields are defined in the `sui::dynamic_object_fields` module in the
-[Sui Framework](./sui-framework). They are similar to dynamic fields in many ways, but unlike them,
-dynamic object fields have an extra constraint on the `Value` type. The `Value` must have a
-combination of `key` and `store`, not just `store` as in the case of dynamic fields.
+동적 Object 필드는 [Sui 프레임워크](./sui-framework)의 `sui::dynamic_object_fields` 모듈에
+정의되어 있습니다. 여러 면에서 동적 필드와 유사하지만, 동적 object 필드는 `Value` 타입에
+추가 제약이 있습니다. `Value`는 동적 필드의 경우처럼 단순히 `store`만이 아니라
+`key`와 `store`의 조합을 가져야 합니다.
 
-They're less explicit in their framework definition, as the concept itself is more abstract:
+개념 자체가 더 추상적이므로 프레임워크 정의에서 덜 명시적입니다:
 
 ```move
 module sui::dynamic_object_field;
 
-/// Internal object used for storing the field and the name associated with the
-/// value. The separate type is necessary to prevent key collision with direct
-/// usage of dynamic_field
+/// 필드와 값과 관련된 이름을 저장하는 데 사용되는 내부 object입니다.
+/// 별도의 타입은 dynamic_field의 직접 사용과 키 충돌을 방지하는 데 필요합니다.
 public struct Wrapper<Name> has copy, drop, store {
     name: Name,
 }
 ```
 
-Unlike `Field` type in the [Dynamic Fields](./dynamic-fields#definition) section, the `Wrapper` type
-only stores the name of the field. The value is the object itself, and is _not wrapped_.
+[동적 필드](./dynamic-fields#definition) 섹션의 `Field` 타입과 달리, `Wrapper` 타입은
+필드의 이름만 저장합니다. 값은 object 자체이며, _래핑되지 않습니다_.
 
-The constraints on the `Value` type become visible in the methods available for dynamic object
-fields. Here's the signature for the `add` function:
+`Value` 타입의 제약은 동적 object 필드에 사용할 수 있는 메서드에서 볼 수 있습니다.
+다음은 `add` 함수의 시그니처입니다:
 
 ```move
-/// Adds a dynamic object field to the object `object: &mut UID` at field
-/// specified by `name: Name`. Aborts with `EFieldAlreadyExists` if the object
-/// already has that field with that name.
+/// `object: &mut UID` object에 `name: Name`으로 지정된 필드에
+/// 동적 object 필드를 추가합니다. object가 이미 해당 이름의 필드를 가지고 있으면
+/// `EFieldAlreadyExists`로 중단됩니다.
 public fun add<Name: copy + drop + store, Value: key + store>(
-    // we use &mut UID in several spots for access control
+    // 접근 제어를 위해 여러 곳에서 &mut UID를 사용합니다
     object: &mut UID,
     name: Name,
     value: Value,
-) { /* implementation omitted */ }
+) { /* 구현 생략 */ }
 ```
 
-The rest of the methods which are identical to the ones in the
-[Dynamic Fields](./dynamic-fields#usage) section have the same constraints on the `Value` type.
-Let's list them for reference:
+[동적 필드](./dynamic-fields#usage) 섹션의 것과 동일한 나머지 메서드들도 `Value` 타입에
+동일한 제약이 있습니다. 참고를 위해 나열해보겠습니다:
 
-- `add` - adds a dynamic object field to the object
-- `remove` - removes a dynamic object field from the object
-- `borrow` - borrows a dynamic object field from the object
-- `borrow_mut` - borrows a mutable reference to a dynamic object field from the object
-- `exists_` - checks if a dynamic object field exists
-- `exists_with_type` - checks if a dynamic object field exists with a specific type
+- `add` - object에 동적 object 필드를 추가합니다
+- `remove` - object에서 동적 object 필드를 제거합니다
+- `borrow` - object에서 동적 object 필드를 빌립니다
+- `borrow_mut` - object에서 동적 object 필드에 대한 가변 참조를 빌립니다
+- `exists_` - 동적 object 필드가 존재하는지 확인합니다
+- `exists_with_type` - 특정 타입의 동적 object 필드가 존재하는지 확인합니다
 
-Additionally, there is an `id` method which returns the `ID` of the `Value` object without
-specifying its type.
+추가로, 타입을 지정하지 않고 `Value` object의 `ID`를 반환하는 `id` 메서드가 있습니다.
 
-## Usage & Differences with Dynamic Fields
+## 사용법 & 동적 필드와의 차이점
 
-The main difference between dynamic fields and dynamic object fields is that the latter allows
-storing _only objects_ as values. This means that you can't store primitive types like `u64` or
-`bool`. It may be considered a limitation, if not for the fact that dynamic object fields are _not
-wrapped_ into a separate object.
+동적 필드와 동적 object 필드의 주요 차이점은 후자가 값으로 _오직 object만_ 저장할 수 있다는
+것입니다. 이는 `u64`나 `bool`과 같은 원시 타입을 저장할 수 없다는 것을 의미합니다.
+동적 object 필드가 별도의 object로 _래핑되지 않는다_는 사실이 아니라면 이는 제한사항으로
+간주될 수 있습니다.
 
-> The relaxed requirement for wrapping keeps the object available for off-chain discovery via its
-> ID. However, this property may not be outstanding if wrapped object indexing is implemented,
-> making the dynamic object fields a redundant feature.
+> 래핑에 대한 완화된 요구사항은 object를 ID를 통해 오프체인에서 탐색할 수 있도록 유지합니다.
+> 그러나 래핑된 object 인덱싱이 구현되면 이 속성은 두드러지지 않을 수 있으며,
+> 동적 object 필드를 중복 기능으로 만들 수 있습니다.
 
-```move file=packages/samples/sources/programmability/dynamic-object-fields.move anchor=usage
+```move
+module book::dynamic_object_field;
 
+use std::string::String;
+
+// 긴 모듈 이름에 대한 두 가지 일반적인 별칭이 있습니다: `dof`와
+// `ofield`. 둘 다 일반적으로 사용되며 다른 프로젝트에서 볼 수 있습니다.
+use sui::dynamic_object_field as dof;
+use sui::dynamic_field as df;
+
+/// 예제에 사용할 `Character`
+public struct Character has key { id: UID }
+
+/// `key` 능력이 없는 메타데이터
+public struct Metadata has store, drop { name: String }
+
+/// `key`와 `store` 능력을 가진 액세서리
+public struct Accessory has key, store { id: UID }
+
+#[test]
+fun equip_accessory() {
+    let ctx = &mut tx_context::dummy();
+    let mut character = Character { id: object::new(ctx) };
+
+    // 액세서리를 생성하고 캐릭터에 첨부합니다
+    let hat = Accessory { id: object::new(ctx) };
+
+    // 캐릭터에 모자를 추가합니다. `dynamic_fields`와 마찬가지로
+    dof::add(&mut character.id, b"hat_key", hat);
+
+    // 그러나 key가 아닌 struct의 경우 `dynamic_field`만 사용할 수 있습니다
+    df::add(&mut character.id, b"metadata_key", Metadata {
+        name: b"John".to_string()
+    });
+
+    // 캐릭터에서 모자를 빌립니다
+    let hat_id = dof::id(&character.id, b"hat_key").extract(); // Option<ID>
+    let hat_ref: &Accessory = dof::borrow(&character.id, b"hat_key");
+    let hat_mut: &mut Accessory = dof::borrow_mut(&mut character.id, b"hat_key");
+    let hat: Accessory = dof::remove(&mut character.id, b"hat_key");
+
+    // 정리, 메타데이터는 이제 고아입니다.
+    sui::test_utils::destroy(hat);
+    sui::test_utils::destroy(character);
+}
 ```
 
-## Pricing Differences
+## 가격 차이
 
-Dynamic Object Fields come a little more expensive than dynamic fields. Because of their internal
-structure, they require 2 objects: the Wrapper for Name and the Value. Because of this, the cost of
-adding and accessing object fields (loading 2 objects compared to 1 for dynamic fields) is higher.
+동적 Object 필드는 동적 필드보다 약간 더 비쌉니다. 내부 구조 때문에 2개의 object가 필요합니다:
+Name을 위한 Wrapper와 Value. 이 때문에 object 필드를 추가하고 접근하는 비용(동적 필드의 경우
+1개에 비해 2개의 object를 로드)이 더 높습니다.
 
-## Next Steps
+## 다음 단계
 
-Both dynamic field and dynamic object fields are powerful features which allow for innovative
-solutions in applications. However, they are relatively low-level and require careful handling to
-avoid orphaned fields. In the next section, we will introduce a higher-level abstraction -
-[Dynamic Collections](./dynamic-collections) - which can help with managing dynamic fields and
-objects more effectively.
+동적 필드와 동적 object 필드 모두 애플리케이션에서 혁신적인 솔루션을 가능하게 하는 강력한
+기능입니다. 그러나 상대적으로 저수준이며 고아 필드를 피하기 위해 신중한 처리가 필요합니다.
+다음 섹션에서는 더 높은 수준의 추상화인 [동적 컬렉션](./dynamic-collections)을 소개합니다.
+이는 동적 필드와 object를 더 효과적으로 관리하는 데 도움이 될 수 있습니다.

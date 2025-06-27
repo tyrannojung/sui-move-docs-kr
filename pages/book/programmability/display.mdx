@@ -1,110 +1,174 @@
 # Object Display
 
-Objects on Sui are explicit in their structure and behavior and can be displayed in an
-understandable way. However, to support richer metadata for clients, there's a standard and
-efficient way of "describing" them to the client - the `Display` object defined in the
-[Sui Framework](./sui-framework).
+Sui의 object는 구조와 동작이 명시적이며 이해하기 쉬운 방식으로 표시될 수 있습니다.
+그러나 클라이언트를 위한 더 풍부한 메타데이터를 지원하기 위해, 클라이언트에게 object를 "설명"하는 
+표준적이고 효율적인 방법이 있습니다 - [Sui 프레임워크](./sui-framework)에 정의된 `Display` object입니다.
 
-## Background
+## 배경
 
-Historically, there were different attempts to agree on a standard structure of an object so it can
-be displayed in a user interface. One of the approaches was to define certain fields in the object
-struct which, when present, would be used in the UI. This approach was not flexible enough and
-required developers to define the same fields in every object, and sometimes the fields did not make
-sense for the object.
+역사적으로 사용자 인터페이스에 object를 표시할 수 있도록 object의 표준 구조에 대해 합의하려는
+다양한 시도가 있었습니다. 한 가지 접근 방식은 object struct에 특정 필드를 정의하여,
+해당 필드가 있으면 UI에서 사용하는 것이었습니다. 이 접근 방식은 충분히 유연하지 않았고
+개발자가 모든 object에 동일한 필드를 정의해야 했으며, 때로는 해당 필드가 object에
+적합하지 않았습니다.
 
-```move file=packages/samples/sources/programmability/display.move anchor=background
-
+```move
+/// 디스플레이를 위한 object 구조를 표준화하려는 시도입니다.
+public struct CounterWithDisplay has key {
+    id: UID,
+    /// 이 필드가 있으면 UI에서 `name`으로 표시됩니다.
+    name: String,
+    /// 이 필드가 있으면 UI에서 `description`으로 표시됩니다.
+    description: String,
+    // ...
+    image: String,
+    /// object의 실제 필드입니다.
+    counter: u64,
+    // ...
+}
 ```
 
-If any of the fields contained static data, it would be duplicated in every object. And, since Move
-does not have interfaces, it is not possible to know if an object has a specific field without
-"manually" checking the object's type, which makes the client fetching more complex.
+필드 중 하나라도 정적 데이터를 포함하면 모든 object에 중복됩니다. 그리고 Move에는
+인터페이스가 없으므로 object의 타입을 "수동으로" 확인하지 않고는 object에 특정 필드가 있는지
+알 수 없으며, 이로 인해 클라이언트 페칭이 더 복잡해집니다.
 
 ## Object Display
 
-To address these issues, Sui introduces a standard way of describing an object for display. Instead
-of defining fields in the object struct, the display metadata is stored in a separate object, which
-is associated with the type. This way, the display metadata is not duplicated, and it is easy to
-extend and maintain.
+이러한 문제를 해결하기 위해 Sui는 디스플레이를 위한 object를 설명하는 표준 방법을 도입합니다.
+object struct에 필드를 정의하는 대신, 디스플레이 메타데이터는 타입과 연결된 별도의 object에
+저장됩니다. 이렇게 하면 디스플레이 메타데이터가 중복되지 않고 확장 및 유지 관리가 쉽습니다.
 
-Another important feature of Sui Display is the ability to define templates and use object fields in
-those templates. Not only it allows for a more flexible display, but it also frees the developer
-from the need to define the same fields with the same names and types in every object.
+Sui Display의 또 다른 중요한 기능은 템플릿을 정의하고 해당 템플릿에서 object 필드를 사용할 수 있는
+기능입니다. 이는 더 유연한 디스플레이를 가능하게 할 뿐만 아니라 개발자가 모든 object에
+동일한 이름과 타입의 동일한 필드를 정의할 필요가 없게 해줍니다.
 
-> The Object Display is natively supported by the
-> [Sui Full Node](https://docs.sui.io/guides/operator/sui-full-node), and the client can fetch the
-> display metadata for any object if the object type has a Display associated with it.
+> Object Display는 [Sui Full Node](https://docs.sui.io/guides/operator/sui-full-node)에서
+> 기본적으로 지원되며, object 타입에 Display가 연결되어 있으면 클라이언트는 모든 object에 대한
+> 디스플레이 메타데이터를 가져올 수 있습니다.
 
-```move file=packages/samples/sources/programmability/display.move anchor=hero
+```move
+module book::arena;
 
+use std::string::String;
+use sui::package;
+use sui::display;
+
+/// `Publisher` object를 청구하기 위한 One Time Witness입니다.
+public struct ARENA has drop {}
+
+/// 표시될 일부 object입니다.
+public struct Hero has key {
+    id: UID,
+    class: String,
+    level: u64,
+}
+
+/// 모듈 초기화자에서 `Publisher` object를 생성한 다음
+/// `Hero` 타입에 대한 Display를 생성합니다.
+fun init(otw: ARENA, ctx: &mut TxContext) {
+    let publisher = package::claim(otw, ctx);
+    let mut display = display::new<Hero>(&publisher, ctx);
+
+    display.add(
+        b"name".to_string(),
+        b"{class} (lvl. {level})".to_string()
+    );
+
+    display.add(
+        b"description".to_string(),
+        b"One of the greatest heroes of all time. Join us!".to_string()
+    );
+
+    display.add(
+        b"link".to_string(),
+        b"https://example.com/hero/{id}".to_string()
+    );
+
+    display.add(
+        b"image_url".to_string(),
+        b"https://example.com/hero/{class}.jpg".to_string()
+    );
+
+    // 새 데이터로 디스플레이를 업데이트합니다.
+    // 변경 사항을 적용하려면 호출해야 합니다.
+    display.update_version();
+
+    transfer::public_transfer(publisher, ctx.sender());
+    transfer::public_transfer(display, ctx.sender());
+}
 ```
 
-## Creator Privilege
+## 생성자 권한
 
-While the objects can be owned by accounts and may be a subject to
-[True Ownership](./../object/ownership#account-owner-or-single-owner), the Display can be owned by
-the creator of the object. This way, the creator can update the display metadata and apply the
-changes globally without the need to update every object. The creator can also transfer Display to
-another account or even build an application around the object with custom functionality to manage
-the metadata.
+object는 계정이 소유할 수 있고 [진정한 소유권](./../object/ownership#account-owner-or-single-owner)의 대상이 될 수 있지만,
+Display는 object의 생성자가 소유할 수 있습니다. 이렇게 하면 생성자는 모든 object를 업데이트할 필요 없이
+디스플레이 메타데이터를 업데이트하고 변경 사항을 전역적으로 적용할 수 있습니다. 생성자는 또한 Display를
+다른 계정으로 전송하거나 메타데이터를 관리하는 사용자 정의 기능으로 object 주변에 애플리케이션을
+구축할 수도 있습니다.
 
-## Standard Fields
+## 표준 필드
 
-The fields that are supported most widely are:
+가장 널리 지원되는 필드는 다음과 같습니다:
 
-- `name` - A name for the object. The name is displayed when users view the object.
-- `description` - A description for the object. The description is displayed when users view the
-  object.
-- `link` - A link to the object to use in an application.
-- `image_url` - A URL or a blob with the image for the object.
-- `thumbnail_url` - A URL to a smaller image to use in wallets, explorers, and other products as a
-  preview.
-- `project_url` - A link to a website associated with the object or creator.
-- `creator` - A string that indicates the object creator.
+- `name` - object의 이름입니다. 사용자가 object를 볼 때 이름이 표시됩니다.
+- `description` - object에 대한 설명입니다. 사용자가 object를 볼 때 설명이 표시됩니다.
+- `link` - 애플리케이션에서 사용할 object에 대한 링크입니다.
+- `image_url` - object의 이미지가 포함된 URL 또는 blob입니다.
+- `thumbnail_url` - 지갑, 탐색기 및 기타 제품에서 미리보기로 사용할 더 작은 이미지의 URL입니다.
+- `project_url` - object 또는 생성자와 관련된 웹사이트 링크입니다.
+- `creator` - object 생성자를 나타내는 문자열입니다.
 
-> Please, refer to the [Sui Documentation](https://docs.sui.io/standards/display) for the most
-> up-to-date list of supported fields.
+> 지원되는 필드의 최신 목록은 [Sui 문서](https://docs.sui.io/standards/display)를 참조하세요.
 
-While there's a standard set of fields, the Display object does not enforce them. The developer can
-define any fields they need, and the client can use them as they see fit. Some applications may
-require additional fields, and omit other, and the Display is flexible enough to support them.
+표준 필드 세트가 있지만 Display object는 이를 강제하지 않습니다. 개발자는 필요한 필드를 정의할 수 있으며
+클라이언트는 적절하다고 판단되는 대로 사용할 수 있습니다. 일부 애플리케이션은 추가 필드가 필요하고
+다른 필드는 생략할 수 있으며, Display는 이를 지원할 만큼 충분히 유연합니다.
 
-## Working with Display
+## Display 작업하기
 
-The `Display` object is defined in the `sui::display` module. It is a generic struct that takes a
-phantom type as a parameter. The phantom type is used to associate the `Display` object with the
-type it describes. The `fields` of the `Display` object are a `VecMap` of key-value pairs, where the
-key is the field name and the value is the field value. The `version` field is used to version the
-display metadata, and is updated on the `update_display` call.
+`Display` object는 `sui::display` 모듈에 정의되어 있습니다. 이는 팬텀 타입을 매개변수로 사용하는
+제네릭 struct입니다. 팬텀 타입은 `Display` object를 설명하는 타입과 연결하는 데 사용됩니다.
+`Display` object의 `fields`는 키-값 쌍의 `VecMap`이며, 여기서 키는 필드 이름이고 값은 필드 값입니다.
+`version` 필드는 디스플레이 메타데이터의 버전을 지정하는 데 사용되며 `update_display` 호출 시 업데이트됩니다.
 
 ```move
 module sui::display;
 
 public struct Display<phantom T: key> has key, store {
     id: UID,
-    /// Contains fields for display. Currently supported
-    /// fields are: name, link, image and description.
+    /// 디스플레이용 필드를 포함합니다. 현재 지원되는
+    /// 필드는: name, link, image 및 description입니다.
     fields: VecMap<String, String>,
-    /// Version that can only be updated manually by the Publisher.
+    /// Publisher만 수동으로 업데이트할 수 있는 버전입니다.
     version: u16
 }
 ```
 
-The [Publisher](./publisher) object is required to a new Display, since it serves as the proof of
-ownership of type.
+[Publisher](./publisher) object는 타입의 소유권 증명 역할을 하므로 새 Display를 만드는 데 필요합니다.
 
-## Template Syntax
+## 템플릿 구문
 
-Currently, Display supports simple string interpolation and can use struct fields (and paths) in its
-templates. The syntax is trivial - `{path}` is replaced with the value of the field at the path. The
-path is a dot-separated list of field names, starting from the root object in case of nested fields.
+현재 Display는 간단한 문자열 보간을 지원하며 템플릿에서 struct 필드(및 경로)를 사용할 수 있습니다.
+구문은 간단합니다 - `{path}`는 경로의 필드 값으로 대체됩니다. 경로는 중첩된 필드의 경우
+루트 object에서 시작하는 점으로 구분된 필드 이름 목록입니다.
 
-```move file=packages/samples/sources/programmability/display.move anchor=nested
+```move
+/// object에 대한 일부 공통 메타데이터입니다.
+public struct Metadata has store {
+    name: String,
+    description: String,
+    published_at: u64
+}
 
+/// 중첩된 Metadata 필드가 있는 타입입니다.
+public struct LittlePony has key, store {
+    id: UID,
+    image_url: String,
+    metadata: Metadata
+}
 ```
 
-The Display for the type `LittlePony` above could be defined as follows:
+위의 `LittlePony` 타입에 대한 Display는 다음과 같이 정의할 수 있습니다:
 
 ```json
 {
@@ -114,12 +178,12 @@ The Display for the type `LittlePony` above could be defined as follows:
 }
 ```
 
-## Multiple Display Objects
+## 여러 Display Object
 
-There's no restriction to how many `Display<T>` objects can be created for a specific `T`. However,
-the most recently updated `Display<T>` will be used by the full node.
+특정 `T`에 대해 생성할 수 있는 `Display<T>` object의 수에는 제한이 없습니다. 그러나
+가장 최근에 업데이트된 `Display<T>`가 풀 노드에서 사용됩니다.
 
-## Further Reading
+## 더 읽어보기
 
-- [Sui Object Display](https://docs.sui.io/standards/display) is Sui Documentation
-- [Publisher](./publisher) - the representation of the creator
+- [Sui Object Display](https://docs.sui.io/standards/display) - Sui 문서
+- [Publisher](./publisher) - 생성자의 표현

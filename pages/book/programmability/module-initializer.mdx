@@ -1,65 +1,98 @@
-# Module Initializer
+# Module 초기화
 
-A common use case in many applications is to run certain code just once when the package is
-published. Imagine a simple store module that needs to create the main Store object upon its
-publication. In Sui, this is achieved by defining an `init` function within the module. This
-function will automatically be called when the module is published.
+많은 애플리케이션에서 일반적인 사용 사례는 패키지가 게시될 때 특정 코드를 단 한 번만 실행하는 것입니다.
+간단한 store 모듈이 게시될 때 메인 Store object를 생성해야 한다고 상상해 보세요.
+Sui에서는 모듈 내에 `init` 함수를 정의하여 이를 달성합니다. 이 함수는
+모듈이 게시될 때 자동으로 호출됩니다.
 
-> All of the modules' `init` functions are called during the publishing process. Currently, this
-> behavior is limited to the publish command and does not extend to package upgrades.
+> 모든 모듈의 `init` 함수는 게시 프로세스 중에 호출됩니다. 현재 이 동작은
+> publish 명령에만 제한되며 패키지 업그레이드로는 확장되지 않습니다.
 >
 > {/* [package upgrades]() */}
 
-```move file=packages/samples/sources/programmability/module-initializer.move anchor=main
+```move
+module book::shop;
 
+/// Shop 소유자에게 상점을 관리할 권한을 부여하는 Capability입니다.
+public struct ShopOwnerCap has key, store { id: UID }
+
+/// `init` 함수에서 생성되는 단일 Shop 객체입니다.
+public struct Shop has key {
+    id: UID,
+    /* ... */
+}
+
+// 모듈 게시 시 한 번만 호출됩니다.
+// 외부 호출을 방지하기 위해 private여야 합니다.
+fun init(ctx: &mut TxContext) {
+    // ShopOwnerCap을 발신자(게시자)에게 전송합니다.
+    transfer::transfer(ShopOwnerCap {
+        id: object::new(ctx)
+    }, ctx.sender());
+
+    // Shop object를 공유합니다.
+    transfer::share_object(Shop {
+        id: object::new(ctx)
+    });
+}
 ```
 
-In the same package, another module can have its own `init` function, encapsulating distinct logic.
+같은 패키지에서 다른 모듈도 고유한 로직을 캐핑슐화하는 자체 `init` 함수를 가질 수 있습니다.
 
-```move file=packages/samples/sources/programmability/module-initializer-2.move anchor=other
+```move
+// `shop` 모듈과 같은 패키지에 있습니다
+module book::bank;
 
+public struct Bank has key {
+    id: UID,
+    /* ... */
+}
+
+fun init(ctx: &mut TxContext) {
+    transfer::share_object(Bank {
+        id: object::new(ctx)
+    });
+}
 ```
 
-## `init` Features
+## `init` 기능
 
-The function is called on publish, if it is present in the module and follows the rules:
+이 함수는 모듈에 존재하고 다음 규칙을 따르는 경우 게시 시 호출됩니다:
 
-- The function has to be named `init`, be private and have no return values.
-- Takes one or two arguments: [One Time Witness](./one-time-witness) (optional) and
-  [TxContext](./transaction-context). With `TxContext` always being the last argument.
+- 함수 이름은 `init`이어야 하고, private이며 반환값이 없어야 합니다.
+- 하나 또는 두 개의 인자를 받습니다: [One Time Witness](./one-time-witness) (선택사항)와
+  [TxContext](./transaction-context). `TxContext`는 항상 마지막 인자입니다.
 
 ```move
 fun init(ctx: &mut TxContext) { /* ... */}
 fun init(otw: OTW, ctx: &mut TxContext) { /* ... */ }
 ```
 
-TxContext can also be passed as immutable reference: `&TxContext`. However, practically speaking, it
-should always be `&mut TxContext` since the `init` function can't access the on-chain state and to
-create new objects it requires the mutable reference to the context.
+TxContext는 불변 참조 `&TxContext`로도 전달될 수 있습니다. 그러나 실제로는
+`init` 함수가 온체인 상태에 접근할 수 없고 새 object를 생성하려면
+컨텍스트에 대한 가변 참조가 필요하므로 항상 `&mut TxContext`여야 합니다.
 
 ```move
 fun init(ctx: &TxContext) { /* ... */}
 fun init(otw: OTW, ctx: &TxContext) { /* ... */ }
 ```
 
-## Trust and Security
+## 신뢰와 보안
 
-While `init` function can be used to create sensitive objects once, it is important to know that the
-same object (eg. `StoreOwnerCap` from the first example) can still be created in another function.
-Especially given that new functions can be added to the module during an upgrade. So the `init`
-function is a good place to set up the initial state of the module, but it is not a security measure
-on its own.
+`init` 함수를 사용하여 민감한 object를 한 번만 생성할 수 있지만, 동일한 object(예: 첫 번째 예시의
+`StoreOwnerCap`)가 다른 함수에서도 여전히 생성될 수 있다는 점을 알아야 합니다.
+특히 업그레이드 중에 모듈에 새로운 함수를 추가할 수 있다는 점을 고려하면 더욱 그렇습니다.
+따라서 `init` 함수는 모듈의 초기 상태를 설정하기에 좋은 장소이지만,
+그 자체로는 보안 조치가 아닙니다.
 
-There are ways to guarantee that the object was created only once, such as the
-[One Time Witness](./one-time-witness). And there are ways to limit or disable the upgrade of the
-module, which we will cover in the Package Upgrades chapter.
+[One Time Witness](./one-time-witness)와 같이 object가 단 한 번만 생성되었음을 보장하는 방법이 있습니다.
+그리고 패키지 업그레이드 챕터에서 다룰 모듈 업그레이드를 제한하거나 비활성화하는 방법도 있습니다.
 
-## Next Steps
+## 다음 단계
 
-As follows from the definition, the `init` function is guaranteed to be called only once when the
-module is published. So it is a good place to put the code that initializes module's objects and
-sets up the environment and configuration.
+정의에서 알 수 있듯이, `init` 함수는 모듈이 게시될 때 단 한 번만 호출되는 것이 보장됩니다.
+따라서 모듈의 object를 초기화하고 환경과 구성을 설정하는 코드를 넣기에 좋은 장소입니다.
 
-For example, if there's a [Capability](./capability) which is required for certain actions, it
-should be created in the `init` function. In the next chapter we will talk about the `Capability`
-pattern in more detail.
+예를 들어, 특정 작업에 필요한 [Capability](./capability)가 있다면
+`init` 함수에서 생성해야 합니다. 다음 챕터에서는 `Capability`
+패턴에 대해 더 자세히 이야기하겠습니다.
