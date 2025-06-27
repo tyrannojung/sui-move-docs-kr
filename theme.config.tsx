@@ -1,13 +1,16 @@
 import React from "react";
 import { DocsThemeConfig } from "nextra-theme-docs";
 import { useRouter } from "next/router";
+import { useTheme } from "nextra-theme-docs";
 
 const config: DocsThemeConfig = {
   logo: () => {
     const router = useRouter();
+    const { theme, resolvedTheme } = useTheme();
     const pathname = router.pathname;
     const isReference = pathname.startsWith("/reference");
     const isBook = pathname.startsWith("/book") || pathname === "/";
+    const currentTheme = theme === 'system' ? resolvedTheme : theme;
 
     return (
       <div key={pathname} style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
@@ -16,7 +19,7 @@ const config: DocsThemeConfig = {
           onClick={() => router.push('/book')}
         >
           <img
-            src='/sui-logo.png'
+            src={currentTheme === 'dark' ? '/sui-logo-dark.png' : '/sui-logo.png'}
             alt='Sui'
             style={{ height: 32, marginRight: 12 }}
           />
