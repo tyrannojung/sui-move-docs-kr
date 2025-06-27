@@ -1,55 +1,55 @@
 # Ability: Store
 
-Now that you have an understanding of top-level storage functions which are enabled by the
-[`key`](./key-ability) ability, we can talk about the last ability in the list - `store`.
+이제 [`key`](./key-ability) ability로 활성화되는 최상위 스토리지 함수들을 이해했으므로,
+목록의 마지막 ability인 `store`에 대해 이야기할 수 있습니다.
 
-## Definition
+## 정의
 
-The `store` is a special ability that allows a type to be _stored_ in objects. This ability is
-required for the type to be used as a field in a struct that has the `key` ability. Another way to
-put it is that the `store` ability allows the value to be _wrapped_ in an object.
+`store`는 타입이 object 내부에 _저장_될 수 있도록 하는 특별한 ability입니다. 이 ability는
+타입이 `key` ability를 가진 struct의 필드로 사용되기 위해 필요합니다. 다르게 표현하면,
+`store` ability는 값이 object에 _포장_될 수 있도록 합니다.
 
-> The `store` ability also relaxes restrictions on transfer operations. We talk about it more in the
-> [Restricted and Public Transfer](./transfer-restrictions) section.
+> `store` ability는 전송 작업에 대한 제한도 완화합니다. 이에 대해서는
+> [제한된 전송과 공개 전송](./transfer-restrictions) 섹션에서 더 자세히 다룹니다.
 
-## Example
+## 예제
 
-In previous sections we already used types with the `key` ability: all objects must have a `UID`
-field, which we used in examples; we also used the `Storable` type as a part of the `Config` struct.
-The `Config` type also has the `store` ability.
+이전 섹션에서 이미 `key` ability를 가진 타입들을 사용했습니다: 모든 object는 `UID`
+필드를 가져야 하며, 이를 예제에서 사용했습니다; 또한 `Config` struct의 일부로 `Storable` 타입을 사용했습니다.
+`Config` 타입도 `store` ability를 가집니다.
 
 ```move
-/// This type has the `store` ability.
+/// 이 타입은 `store` ability를 가집니다.
 public struct Storable has store {}
 
-/// Config contains a `Storable` field which must have the `store` ability.
+/// Config는 `store` ability를 가져야 하는 `Storable` 필드를 포함합니다.
 public struct Config has key, store {
     id: UID,
     stores: Storable,
 }
 
-/// MegaConfig contains a `Config` field which has the `store` ability.
+/// MegaConfig는 `store` ability를 가진 `Config` 필드를 포함합니다.
 public struct MegaConfig has key {
     id: UID,
-    config: Config, // there it is!
+    config: Config, // 여기 있습니다!
 }
 ```
 
-## Types with the `store` Ability
+## `store` Ability를 가진 타입들
 
-All native types (except for references) in Move have the `store` ability. This includes:
+Move의 모든 네이티브 타입(참조 제외)은 `store` ability를 가집니다. 여기에는 다음이 포함됩니다:
 
 - [bool](./../move-basics/primitive-types#booleans)
-- [unsigned integers](./../move-basics/primitive-types#integer-types)
+- [부호 없는 정수](./../move-basics/primitive-types#integer-types)
 - [vector](./../move-basics/vector)
 - [address](./../move-basics/address)
 
-All of the types defined in the standard library have the `store` ability as well. This includes:
+표준 라이브러리에 정의된 모든 타입도 `store` ability를 가집니다. 여기에는 다음이 포함됩니다:
 
 - [Option](./../move-basics/option)
 - [String](./../move-basics/string)
 - [TypeName](./../move-basics/type-reflection)
 
-## Further Reading
+## 추가 자료
 
-- [Type Abilities](./../../reference/abilities) in the Move Reference.
+- Move Reference의 [Type Abilities](./../../reference/abilities)

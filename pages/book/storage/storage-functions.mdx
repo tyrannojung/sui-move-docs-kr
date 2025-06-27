@@ -1,64 +1,62 @@
-# Storage Functions
+# 스토리지 함수
 
-The module that defines main storage operations is `sui::transfer`. It is implicitly imported in all
-packages that depend on the [Sui Framework](./../programmability/sui-framework), so, like other
-implicitly imported modules (e.g. `std::option` or `std::vector`), it does not require adding a use
-statement.
+주요 스토리지 작업을 정의하는 module은 `sui::transfer`입니다. 이는 [Sui 프레임워크](./../programmability/sui-framework)에
+의존하는 모든 패키지에서 암시적으로 가져오므로, 다른 암시적으로 가져온 module(예: `std::option` 또는 `std::vector`)과 마찬가지로
+use 문을 추가할 필요가 없습니다.
 
-## Overview
+## 개요
 
-The `transfer` module provides functions to perform all three storage operations matching
-[ownership types](./../object/ownership) which we explained:
+`transfer` module은 우리가 설명한 [소유권 타입](./../object/ownership)과 일치하는 세 가지 스토리지
+작업을 수행하는 함수를 제공합니다:
 
-> On this page we will only talk about so-called _restricted_ storage operations, later we will
-> cover _public_ ones, after the `store` ability is introduced.
+> 이 페이지에서는 소위 _제한된_ 스토리지 작업에 대해서만 이야기하고, 나중에 `store` ability가
+> 도입된 후 _공개_ 작업을 다룰 것입니다.
 
-1. _Transfer_ - send an object to an address, put it into _account owned_ state;
-2. _Share_ - put an object into a _shared_ state, so it is available to everyone;
-3. _Freeze_ - put an object into _immutable_ state, so it becomes a public constant and can never
-   change.
+1. _전송(Transfer)_ - object를 주소로 보내어 _계정 소유_ 상태로 만듭니다;
+2. _공유(Share)_ - object를 _공유_ 상태로 만들어 모든 사람이 사용할 수 있게 합니다;
+3. _동결(Freeze)_ - object를 _불변_ 상태로 만들어 공개 상수가 되고 결코 변경할 수 없게
+   합니다.
 
-The `transfer` module is a go-to for most of the storage operations, except a special case with
-[Dynamic Fields](./../programmability/dynamic-fields) that awaits us in the next chapter.
+`transfer` module은 다음 챕터에서 다룰 [동적 필드](./../programmability/dynamic-fields)의
+특별한 경우를 제외하고 대부분의 스토리지 작업을 위한 기본 module입니다.
 
-## Ownership and References: a Quick Recap
+## 소유권과 참조: 빠른 복습
 
-In the [Ownership and Scope](./../move-basics/ownership-and-scope) and
-[References](./../move-basics/references) chapters, we covered the basics of ownership and
-references in Move. It is important that you understand these concepts when using storage functions.
-Here is a quick recap of the most important points:
+[소유권과 스코프](./../move-basics/ownership-and-scope)와
+[참조](./../move-basics/references) 챕터에서 Move의 소유권과 참조의 기본을 다뤘습니다.
+스토리지 함수를 사용할 때 이러한 개념을 이해하는 것이 중요합니다.
+가장 중요한 점들을 빠르게 복습해보겠습니다:
 
-- The _move_ semantics in Move means that the value is _moved_ from one scope to another. In other
-  words, if an instance of a type is passed to a function _by value_, it is _moved_ to the function
-  scope and can't be accessed in the caller scope anymore.
-- To maintain the ownership of the value, you can pass it _by reference_. Either by _immutable
-  reference_ `&T` or _mutable reference_ `&mut T`. Then the value is _borrowed_ and can be accessed
-  in the callee scope, however the owner stays the same.
+- Move의 _이동_ 의미론은 값이 한 스코프에서 다른 스코프로 _이동_된다는 것을 의미합니다. 다시 말해,
+  타입의 인스턴스가 함수에 _값으로_ 전달되면 함수 스코프로 _이동_되어 호출자 스코프에서 더 이상
+  접근할 수 없습니다.
+- 값의 소유권을 유지하려면 _참조로_ 전달할 수 있습니다. _불변 참조_ `&T` 또는 _가변 참조_ `&mut T`로
+  전달합니다. 그러면 값이 _빌려지고_ 호출된 스코프에서 접근할 수 있지만 소유자는 동일하게
+  유지됩니다.
 
 ```move
-/// Moved by value
-public fun take<T>(value: T) { /* value is moved here! */ abort 0 }
+/// 값으로 이동됨
+public fun take<T>(value: T) { /* 값이 여기로 이동됨! */ abort 0 }
 
-/// For immutable reference
-public fun borrow<T>(value: &T) { /* value is borrowed here! can be read */ abort 0 }
+/// 불변 참조용
+public fun borrow<T>(value: &T) { /* 값이 여기서 빌려짐! 읽을 수 있음 */ abort 0 }
 
-/// For mutable reference
-public fun borrow_mut<T>(value: &mut T) { /* value is mutably borrowed here! */ abort 0 }
+/// 가변 참조용
+public fun borrow_mut<T>(value: &mut T) { /* 값이 가변으로 빌려짐! */ abort 0 }
 ```
 
-{/* TODO part on:
-    - object does not have an associated storage type
-    - the same type of object can be stored differently
-    - the objects must be specified in the transaction by their ID
+{/* TODO 부분:
+    - object는 연관된 스토리지 타입을 가지지 않음
+    - 동일한 타입의 object도 다르게 저장될 수 있음
+    - 트랜잭션에서 object는 ID로 지정되어야 함
  */}
 
-## Transfer
+## 전송(Transfer)
 
-The `transfer::transfer` function is a public function used to transfer an object to another
-address. Its signature is as follows, only accepts a type with the [`key` ability](./key-ability)
-and an [address](./../move-basics/address) of the recipient. Please, note that the object is
-passed into the function _by value_, therefore it is _moved_ to the function scope and then moved to
-the recipient address:
+`transfer::transfer` 함수는 object를 다른 주소로 전송하는 데 사용되는 public 함수입니다.
+함수 시그니처는 다음과 같으며, [`key` ability](./key-ability)를 가진 타입과
+수신자의 [주소](./../move-basics/address)만 받습니다. object가 함수에 _값으로_ 전달되므로
+함수 스코프로 _이동_된 다음 수신자 주소로 이동된다는 점에 주의하세요:
 
 ```move
 module sui::transfer;
@@ -66,52 +64,52 @@ module sui::transfer;
 public fun transfer<T: key>(obj: T, recipient: address);
 ```
 
-In the next example, you can see how it can be used in a module that defines and sends an object to
-the transaction sender.
+다음 예제에서는 object를 정의하고 트랜잭션 발신자에게 보내는 module에서
+어떻게 사용할 수 있는지 볼 수 있습니다.
 
 ```move
 module book::transfer_to_sender;
 
-/// A struct with `key` is an object. The first field is `id: UID`!
+/// `key`를 가진 struct는 object입니다. 첫 번째 필드는 `id: UID`입니다!
 public struct AdminCap has key { id: UID }
 
-/// `init` function is a special function that is called when the module
-/// is published. It is a good place to create application objects.
+/// `init` 함수는 module이 배포될 때 호출되는 특별한 함수입니다.
+/// 애플리케이션 object를 생성하기에 좋은 장소입니다.
 fun init(ctx: &mut TxContext) {
-    // Create a new `AdminCap` object, in this scope.
+    // 이 스코프에서 새로운 `AdminCap` object를 생성합니다.
     let admin_cap = AdminCap { id: object::new(ctx) };
 
-    // Transfer the object to the transaction sender.
+    // object를 트랜잭션 발신자에게 전송합니다.
     transfer::transfer(admin_cap, ctx.sender());
 
-    // admin_cap is gone! Can't be accessed anymore.
+    // admin_cap은 사라졌습니다! 더 이상 접근할 수 없습니다.
 }
 
-/// Transfers the `AdminCap` object to the `recipient`. Thus, the recipient
-/// becomes the owner of the object, and only they can access it.
+/// `AdminCap` object를 `recipient`에게 전송합니다. 따라서 수신자가
+/// object의 소유자가 되고, 오직 그들만 접근할 수 있습니다.
 public fun transfer_admin_cap(cap: AdminCap, recipient: address) {
     transfer::transfer(cap, recipient);
 }
 ```
 
-When the module is published, the `init` function will get called, and the `AdminCap` object which
-we created there will be _transferred_ to the transaction sender. The `ctx.sender()` function
-returns the sender address for the current transaction.
+module이 배포되면 `init` 함수가 호출되고, 그곳에서 생성한 `AdminCap` object가
+트랜잭션 발신자에게 _전송_됩니다. `ctx.sender()` 함수는
+현재 트랜잭션의 발신자 주소를 반환합니다.
 
-Once the `AdminCap` has been transferred to the sender, for example, to `0xa11ce`, the sender, and
-only the sender, will be able to access the object. The object is now _account owned_.
+`AdminCap`이 발신자에게 전송되면, 예를 들어 `0xa11ce`에게 전송되면, 발신자만이
+object에 접근할 수 있습니다. object는 이제 _계정 소유_됩니다.
 
-> Account owned objects are a subject to _true ownership_ - only the account owner can access them.
-> This is a fundamental concept in the Sui storage model.
+> 계정 소유 object는 _진정한 소유권_의 대상입니다 - 오직 계정 소유자만 접근할 수 있습니다.
+> 이는 Sui 스토리지 모델의 기본 개념입니다.
 
-Let's extend the example with a function that uses `AdminCap` to authorize a mint of a new object
-and its transfer to another address:
+`AdminCap`을 사용하여 새 object의 발행과 다른 주소로의 전송을 승인하는 함수로
+예제를 확장해 보겠습니다:
 
 ```move
-/// Some `Gift` object that the admin can `mint_and_transfer`.
+/// 관리자가 `mint_and_transfer`할 수 있는 `Gift` object.
 public struct Gift has key { id: UID }
 
-/// Creates a new `Gift` object and transfers it to the `recipient`.
+/// 새로운 `Gift` object를 생성하고 `recipient`에게 전송합니다.
 public fun mint_and_transfer(
     _: &AdminCap, recipient: address, ctx: &mut TxContext
 ) {
@@ -120,31 +118,31 @@ public fun mint_and_transfer(
 }
 ```
 
-The `mint_and_transfer` function is a public function that "could" be called by anyone, but it
-requires an `AdminCap` object to be passed as the first argument by reference. Without it, the
-function will not be callable. This is a simple way to restrict access to privileged functions
-called _[Capability](./../programmability/capability)_. Because the `AdminCap` object is _account
-owned_, only `0xa11ce` will be able to call the `mint_and_transfer` function.
+`mint_and_transfer` 함수는 "누구나" 호출할 수 있는 public 함수지만,
+첫 번째 인자로 `AdminCap` object를 참조로 전달해야 합니다. 이것 없이는
+함수를 호출할 수 없습니다. 이는 _[Capability](./../programmability/capability)_라고 불리는
+권한이 필요한 함수에 대한 접근을 제한하는 간단한 방법입니다. `AdminCap` object가
+_계정 소유_이므로, 오직 `0xa11ce`만 `mint_and_transfer` 함수를 호출할 수 있습니다.
 
-The `Gift`s sent to recipients will also be _account owned_, each gift being unique and owned
-exclusively by the recipient.
+수신자에게 전송된 `Gift`들도 _계정 소유_가 되며, 각 선물은 고유하고
+수신자가 독점적으로 소유합니다.
 
-A quick recap:
+빠른 정리:
 
-- `transfer` function is used to send an object to an address;
-- The object becomes _account owned_ and can only be accessed by the recipient;
-- Functions can be gated by requiring an object to be passed as an argument, creating a
-  _capability_.
+- `transfer` 함수는 object를 주소로 보내는 데 사용됩니다;
+- object는 _계정 소유_가 되어 오직 수신자만 접근할 수 있습니다;
+- 함수는 object를 인자로 전달하도록 요구하여 게이트할 수 있으며,
+  _capability_를 만듭니다.
 
-## Freeze
+## 동결(Freeze)
 
-The `transfer::freeze_object` function is a public function that is used to put an object into an
-_immutable_ state. Once an object is _frozen_, it can never be changed, and it can be accessed by
-anyone by immutable reference.
+`transfer::freeze_object` 함수는 object를 _불변_ 상태로 만드는 데 사용되는
+public 함수입니다. object가 _동결_되면 결코 변경할 수 없으며,
+누구나 불변 참조로 접근할 수 있습니다.
 
-The function signature is as follows, only accepts a type with the
-[`key` ability](./key-ability). Just like all other storage functions, it takes the object _by
-value_:
+함수 시그니처는 다음과 같으며, [`key` ability](./key-ability)를 가진 타입만
+받습니다. 다른 모든 스토리지 함수와 마찬가지로 object를 _값으로_
+받습니다:
 
 ```move
 module sui::transfer;
@@ -152,17 +150,17 @@ module sui::transfer;
 public fun freeze_object<T: key>(obj: T);
 ```
 
-Let's expand on the previous example and add a function that allows the admin to create a `Config`
-object and freeze it:
+이전 예제를 확장하여 관리자가 `Config` object를 생성하고
+동결할 수 있는 함수를 추가해 보겠습니다:
 
 ```move
-/// Some `Config` object that the admin can `create_and_freeze`.
+/// 관리자가 `create_and_freeze`할 수 있는 `Config` object.
 public struct Config has key {
     id: UID,
     message: String
 }
 
-/// Creates a new `Config` object and freezes it.
+/// 새로운 `Config` object를 생성하고 동결합니다.
 public fun create_and_freeze(
     _: &AdminCap,
     message: String,
@@ -173,72 +171,71 @@ public fun create_and_freeze(
         message
     };
 
-    // Freeze the object so it becomes immutable.
+    // object를 동결하여 불변이 되도록 합니다.
     transfer::freeze_object(config);
 }
 
-/// Returns the message from the `Config` object.
-/// Can access the object by immutable reference!
+/// `Config` object에서 메시지를 반환합니다.
+/// 불변 참조로 object에 접근할 수 있습니다!
 public fun message(c: &Config): String { c.message }
 ```
 
-Config is an object that has a `message` field, and the `create_and_freeze` function creates a new
-`Config` and freezes it. Once the object is frozen, it can be accessed by anyone by immutable
-reference. The `message` function is a public function that returns the message from the `Config`
-object. Config is now publicly available by its ID, and the message can be read by anyone.
+Config는 `message` 필드를 가진 object이고, `create_and_freeze` 함수는 새로운
+`Config`를 생성하고 동결합니다. object가 동결되면 누구나 불변
+참조로 접근할 수 있습니다. `message` 함수는 `Config`
+object에서 메시지를 반환하는 public 함수입니다. Config는 이제 ID로 공개적으로 사용 가능하며, 누구나 메시지를 읽을 수 있습니다.
 
-> Function definitions are not connected to the object's state. It is possible to define a function
-> that takes a mutable reference to an object that is used as frozen. However, it won't be callable
-> on a frozen object.
+> 함수 정의는 object의 상태와 연결되지 않습니다. 동결된 object에 가변 참조를 받는
+> 함수를 정의할 수는 있지만, 동결된 object에서는 호출할 수 없습니다.
 
-The `message` function can be called on an immutable `Config` object, however, two functions below
-are not callable on a frozen object:
+`message` 함수는 불변 `Config` object에서 호출할 수 있지만, 아래 두 함수는
+동결된 object에서 호출할 수 없습니다:
 
 ```move
-// === Functions below can't be called on a frozen object! ===
+// === 아래 함수들은 동결된 object에서 호출할 수 없습니다! ===
 
-/// The function can be defined, but it won't be callable on a frozen object.
-/// Only immutable references are allowed.
+/// 함수는 정의될 수 있지만, 동결된 object에서는 호출할 수 없습니다.
+/// 오직 불변 참조만 허용됩니다.
 public fun message_mut(c: &mut Config): &mut String { &mut c.message }
 
-/// Deletes the `Config` object, takes it by value.
-/// Can't be called on a frozen object!
+/// `Config` object를 삭제하며, 값으로 받습니다.
+/// 동결된 object에서 호출할 수 없습니다!
 public fun delete_config(c: Config) {
     let Config { id, message: _ } = c;
     id.delete()
 }
 ```
 
-To summarize:
+요약하면:
 
-- `transfer::freeze_object` function is used to put an object into an _immutable_ state;
-- Once an object is _frozen_, it can never be changed, deleted or transferred, and it can be
-  accessed by anyone by immutable reference;
+- `transfer::freeze_object` 함수는 object를 _불변_ 상태로 만드는 데 사용됩니다;
+- object가 _동결_되면 결코 변경, 삭제 또는 전송할 수 없으며, 누구나 불변 참조로
+  접근할 수 있습니다;
 
-## Owned -> Frozen
+## 소유 -> 동결
 
-Since the `transfer::freeze_object` signature accepts any type with the `key` ability, it can take
-an object that was created in the same scope, but it can also take an object that was owned by an
-account. This means that the `freeze_object` function can be used to _freeze_ an object that was
-_transferred_ to the sender. For security concerns, we would not want to freeze the `AdminCap`
-object - it would be a security risk to allow access to it to anyone. However, we can freeze the
-`Gift` object that was minted and transferred to the recipient:
+`transfer::freeze_object` 시그니처가 `key` ability를 가진 모든 타입을 받으므로,
+같은 스코프에서 생성된 object도 받을 수 있고 계정이 소유한 object도
+받을 수 있습니다. 이는 `freeze_object` 함수가 발신자에게 _전송_된 object를
+_동결_하는 데 사용될 수 있다는 의미입니다. 보안 문제로, `AdminCap`
+object를 동결하고 싶지 않을 것입니다 - 누구나 접근할 수 있게 하는 것은 보안 위험이 될 것입니다.
+그러나 발행되어 수신자에게 전송된 `Gift` object는 동결할 수 있습니다:
 
-> Single Owner -> Immutable conversion is possible!
+> 단일 소유자 -> 불변 변환이 가능합니다!
 
 ```move
-/// Freezes the `Gift` object so it becomes immutable.
+/// `Gift` object를 동결하여 불변이 되도록 합니다.
 public fun freeze_gift(gift: Gift) {
     transfer::freeze_object(gift);
 }
 ```
 
-## Share
+## 공유(Share)
 
-The `transfer::share_object` function is a public function used to put an object into a _shared_
-state. Once an object is _shared_, it can be accessed by anyone by a mutable reference (hence,
-immutable too). The function signature is as follows, only accepts a type with the
-[`key` ability](./key-ability):
+`transfer::share_object` 함수는 object를 _공유_ 상태로 만드는 데 사용되는
+public 함수입니다. object가 _공유_되면 누구나 가변 참조로 (따라서
+불변 참조로도) 접근할 수 있습니다. 함수 시그니처는 다음과 같으며,
+[`key` ability](./key-ability)를 가진 타입만 받습니다:
 
 ```move
 module sui::transfer;
@@ -246,61 +243,61 @@ module sui::transfer;
 public fun share_object<T: key>(obj: T);
 ```
 
-Once an object is _shared_, it is publicly available as a mutable reference.
+object가 _공유_되면 가변 참조로 공개적으로 사용할 수 있습니다.
 
-## Special Case: Shared Object Deletion
+## 특별한 경우: 공유 Object 삭제
 
-While the shared object can't normally be taken by value, there is one special case where it can -
-if the function that takes it deletes the object. This is a special case in the Sui storage model,
-and it is used to allow the deletion of shared objects. To show how it works, we will create a
-function that creates and shares a Config object and then another one that deletes it:
+공유 object는 일반적으로 값으로 가져올 수 없지만, 한 가지 특별한 경우가 있습니다 -
+object를 가져오는 함수가 object를 삭제하는 경우입니다. 이는 Sui 스토리지 모델의 특별한 경우이며,
+공유 object의 삭제를 허용하기 위해 사용됩니다. 어떻게 작동하는지 보여드리기 위해,
+Config object를 생성하고 공유하는 함수와 이를 삭제하는 함수를 만들어 보겠습니다:
 
 ```move
-/// Creates a new `Config` object and shares it.
+/// 새로운 `Config` object를 생성하고 공유합니다.
 public fun create_and_share(message: String, ctx: &mut TxContext) {
     let config = Config {
         id: object::new(ctx),
         message
     };
 
-    // Share the object so it becomes shared.
+    // object를 공유하여 공유 상태가 되도록 합니다.
     transfer::share_object(config);
 }
 ```
 
-The `create_and_share` function creates a new `Config` object and shares it. The object is now
-publicly available as a mutable reference. Let's create a function that deletes the shared object:
+`create_and_share` 함수는 새로운 `Config` object를 생성하고 공유합니다. object는 이제
+가변 참조로 공개적으로 사용할 수 있습니다. 공유 object를 삭제하는 함수를 만들어 보겠습니다:
 
 ```move
-/// Deletes the `Config` object, takes it by value.
-/// Can be called on a shared object!
+/// `Config` object를 삭제하며, 값으로 받습니다.
+/// 공유 object에서 호출할 수 있습니다!
 public fun delete_config(c: Config) {
     let Config { id, message: _ } = c;
     id.delete()
 }
 ```
 
-The `delete_config` function takes the `Config` object by value and deletes it, and the Sui Verifier
-would allow this call. However, if the function returned the `Config` object back or attempted to
-`freeze` or `transfer` it, the Sui Verifier would reject the transaction.
+`delete_config` 함수는 `Config` object를 값으로 받아 삭제하며, Sui Verifier는
+이 호출을 허용합니다. 하지만 함수가 `Config` object를 다시 반환하거나
+`freeze` 또는 `transfer`하려고 시도하면 Sui Verifier는 트랜잭션을 거부합니다.
 
 ```move
-// Won't work!
+// 작동하지 않습니다!
 public fun transfer_shared(c: Config, to: address) {
     transfer::transfer(c, to);
 }
 ```
 
-To summarize:
+요약하면:
 
-- `share_object` function is used to put an object into a _shared_ state;
-- Once an object is _shared_, it can be accessed by anyone by a mutable reference;
-- Shared objects can be deleted, but they can't be transferred or frozen.
+- `share_object` 함수는 object를 _공유_ 상태로 만드는 데 사용됩니다;
+- object가 _공유_되면 누구나 가변 참조로 접근할 수 있습니다;
+- 공유 object는 삭제할 수 있지만 전송하거나 동결할 수 없습니다.
 
-## Next Steps
+## 다음 단계
 
-Now that you know main features of the `transfer` module, you can start building more complex
-applications on Sui that involve storage operations. In the next chapter, we will cover the
-[Store Ability](./store-ability) which allows storing data inside objects and relaxes transfer
-restrictions which we barely touched on here. And after that we will cover the
-[UID and ID](./uid-and-id) types which are the most important types in the Sui storage model.
+이제 `transfer` module의 주요 기능을 알았으므로, 스토리지 작업을 포함하는
+더 복잡한 Sui 애플리케이션을 구축할 수 있습니다. 다음 챕터에서는
+object 내부에 데이터를 저장할 수 있게 하고 여기서 거의 다루지 않은 전송 제한을
+완화하는 [Store Ability](./store-ability)를 다룰 것입니다. 그리고 그 후에는
+Sui 스토리지 모델에서 가장 중요한 타입인 [UID와 ID](./uid-and-id) 타입을 다룰 것입니다.

@@ -1,8 +1,8 @@
 export default {
-  index: "Using Objects",
+  index: "Object 사용하기",
   "key-ability": "Ability: Key",
-  "storage-functions": "Storage Functions",
+  "storage-functions": "스토리지 함수",
   "store-ability": "Ability: Store",
-  "uid-and-id": "UID and ID",
-  "transfer-restrictions": "Restricted and Public Transfer"
+  "uid-and-id": "UID와 ID",
+  "transfer-restrictions": "제한된 전송과 공개 전송"
 }
