@@ -1,53 +1,52 @@
-# Upgradeability Practices
+# 업그레이드 가능성 모범 사례
 
-To talk about best practices for upgradeability, we need to first understand what can be upgraded in
-a package. The base premise of upgradeability is that an upgrade should not break public
-compatibility with the previous version. The parts of the module which can be used in dependent
-packages should not change their static signature. This applies to modules - a module can not be
-removed from a package, public structs - they can be used in function signatures and public
-functions - they can be called from other packages.
+업그레이드 가능성에 대한 모범 사례를 이야기하려면 먼저 패키지에서 무엇을 업그레이드할 수 있는지
+이해해야 합니다. 업그레이드 가능성의 기본 전제는 업그레이드가 이전 버전과의 공개 호환성을
+깨뜨리지 않아야 한다는 것입니다. 종속 패키지에서 사용할 수 있는 모듈의 부분은 정적 서명을
+변경하지 않아야 합니다. 이는 모듈 - 패키지에서 모듈을 제거할 수 없고, public struct -
+함수 서명에서 사용할 수 있고, public 함수 - 다른 패키지에서 호출할 수 있는 것에 적용됩니다.
 
 ```move
-// module can not be removed from the package
+// 모듈은 패키지에서 제거할 수 없습니다
 module book::upgradable;
 
-// dependencies can be changed (if they are not used in public signatures)
+// 종속성은 변경할 수 있습니다 (public 서명에서 사용하지 않는 경우)
 use std::string::String;
-use sui::event; // can be removed
+use sui::event; // 제거 가능
 
-// public structs can not be removed and can't be changed
+// public struct는 제거할 수 없고 변경할 수 없습니다
 public struct Book has key {
     id: UID,
     title: String,
 }
 
-// public structs can not be removed and can't be changed
+// public struct는 제거할 수 없고 변경할 수 없습니다
 public struct BookCreated has copy, drop {
     /* ... */
 }
 
-// public functions can not be removed and their signature can never change
-// but the implementation can be changed
+// public 함수는 제거할 수 없고 서명을 변경할 수 없습니다
+// 하지만 구현은 변경할 수 있습니다
 public fun create_book(ctx: &mut TxContext): Book {
     create_book_internal(ctx)
 
-    // can be removed and changed
+    // 제거하고 변경할 수 있습니다
     event::emit(BookCreated {
         /* ... */
     })
 }
 
-// package-visibility functions can be removed and changed
+// 패키지 가시성 함수는 제거하고 변경할 수 있습니다
 public(package) fun create_book_package(ctx: &mut TxContext): Book {
     create_book_internal(ctx)
 }
 
-// entry functions can be removed and changed as long as they're not public
+// entry 함수는 public이 아닌 한 제거하고 변경할 수 있습니다
 entry fun create_book_entry(ctx: &mut TxContext): Book {
     create_book_internal(ctx)
 }
 
-// private functions can be removed and changed
+// private 함수는 제거하고 변경할 수 있습니다
 fun create_book_internal(ctx: &mut TxContext): Book {
     abort 0
 }
@@ -59,15 +58,15 @@ fun create_book_internal(ctx: &mut TxContext): Book {
 TODO: Add a section about entry and friend functions
 */}
 
-## Versioning objects
+## Object 버전 관리
 
-{/* This practice is for function version locking based on a shared state */}
+{/* 이 사례는 공유 상태를 기반으로 한 함수 버전 잠금을 위한 것입니다 */}
 
-To discard previous versions of the package, the objects can be versioned. As long as the object
-contains a version field, and the code which uses the object expects and asserts a specific version,
-the code can be force-migrated to the new version. Normally, after an upgrade, admin functions can
-be used to update the version of the shared state, so that the new version of code can be used, and
-the old version aborts with a version mismatch.
+패키지의 이전 버전을 폐기하려면 object에 버전을 지정할 수 있습니다. object가 버전 필드를
+포함하고 object를 사용하는 코드가 특정 버전을 기대하고 검증하는 한, 코드를 새 버전으로
+강제 마이그레이션할 수 있습니다. 일반적으로 업그레이드 후 관리자 함수를 사용하여 공유 상태의
+버전을 업데이트할 수 있으므로 새 버전의 코드를 사용할 수 있고 이전 버전은 버전 불일치로
+중단됩니다.
 
 ```move
 module book::versioned_state;
@@ -76,7 +75,7 @@ const EVersionMismatch: u64 = 0;
 
 const VERSION: u8 = 1;
 
-/// The shared state (can be owned too)
+/// 공유 상태 (소유할 수도 있음)
 public struct SharedState has key {
     id: UID,
     version: u8,
@@ -89,14 +88,14 @@ public fun mutate(state: &mut SharedState) {
 }
 ```
 
-## Versioning configuration with dynamic fields
+## 동적 필드를 사용한 구성 버전 관리
 
-{/* This practice is for versioning the contents / structure of objects */}
+{/* 이 사례는 object의 내용/구조의 버전 관리를 위한 것입니다 */}
 
-There's a common pattern in Sui which allows changing the stored configuration of an object while
-retaining the same object signature. This is done by keeping the base object simple and versioned
-and adding an actual configuration object as a dynamic field. Using this _anchor_ pattern, the
-configuration can be changed with package upgrades while keeping the same base object signature.
+Sui에는 동일한 object 서명을 유지하면서 object의 저장된 구성을 변경할 수 있는 일반적인
+패턴이 있습니다. 이는 기본 object를 간단하고 버전화된 상태로 유지하고 실제 구성 object를
+동적 필드로 추가하여 수행됩니다. 이 _앵커_ 패턴을 사용하면 동일한 기본 object 서명을
+유지하면서 패키지 업그레이드로 구성을 변경할 수 있습니다.
 
 ```move
 module book::versioned_config;
@@ -104,13 +103,13 @@ module book::versioned_config;
 use sui::vec_map::VecMap;
 use std::string::String;
 
-/// The base object
+/// 기본 object
 public struct Config has key {
     id: UID,
     version: u16
 }
 
-/// The actual configuration
+/// 실제 구성
 public struct ConfigV1 has store {
     data: Bag,
     metadata: VecMap<String, String>
@@ -119,8 +118,8 @@ public struct ConfigV1 has store {
 // ...
 ```
 
-## Modular architecture
+## 모듈형 아키텍처
 
-This section is coming soon!
+이 섹션은 공 예정입니다!
 
-{/* TODO: add two patterns for modular architecture: object capability (SuiFrens) and witness registry (SuiNS) */}
+{/* TODO: 모듈형 아키텍처를 위한 두 가지 패턴 추가: object capability (SuiFrens)와 witness registry (SuiNS) */}

@@ -1,44 +1,42 @@
-# Move 2024 Migration Guide
+# Move 2024 마이그레이션 가이드
 
-Move 2024 is the new edition of the Move language that is maintained by Mysten Labs. This guide is
-intended to help you understand the differences between the 2024 edition and the previous version of
-the Move language.
+Move 2024는 Mysten Labs에서 유지 관리하는 Move 언어의 새 버전입니다. 이 가이드는
+2024 버전과 이전 버전의 Move 언어 간의 차이점을 이해하는 데 도움을 주기 위한 것입니다.
 
-> This guide provides a high-level overview of the changes in the new edition. For a more detailed
-> and exhaustive list of changes, refer to the
-> [Sui Documentation](https://docs.sui.io/guides/developer/advanced/move-2024-migration).
+> 이 가이드는 새 버전의 변경 사항에 대한 개요를 제공합니다. 더 자세하고
+> 완전한 변경 사항 목록은 [Sui 문서](https://docs.sui.io/guides/developer/advanced/move-2024-migration)를 참조하세요.
 
-## Using the New Edition
+## 새 버전 사용하기
 
-To use the new edition, you need to specify the edition in the `move` file. The edition is specified
-in the `move` file using the `edition` keyword. Currently, the only available edition is
-`2024.beta`.
+새 버전을 사용하려면 `move` 파일에서 버전을 지정해야 합니다. 버전은 `move` 파일에서
+`edition` 키워드를 사용하여 지정됩니다. 현재 사용 가능한 버전은
+`2024.beta`입니다.
 
 ```ini
 edition = "2024"
-# alternatively, for new features:
+# 또는 새로운 기능을 위해:
 edition = "2024.beta"
 ```
 
-## Migration Tool
+## 마이그레이션 도구
 
-The Move CLI has a migration tool that updates the code to the new edition. To use the migration
-tool, run the following command:
+Move CLI에는 코드를 새 버전으로 업데이트하는 마이그레이션 도구가 있습니다. 마이그레이션
+도구를 사용하려면 다음 명령을 실행하세요:
 
 ```bash
 $ sui move migrate
 ```
 
-The migration tool will update the code to use the `let mut` syntax, the new `public` modifier for
-structs, and the `public(package)` function visibility instead of `friend` declarations.
+마이그레이션 도구는 코드를 `let mut` 구문, struct의 새로운 `public` 수식어,
+그리고 `friend` 선언 대신 `public(package)` 함수 가시성을 사용하도록 업데이트합니다.
 
-## Mutable Bindings with `let mut`
+## `let mut`를 사용한 가변 바인딩
 
-Move 2024 introduces `let mut` syntax to declare mutable variables. The `let mut` syntax is used to
-declare a mutable variable that can be changed after it is declared.
+Move 2024는 가변 변수를 선언하기 위한 `let mut` 구문을 도입합니다. `let mut` 구문은
+선언 후 변경할 수 있는 가변 변수를 선언하는 데 사용됩니다.
 
-> `let mut` declaration is now required for mutable variables. Compiler will emit an error if you
-> try to reassign a variable without the `mut` keyword.
+> `let mut` 선언은 이제 가변 변수에 필수입니다. `mut` 키워드 없이 변수를
+> 재할당하려고 하면 컴파일러가 오류를 발생시킵니다.
 
 ```move
 // Move 2020
@@ -50,34 +48,34 @@ let mut x: u64 = 10;
 x = 20;
 ```
 
-Additionally, the `mut` keyword is used in tuple destructuring and function arguments to declare
-mutable variables.
+추가적으로 `mut` 키워드는 튜플 구조 분해와 함수 인자에서 가변 변수를 선언하는 데
+사용됩니다.
 
 ```move
-// takes by value and mutates
+// 값으로 받아서 변경합니다
 fun takes_by_value_and_mutates(mut v: Value): Value {
     v.field = 10;
     v
 }
 
-// `mut` should be placed before the variable name
+// `mut`는 변수 이름 앞에 위치해야 합니다
 fun destruct() {
     let (x, y) = point::get_point();
     let (mut x, y) = point::get_point();
     let (mut x, mut y) = point::get_point();
 }
 
-// in struct unpack
+// struct 언패킹에서
 fun unpack() {
     let Point { x, mut y } = point::get_point();
     let Point { mut x, mut y } = point::get_point();
 }
 ```
 
-## Friends are Deprecated
+## Friend는 비권장됨
 
-In Move 2024, the `friend` keyword is deprecated. Instead, you can use the `public(package)`
-visibility modifier to make functions visible to other modules in the same package.
+Move 2024에서 `friend` 키워드는 비권장됩니다. 대신 `public(package)`
+가시성 수식어를 사용하여 같은 패키지의 다른 모듈에 함수를 표시할 수 있습니다.
 
 ```move
 // Move 2020
@@ -88,10 +86,10 @@ public(friend) fun protected_function() {}
 public(package) fun protected_function_2024() {}
 ```
 
-## Struct Visibility
+## Struct 가시성
 
-In Move 2024, structs get a visibility modifier. Currently, the only available visibility modifier
-is `public`.
+Move 2024에서 struct는 가시성 수식어를 가집니다. 현재 사용 가능한 유일한 가시성 수식어는
+`public`입니다.
 
 ```move
 // Move 2020
@@ -101,15 +99,15 @@ struct Book {}
 public struct Book {}
 ```
 
-## Method Syntax
+## 메서드 구문
 
-In the new edition, functions which have a struct as the first argument are associated with the
-struct. This means that the function can be called using the dot notation. Methods defined in the
-same module with the type are automatically exported.
+새 버전에서는 struct를 첫 번째 인자로 가지는 함수가 struct와 연결됩니다.
+이는 함수를 점 표기법으로 호출할 수 있음을 의미합니다. 타입과 같은 모듈에 정의된
+메서드는 자동으로 내보내집니다.
 
-> Methods are automatically exported if the type is defined in the same module as the method. It is
-> impossible to export methods for types defined in other modules. However, you can create
-> [custom aliases](#method-aliases) for methods in the module scope.
+> 메서드는 타입이 메서드와 같은 모듈에 정의된 경우 자동으로 내보내집니다.
+> 다른 모듈에 정의된 타입에 대한 메서드를 내보내는 것은 불가능합니다. 그러나
+> 모듈 범위에서 메서드에 대한 [사용자 정의 별칭](#method-aliases)을 만들 수 있습니다.
 
 ```move
 public fun count(c: &Counter): u64 { /* ... */ }
@@ -123,41 +121,40 @@ fun use_counter() {
 }
 ```
 
-## Methods for Built-in Types
+## 내장 타입의 메서드
 
-In Move 2024, some of the native and standard types received associated methods. For example, the
-`vector` type has a `to_string` method that converts the vector into a UTF8 string.
+Move 2024에서는 일부 네이티브 및 표준 타입이 연관 메서드를 받았습니다. 예를 들어,
+`vector` 타입은 벡터를 UTF8 문자열로 변환하는 `to_string` 메서드를 가집니다.
 
 ```move
 fun aliases() {
-    // vector to string and ascii string
+    // 벡터를 문자열과 ascii 문자열로
     let str: String = b"Hello, World!".to_string();
     let ascii: ascii::String = b"Hello, World!".to_ascii_string();
 
-    // address to bytes
+    // 주소를 바이트로
     let bytes = @0xa11ce.to_bytes();
 }
 ```
 
-For the full list of built-in aliases, refer to the
-[Standard Library](./../move-basics/standard-library#source-code) and
-[Sui Framework](./../programmability/sui-framework#source-code) source code.
+내장 별칭의 전체 목록은 [표준 라이브러리](./../move-basics/standard-library#source-code)와
+[Sui 프레임워크](./../programmability/sui-framework#source-code) 소스 코드를 참조하세요.
 
-## Borrowing Operator
+## 차용 연산자
 
-Some of the built-in types support borrowing operators. The borrowing operator is used to get a
-reference to the element at the specified index. The borrowing operator is defined as `[]`.
+일부 내장 타입은 차용 연산자를 지원합니다. 차용 연산자는 지정된 인덱스에서
+요소에 대한 참조를 얻는 데 사용됩니다. 차용 연산자는 `[]`로 정의됩니다.
 
 ```move
 fun play_vec() {
     let v = vector[1,2,3,4];
-    let first = &v[0];         // calls vector::borrow(v, 0)
-    let first_mut = &mut v[0]; // calls vector::borrow_mut(v, 0)
-    let first_copy = v[0];     // calls *vector::borrow(v, 0)
+    let first = &v[0];         // vector::borrow(v, 0) 호출
+    let first_mut = &mut v[0]; // vector::borrow_mut(v, 0) 호출
+    let first_copy = v[0];     // *vector::borrow(v, 0) 호출
 }
 ```
 
-Types that support the borrowing operator are:
+차용 연산자를 지원하는 타입:
 
 - `vector`
 - `sui::vec_map::VecMap`
@@ -167,8 +164,8 @@ Types that support the borrowing operator are:
 - `sui::object_bag::ObjectBag`
 - `sui::linked_table::LinkedTable`
 
-To implement the borrowing operator for a custom type, you need to add a `#[syntax(index)]`
-attribute to the methods.
+사용자 정의 타입에 차용 연산자를 구현하려면 메서드에 `#[syntax(index)]`
+속성을 추가해야 합니다.
 
 ```move
 #[syntax(index)]
@@ -178,18 +175,18 @@ public fun borrow(c: &List<T>, key: String): &T { /* ... */ }
 public fun borrow_mut(c: &mut List<T>, key: String): &mut T { /* ... */ }
 ```
 
-## Method Aliases
+## 메서드 별칭
 
-In Move 2024, methods can be associated with types. The alias can be defined for any type locally to
-the module; or publicly, if the type is defined in the same module.
+Move 2024에서는 메서드를 타입과 연결할 수 있습니다. 별칭은 모듈에 로컬로 모든 타입에 대해
+정의할 수 있거나, 타입이 같은 모듈에 정의된 경우 공개적으로 정의할 수 있습니다.
 
 ```move
 // my_module.move
-// Local: type is foreign to the module
+// 로컬: 타입이 모듈에 외부적입니다
 use fun my_custom_function as vector.do_magic;
 
 // sui-framework/kiosk/kiosk.move
-// Exported: type is defined in the same module
+// 내보내기: 타입이 같은 모듈에 정의되어 있습니다
 public use fun kiosk_owner_cap_for as KioskOwnerCap.kiosk;
 ```
 
