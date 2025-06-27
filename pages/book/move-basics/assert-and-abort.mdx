@@ -1,4 +1,4 @@
-# Aborting Execution
+# 실행 중단하기
 
 {/* Consider "aborting execution" */}
 
@@ -20,62 +20,80 @@ Links:
     - constants (previous section)
  */}
 
-A transaction can either succeed or fail. Successful execution applies all changes made to objects
-and on-chain data, and the transaction is committed to the blockchain. Alternatively, if a
-transaction aborts, changes are not applied. Use the `abort` keyword to abort a transaction and
-revert any changes that were made.
+트랜잭션은 성공하거나 실패할 수 있습니다. 성공적인 실행은 객체와 온체인 데이터에 대한 모든 변경 사항을 적용하고, 트랜잭션은 블록체인에 커밋됩니다. 반대로 트랜잭션이 중단되면 변경 사항이 적용되지 않습니다. `abort` 키워드를 사용하여 트랜잭션을 중단하고 수행된 모든 변경 사항을 되돌릴 수 있습니다.
 
-> It is important to note that there is no catch mechanism in Move. If a transaction aborts, the
-> changes made so far are reverted, and the transaction is considered failed.
+> Move에는 catch 메커니즘이 없다는 점을 유의해야 합니다. 트랜잭션이 중단되면 지금까지 수행된 변경 사항이 되돌려지고, 트랜잭션은 실패로 간주됩니다.
 
 ## Abort
 
-The `abort` keyword is used to abort the execution of a transaction. It is used in combination with
-an abort code, which is returned to the caller of the transaction. The abort code is an
-[integer](./primitive-types) of type `u64`.
+`abort` 키워드는 트랜잭션 실행을 중단하는 데 사용됩니다. 중단 코드와 함께 사용되며, 이 코드는 트랜잭션 호출자에게 반환됩니다. 중단 코드는 `u64` 타입의 [정수](./primitive-types)입니다.
 
-```move file=packages/samples/sources/move-basics/assert-and-abort.move anchor=abort
+```move
+let user_has_access = true;
 
+// `user_has_access`가 false이면 미리 정의된 상수로 중단
+if (user_has_access) {
+    abort 1
+};
 ```
 
-The code above will, of course, abort with abort code `1`.
+위 코드는 당연히 중단 코드 `1`로 중단됩니다.
 
 ## assert!
 
-The `assert!` macro is a built-in macro that can be used to assert a condition. If the condition is
-false, the transaction will abort with the given abort code. The `assert!` macro is a convenient way
-to abort a transaction if a condition is not met. The macro shortens the code otherwise written with
-an `if` expression + `abort`. The `code` argument is optional, but has to be a `u64` value or an
-`#[error]` (see below for more information).
+`assert!` 매크로는 조건을 검증하는 데 사용할 수 있는 내장 매크로입니다. 조건이 거짓이면 트랜잭션은 주어진 중단 코드로 중단됩니다. `assert!` 매크로는 조건이 충족되지 않을 때 트랜잭션을 중단하는 편리한 방법입니다. 이 매크로는 `if` 표현식 + `abort`로 작성될 코드를 단축시킵니다. `code` 인수는 선택 사항이지만 `u64` 값이거나 `#[error]`여야 합니다(자세한 정보는 아래 참조).
 
-```move file=packages/samples/sources/move-basics/assert-and-abort.move anchor=assert
+```move
+// `user_has_access`가 `false`이면 중단 코드 0으로 중단
+assert!(user_has_access, 0);
 
+// 다음과 같이 확장됩니다:
+if (!user_has_access) {
+    abort 0
+};
 ```
 
-## Error constants
+## 오류 상수
 
-To make error codes more descriptive, it is a good practice to define
-[error constants](./constants). Error constants are defined as `const` declarations and are usually
-prefixed with `E` followed by a camel case name. Error constants are similar to other constants and
-do not have any special handling. However, they are commonly used to improve code readability and
-make abort scenarios easier to understand.
+오류 코드를 더 설명적으로 만들기 위해 [오류 상수](./constants)를 정의하는 것이 좋은 관행입니다. 오류 상수는 `const` 선언으로 정의되며 일반적으로 `E`로 시작하고 카멜 케이스 이름이 뒤따릅니다. 오류 상수는 다른 상수와 유사하며 특별한 처리가 없습니다. 하지만 코드 가독성을 향상시키고 중단 시나리오를 이해하기 쉽게 만들기 위해 일반적으로 사용됩니다.
 
-```move file=packages/samples/sources/move-basics/assert-and-abort.move anchor=error_const
+```move
+/// 사용자에게 접근 권한이 없을 때의 오류 코드.
+const ENoAccess: u64 = 0;
+/// 존재하지 않는 필드에 접근하려 할 때.
+const ENoField: u64 = 1;
 
+/// 레코드를 업데이트합니다.
+public fun update_record(/* ... , */ user_has_access: bool, field_exists: bool) {
+    // assert가 이제 훨씬 더 읽기 쉬워졌습니다
+    assert!(user_has_access, ENoAccess);
+    assert!(field_exists, ENoField);
+
+    /* ... */
+}
 ```
 
-## Error messages
+## 오류 메시지
 
-Move 2024 introduces a special type of error constant, marked with the `#[error]` attribute. This
-attribute allows the error constant to be of type `vector<u8>` and can be used to store an error
-message.
+Move 2024는 `#[error]` 속성으로 표시되는 특별한 타입의 오류 상수를 도입합니다. 이 속성을 사용하면 오류 상수가 `vector<u8>` 타입이 될 수 있으며 오류 메시지를 저장하는 데 사용할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/assert-and-abort.move anchor=error_attribute
+```move
+#[error]
+const ENotAuthorized: vector<u8> = b"The user is not authorized to perform this action";
 
+#[error]
+const EValueTooLow: vector<u8> = b"The value is too low, it should be at least 10";
+
+/// 사용자를 대신하여 작업을 수행합니다.
+public fun update_value(user: &mut User, value: u64) {
+    assert!(user.is_authorized, ENotAuthorized);
+    assert!(value >= 10, EValueTooLow);
+
+    user.value = value;
+}
 ```
 
-## Further Reading
+## 추가 자료
 
-- [Abort and Assert](./../../reference/abort-and-assert) in the Move Reference.
-- We suggest reading the [Better Error Handling](./../guides/better-error-handling) guide to learn
-  about best practices for error handling in Move.
+- Move Reference의 [Abort and Assert](./../../reference/abort-and-assert)
+- Move에서 오류 처리의 모범 사례를 배우려면 [Better Error Handling](./../guides/better-error-handling) 가이드를 읽어보시기 바랍니다.

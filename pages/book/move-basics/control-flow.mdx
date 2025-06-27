@@ -1,4 +1,4 @@
-# Control Flow
+# 제어 흐름
 
 {/*
 
@@ -19,181 +19,260 @@ Links:
 
  */}
 
-Control flow statements are used to control the flow of execution in a program. They are used to
-make decisions, repeat a block of code, or exit a block of code early. Move includes the following
-control flow statements (explained in detail below):
+제어 흐름 문은 프로그램의 실행 흐름을 제어하는 데 사용됩니다. 결정을 내리거나, 코드 블록을 반복하거나, 코드 블록을 조기에 종료하는 데 사용됩니다. Move는 다음과 같은 제어 흐름 문을 포함합니다 (아래에 자세히 설명):
 
-- [`if` and `if-else`](#conditional-statements) - making decisions on whether to execute a block of
-  code
-- [`loop` and `while` loops](#repeating-statements-with-loops) - repeating a block of code
-- [`break` and `continue` statements](#exiting-a-loop-early) - exiting a loop early
-- [`return`](#early-return) statement - exiting a function early
+- [`if`와 `if-else`](#조건문) - 코드 블록 실행 여부를 결정
+- [`loop`와 `while` 반복문](#반복문으로-문장-반복하기) - 코드 블록 반복
+- [`break`와 `continue` 문](#반복문-조기-종료) - 반복문 조기 종료
+- [`return`](#조기-반환) 문 - 함수 조기 종료
 
-## Conditional Statements
+## 조건문
 
-The `if` expression is used to make decisions in a program. It evaluates a
-[boolean expression](./expression#literals) and executes a block of code if the expression is true.
-Paired with `else`, it can execute a different block of code if the expression is false.
+`if` 표현식은 프로그램에서 결정을 내리는 데 사용됩니다. [불리언 표현식](./expression#literals)을 평가하고 표현식이 참이면 코드 블록을 실행합니다.
+`else`와 함께 사용하면 표현식이 거짓일 때 다른 코드 블록을 실행할 수 있습니다.
 
-The syntax for an `if` expression is:
+`if` 표현식의 구문은 다음과 같습니다:
 
 ```move
 if (<bool_expression>) <expression>;
 if (<bool_expression>) <expression> else <expression>;
 ```
 
-Just like any other expression, `if` requires a semicolon if there are other expressions following
-it. The `else` keyword is optional, except when the resulting value is assigned to a variable, as
-all branches must return a value to ensure type safety. Let’s examine how an `if` expression works
-in Move with the following example:
+다른 표현식과 마찬가지로 `if`는 뒤에 다른 표현식이 따라올 경우 세미콜론이 필요합니다. `else` 키워드는 선택 사항이지만, 결과 값이 변수에 할당될 때는 필수입니다. 모든 분기가 타입 안전성을 보장하기 위해 값을 반환해야 하기 때문입니다. Move에서 `if` 표현식이 어떻게 작동하는지 다음 예제로 살펴보겠습니다:
 
-```move file=packages/samples/sources/move-basics/control-flow.move anchor=if_condition
+```move
+#[test]
+fun test_if() {
+    let x = 5;
 
+    // `x > 0`은 불리언 표현식입니다.
+    if (x > 0) {
+        std::debug::print(&b"X is bigger than 0".to_string())
+    };
+}
 ```
 
-Let's see how we can use `if` and `else` to assign a value to a variable:
+`if`와 `else`를 사용하여 변수에 값을 할당하는 방법을 살펴보겠습니다:
 
-```move file=packages/samples/sources/move-basics/control-flow.move anchor=if_else
+```move
+#[test]
+fun test_if_else() {
+    let x = 5;
+    let y = if (x > 0) {
+        1
+    } else {
+        0
+    };
 
+    assert!(y == 1);
+}
 ```
 
-In this example, the value of the `if` expression is assigned to the variable `y`. If `x` is greater
-than 0, `y` is assigned the value 1; otherwise, it is assigned 0. The `else` block is required
-because both branches of the `if` expression must return a value of the same type. Omitting the
-`else` block would result in a compiler error, as it ensures all possible branches are accounted for
-and type safety is maintained.
+이 예제에서 `if` 표현식의 값은 변수 `y`에 할당됩니다. `x`가 0보다 크면 `y`에 값 1이 할당되고, 그렇지 않으면 0이 할당됩니다. `else` 블록은 필수입니다. `if` 표현식의 두 분기가 모두 같은 타입의 값을 반환해야 하기 때문입니다. `else` 블록을 생략하면 컴파일러 오류가 발생합니다. 이는 모든 가능한 분기가 고려되고 타입 안전성이 유지되도록 보장합니다.
 
 {/* TODO: add an error */}
 
-Conditional expressions are among the most important control flow statements in Move. They evaluate
-user-provided input or stored data to make decisions. One key use case is in the
-[`assert!` macro](./assert-and-abort), which checks if a condition is true and aborts execution if
-it is not. We’ll explore this in detail shortly.
+조건 표현식은 Move에서 가장 중요한 제어 흐름 문 중 하나입니다. 사용자가 제공한 입력이나 저장된 데이터를 평가하여 결정을 내립니다. 주요 사용 사례 중 하나는 [`assert!` 매크로](./assert-and-abort)에서 조건이 참인지 확인하고 그렇지 않으면 실행을 중단하는 것입니다. 이에 대해서는 곧 자세히 살펴보겠습니다.
 
-## Repeating Statements with Loops
+## 반복문으로 문장 반복하기
 
-Loops are used to execute a block of code multiple times. Move has two built-in types of loops:
-`loop` and `while`. In many cases they can be used interchangeably, but usually `while` is used when
-the number of iterations is known in advance, and `loop` is used when the number of iterations is
-not known in advance or there are multiple exit points.
+반복문은 코드 블록을 여러 번 실행하는 데 사용됩니다. Move에는 두 가지 내장 반복문 타입이 있습니다:
+`loop`와 `while`입니다. 많은 경우 서로 바꿔 사용할 수 있지만, 일반적으로 `while`은 반복 횟수를 미리 알 때 사용하고, `loop`는 반복 횟수를 미리 알 수 없거나 여러 종료 지점이 있을 때 사용합니다.
 
-Loops are useful for working with collections, such as vectors, or for repeating a block of code
-until a specific condition is met. However, take care to avoid infinite loops, which can exhaust gas
-limits and cause the transaction to abort.
+반복문은 벡터와 같은 컬렉션 작업이나 특정 조건이 충족될 때까지 코드 블록을 반복하는 데 유용합니다. 하지만 가스 한계를 소진하고 트랜잭션이 중단될 수 있는 무한 반복문을 피하도록 주의해야 합니다.
 
-## The `while` Loop
+## `while` 반복문
 
-The `while` statement executes a block of code repeatedly as long as the associated boolean
-expression evaluates to true. Just like we've seen with `if`, the boolean expression is evaluated
-before each iteration of the loop. Additionally, like conditional statements, the `while` loop is an
-expression and requires a semicolon if there are other expressions following it.
+`while` 문은 연관된 불리언 표현식이 참으로 평가되는 동안 코드 블록을 반복적으로 실행합니다. `if`에서 본 것처럼 불리언 표현식은 반복문의 각 반복 전에 평가됩니다. 또한 조건문처럼 `while` 반복문은 표현식이며 뒤에 다른 표현식이 따라올 경우 세미콜론이 필요합니다.
 
-The syntax for the `while` loop is:
+`while` 반복문의 구문은 다음과 같습니다:
 
 ```move
 while (<bool_expression>) { <expressions>; };
 ```
 
-Here is an example of a `while` loop with a very simple condition:
+다음은 매우 간단한 조건을 가진 `while` 반복문의 예입니다:
 
-```move file=packages/samples/sources/move-basics/control-flow.move anchor=while_loop
+```move
+// 이 함수는 `x` 변수가 10에 도달할 때까지 반복하며,
+// 반환 값은 10에 도달하는 데 걸린 반복 횟수입니다.
+//
+// `x`가 0이면 함수는 10을 반환합니다.
+// `x`가 5이면 함수는 5를 반환합니다.
+fun while_loop(mut x: u8): u8 {
+    let mut y = 0;
 
+    // 이것은 `x`가 10이 될 때까지 반복됩니다.
+    // 그리고 `x`가 10 이상이면 실행되지 않습니다.
+    while (x < 10) {
+        y = y + 1;
+        x = x + 1;
+    };
+
+    y
+}
+
+#[test]
+fun test_while() {
+    assert!(while_loop(0) == 10); // 10번
+    assert!(while_loop(5) == 5);  // 5번
+    assert!(while_loop(10) == 0); // 반복문이 실행되지 않음
+}
 ```
 
-## Infinite `loop`
+## 무한 `loop`
 
-Now let's imagine a scenario where the boolean expression is always `true`. For example, if we
-literally passed `true` to the `while` condition. This is similar to how the `loop` statement
-functions, except that `while` evaluates a condition.
+이제 불리언 표현식이 항상 `true`인 시나리오를 상상해 봅시다. 예를 들어, `while` 조건에 문자 그대로 `true`를 전달한다면 어떻게 될까요. 이것은 `loop` 문이 작동하는 방식과 유사하지만, `while`은 조건을 평가한다는 점이 다릅니다.
 
-```move file=packages/samples/sources/move-basics/control-flow.move anchor=infinite_while
+```move
+#[test, expected_failure(out_of_gas, location=Self)]
+fun test_infinite_while() {
+    let mut x = 0;
 
+    // 이것은 영원히 반복됩니다.
+    while (true) {
+        x = x + 1;
+    };
+
+    // 이 줄은 절대 실행되지 않습니다.
+    assert!(x == 5);
+}
 ```
 
-An infinite `while` loop, or a `while` loop with an always `true` condition, is equivalent to a
-`loop`. The syntax for creating a `loop` is straightforward:
+무한 `while` 반복문, 또는 항상 `true` 조건을 가진 `while` 반복문은 `loop`와 동일합니다. `loop`를 만드는 구문은 간단합니다:
 
 ```move
 loop { <expressions>; };
 ```
 
-Let's rewrite the previous example using `loop` instead of `while`:
+이전 예제를 `while` 대신 `loop`를 사용하여 다시 작성해 보겠습니다:
 
-```move file=packages/samples/sources/move-basics/control-flow.move anchor=infinite_loop
+```move
+#[test, expected_failure(out_of_gas, location=Self)]
+fun test_infinite_loop() {
+    let mut x = 0;
 
+    // 이것은 영원히 반복됩니다.
+    loop {
+        x = x + 1;
+    };
+
+    // 이 줄은 절대 실행되지 않습니다.
+    assert!(x == 5);
+}
 ```
 
-Infinite loops are rarely practical in Move, as every operation consumes gas, and an infinite loop
-will inevitably lead to gas exhaustion. If you find yourself using a loop, consider whether there
-might be a better approach, as many use cases can be handled more efficiently with other control
-flow structures. That said, `loop` might be useful when combined with `break` and `continue`
-statements to create controlled and flexible looping behavior.
+무한 반복문은 Move에서 실용적이지 않습니다. 모든 연산이 가스를 소비하고, 무한 반복문은 필연적으로 가스 소진으로 이어지기 때문입니다. 반복문을 사용하고 있다면 더 나은 접근 방법이 있는지 고려해 보세요. 많은 사용 사례를 다른 제어 흐름 구조로 더 효율적으로 처리할 수 있습니다. 그렇긴 하지만, `loop`는 `break`와 `continue` 문과 함께 사용하여 제어되고 유연한 반복 동작을 만들 때 유용할 수 있습니다.
 
-## Exiting a Loop Early
+## 반복문 조기 종료
 
-As we already mentioned, infinite loops are rather useless on their own. And that's where we
-introduce the `break` and `continue` statements. They are used to exit a loop early, and to skip the
-rest of the current iteration, respectively.
+이미 언급했듯이 무한 반복문은 그 자체로는 다소 쓸모가 없습니다. 그래서 `break`와 `continue` 문을 소개합니다. 이들은 각각 반복문을 조기에 종료하고 현재 반복의 나머지 부분을 건너뛰는 데 사용됩니다.
 
-Syntax for the `break` statement is (without a semicolon):
+`break` 문의 구문은 다음과 같습니다 (세미콜론 없음):
 
 ```move
 break
 ```
 
-The `break` statement is used to stop the execution of a loop and exit it early. It is often used in
-combination with a conditional statement to exit the loop when a certain condition is met. To
-illustrate this point, let's turn the infinite `loop` from the previous example into something that
-looks and behaves more like a `while` loop:
+`break` 문은 반복문의 실행을 중지하고 조기에 종료하는 데 사용됩니다. 특정 조건이 충족되면 반복문을 종료하기 위해 조건문과 함께 사용되는 경우가 많습니다. 이를 설명하기 위해 이전 예제의 무한 `loop`를 `while` 반복문처럼 보이고 동작하는 것으로 바꿔보겠습니다:
 
-```move file=packages/samples/sources/move-basics/control-flow.move anchor=break_loop
+```move
+#[test]
+fun test_break_loop() {
+    let mut x = 0;
 
+    // 이것은 `x`가 5가 될 때까지 반복됩니다.
+    loop {
+        x = x + 1;
+
+        // `x`가 5이면 반복문을 종료합니다.
+        if (x == 5) {
+            break // 반복문을 종료합니다.
+        }
+    };
+
+    assert!(x == 5);
+}
 ```
 
-Almost identical to the `while` loop, right? The `break` statement is used to exit the loop when `x`
-is 5. If we remove the `break` statement, the loop will run forever, just like in the previous
-example.
+`while` 반복문과 거의 동일하죠? `break` 문은 `x`가 5일 때 반복문을 종료하는 데 사용됩니다. `break` 문을 제거하면 이전 예제처럼 반복문이 영원히 실행됩니다.
 
-## Skipping an Iteration
+## 반복 건너뛰기
 
-The `continue` statement is used to skip the rest of the current iteration and start the next one.
-Similarly to `break`, it is used in combination with a conditional statement to skip the rest of an
-iteration when a certain condition is met.
+`continue` 문은 현재 반복의 나머지 부분을 건너뛰고 다음 반복을 시작하는 데 사용됩니다.
+`break`와 마찬가지로 특정 조건이 충족되면 반복의 나머지 부분을 건너뛰기 위해 조건문과 함께 사용됩니다.
 
-Syntax for the `continue` statement is (without a semicolon):
+`continue` 문의 구문은 다음과 같습니다 (세미콜론 없음):
 
 ```move
 continue
 ```
 
-The example below skips odd numbers and prints only even numbers from 0 to 10:
+아래 예제는 홀수를 건너뛰고 0에서 10까지의 짝수만 출력합니다:
 
-```move file=packages/samples/sources/move-basics/control-flow.move anchor=continue_loop
+```move
+#[test]
+fun test_continue_loop() {
+    let mut x = 0;
 
+    // 이것은 `x`가 10이 될 때까지 반복됩니다.
+    loop {
+        x = x + 1;
+
+        // `x`가 홀수이면 반복의 나머지 부분을 건너뜁니다.
+        if (x % 2 == 1) {
+            continue // 반복의 나머지 부분을 건너뜁니다.
+        };
+
+        std::debug::print(&x);
+
+        // `x`가 10이면 반복문을 종료합니다.
+        if (x == 10) {
+            break // 반복문을 종료합니다.
+        }
+    };
+
+    assert!(x == 10); // 10
+}
 ```
 
-`break` and `continue` statements can be used in both `while` and `loop` loops.
+`break`와 `continue` 문은 `while`과 `loop` 반복문 모두에서 사용할 수 있습니다.
 
-## Early Return
+## 조기 반환
 
-The `return` statement is used to exit a [function](./function) early and return a value. It is
-often used in combination with a conditional statement to exit the function when a certain condition
-is met. The syntax for the `return` statement is:
+`return` 문은 [함수](./function)를 조기에 종료하고 값을 반환하는 데 사용됩니다. 특정 조건이 충족되면 함수를 종료하기 위해 조건문과 함께 사용되는 경우가 많습니다. `return` 문의 구문은 다음과 같습니다:
 
 ```move
 return <expression>
 ```
 
-Here is an example of a function that returns a value when a certain condition is met:
+다음은 특정 조건이 충족되면 값을 반환하는 함수의 예입니다:
 
-```move file=packages/samples/sources/move-basics/control-flow.move anchor=return_statement
+```move
+/// 이 함수는 `x`가 0보다 크고 5가 아니면 `true`를 반환하고,
+/// 그렇지 않으면 `false`를 반환합니다.
+fun is_positive(x: u8): bool {
+    if (x == 5) {
+        return false
+    };
 
+    if (x > 0) {
+        return true
+    };
+
+    false
+}
+
+#[test]
+fun test_return() {
+    assert!(is_positive(5) == false);
+    assert!(is_positive(0) == false);
+    assert!(is_positive(1) == true);
+}
 ```
 
-Unlike in many other languages, the `return` statement is not required for the last expression in a
-function. The last expression in a function block is automatically returned. However, the `return`
-statement is useful when we want to exit a function early if a certain condition is met.
+많은 다른 언어와 달리 Move에서는 함수의 마지막 표현식에 `return` 문이 필요하지 않습니다. 함수 블록의 마지막 표현식은 자동으로 반환됩니다. 하지만 `return` 문은 특정 조건이 충족되면 함수를 조기에 종료하고 싶을 때 유용합니다.
 
-## Further Reading
+## 추가 자료
 
-- [Control Flow](./../../reference/control-flow) chapter in the Move Reference.
+- Move Reference의 [Control Flow](./../../reference/control-flow) 챕터

@@ -1,25 +1,49 @@
-# Type Reflection
+# 타입 리플렉션
 
-In programming languages, _reflection_ is the ability of a program to examine and modify its own
-structure and behavior. Move has a limited form of reflection that allows you to inspect the type of
-a value at runtime. This is useful when you need to store type information in a homogeneous
-collection, or when you need to check if a type belongs to a package.
+프로그래밍 언어에서 _리플렉션(reflection)_ 은 프로그램이 자신의 구조와 동작을 검사하고 수정할 수 있는 능력입니다. Move는 런타임에 값의 타입을 검사할 수 있는 제한된 형태의 리플렉션을 가지고 있습니다. 이는 동질적인 컬렉션에 타입 정보를 저장해야 하거나, 타입이 패키지에 속하는지 확인해야 할 때 유용합니다.
 
-Type reflection is implemented in the [Standard Library](./standard-library) module
-[`std::type_name`][type-name-stdlib]. Expressed very roughly, it gives a single function `get<T>()`
-which returns the name of the type `T`.
+타입 리플렉션은 [표준 라이브러리](./standard-library) 모듈인 [`std::type_name`][type-name-stdlib]에 구현되어 있습니다. 아주 간단히 표현하면, 타입 `T`의 이름을 반환하는 단일 함수 `get<T>()`를 제공합니다.
 
-## In practice
+## 실제 사용
 
-The module is straightforward, and operations allowed on the result are limited to getting a string
-representation and extracting the module and address of the type.
+이 module은 간단하며, 결과에 대해 허용되는 연산은 문자열 표현을 얻고 타입의 module과 주소를 추출하는 것으로 제한됩니다.
 
-```move file=packages/samples/sources/move-basics/type-reflection.move anchor=main
+```move
+module book::type_reflection;
 
+use std::ascii::String;
+use std::type_name::{Self, TypeName};
+
+/// 타입 `T`의 이름과 그 module 및 주소를 반환하는 함수.
+public fun do_i_know_you<T>(): (String, String, String) {
+    let type_name: TypeName = type_name::get<T>();
+
+    // 빌리는 방법이 있습니다
+    let str: &String = type_name.borrow_string();
+
+    let module_name: String = type_name.get_module();
+    let address_str: String = type_name.get_address();
+
+    // 그리고 값을 소비하는 방법도 있습니다
+    let str = type_name.into_string();
+
+    (str, module_name, address_str)
+}
+
+#[test_only]
+public struct MyType {}
+
+#[test]
+fun test_type_reflection() {
+    let (type_name, module_name, _address_str) = do_i_know_you<MyType>();
+
+    //
+    assert!(module_name == b"type_reflection".to_ascii_string());
+}
 ```
 
-## Further Reading
+## 추가 자료
 
-- [std::type_name][type-name-stdlib] module documentation.
+- [std::type_name][type-name-stdlib] module 문서
 
 [type-name-stdlib]: https://docs.sui.io/references/framework/std/type_name

@@ -1,85 +1,97 @@
-# Custom Types with Struct
+# Struct를 사용한 사용자 정의 타입
 
-Move's type system shines when it comes to defining custom types. User defined types can be custom
-tailored to the specific needs of the application, not only on the data level, but also in its
-behavior. In this section we introduce the struct definition and how to use it.
+Move의 타입 시스템은 사용자 정의 타입을 정의할 때 빛을 발합니다. 사용자 정의 타입은 애플리케이션의 특정 요구사항에 맞게 맞춤 설정할 수 있으며, 데이터 수준뿐만 아니라 동작 측면에서도 조정할 수 있습니다. 이 섹션에서는 struct(구조체) 정의와 사용 방법을 소개합니다.
 
 ## Struct
 
-To define a custom type, you can use the `struct` keyword followed by the name of the type. After
-the name, you can define the fields of the struct. Each field is defined with the
-`field_name: field_type` syntax. Field definitions must be separated by commas. The fields can be of
-any type, including other structs.
+사용자 정의 타입을 정의하려면 `struct` 키워드 다음에 타입 이름을 사용할 수 있습니다. 이름 다음에는 struct의 필드를 정의할 수 있습니다. 각 필드는 `field_name: field_type` 구문으로 정의됩니다. 필드 정의는 쉼표로 구분되어야 합니다. 필드는 다른 struct를 포함한 모든 타입이 될 수 있습니다.
 
-> Move does not support recursive structs, meaning a struct cannot contain itself as a field.
+> Move는 재귀적 struct를 지원하지 않습니다. 즉, struct는 자기 자신을 필드로 포함할 수 없습니다.
 
-```move file=packages/samples/sources/move-basics/struct.move anchor=def
+```move
+/// 아티스트를 나타내는 struct
+public struct Artist {
+    /// 아티스트의 이름
+    name: String,
+}
 
+/// 음반을 나타내는 struct
+public struct Record {
+    /// 음반의 제목
+    title: String,
+    /// 음반의 아티스트. `Artist` 타입을 사용
+    artist: Artist,
+    /// 음반이 출시된 연도
+    year: u16,
+    /// 데뷔 앨범인지 여부
+    is_debut: bool,
+    /// 음반의 에디션
+    edition: Option<u16>,
+}
 ```
 
-In the example above, we define a `Record` struct with five fields. The `title` field is of type
-`String`, the `artist` field is of type `Artist`, the `year` field is of type `u16`, the `is_debut`
-field is of type `bool`, and the `edition` field is of type `Option<u16>`. The `edition` field is of
-type `Option<u16>` to represent that the edition is optional.
+위 예제에서는 5개의 필드를 가진 `Record` struct를 정의합니다. `title` 필드는 `String` 타입이고, `artist` 필드는 `Artist` 타입이며, `year` 필드는 `u16` 타입이고, `is_debut` 필드는 `bool` 타입이며, `edition` 필드는 `Option<u16>` 타입입니다. `edition` 필드는 에디션이 선택사항임을 나타내기 위해 `Option<u16>` 타입입니다.
 
-Structs are private by default, meaning they cannot be imported and used outside of the module they
-are defined in. Their fields are also private and can't be accessed from outside the module. See
-[visibility](./visibility) for more information on different visibility modifiers.
+Struct는 기본적으로 private(비공개)이며, 정의된 module 외부에서는 import하여 사용할 수 없습니다. 필드 또한 private이며 module 외부에서 접근할 수 없습니다. 다양한 가시성 수정자에 대한 자세한 정보는 [visibility](./visibility)를 참조하세요.
 
-> Fields of a struct are private and can only be accessed by the module defining the struct. Reading
-> and writing the fields of a struct in other modules is only possible if the module defining the
-> struct provides public functions to access the fields.
+> Struct의 필드는 private이며 struct를 정의한 module에서만 접근할 수 있습니다. 다른 module에서 struct의 필드를 읽고 쓰는 것은 struct를 정의한 module이 필드에 접근할 수 있는 public 함수를 제공하는 경우에만 가능합니다.
 
-## Create and use an instance
+## 인스턴스 생성 및 사용
 
-We described the _definition_ of a struct. Now let's see how to initialize a struct and use it. A
-struct can be initialized using the `struct_name { field1: value1, field2: value2, ... }` syntax.
-The fields can be initialized in any order, and all of the required fields must be set.
+Struct의 _정의_에 대해 설명했습니다. 이제 struct를 초기화하고 사용하는 방법을 살펴보겠습니다. Struct는 `struct_name { field1: value1, field2: value2, ... }` 구문을 사용하여 초기화할 수 있습니다. 필드는 어떤 순서로든 초기화할 수 있으며, 모든 필수 필드가 설정되어야 합니다.
 
-```move file=packages/samples/sources/move-basics/struct.move anchor=pack
-
+```move
+let mut artist = Artist {
+    name: b"The Beatles".to_string()
+};
 ```
 
-In the example above, we create an instance of the `Artist` struct and set the `name` field to a
-string "The Beatles".
+위 예제에서는 `Artist` struct의 인스턴스를 생성하고 `name` 필드를 "The Beatles" 문자열로 설정합니다.
 
-To access the fields of a struct, you can use the `.` operator followed by the field name.
+Struct의 필드에 접근하려면 `.` 연산자 다음에 필드 이름을 사용할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/struct.move anchor=access
+```move
+// `Artist` struct의 `name` 필드에 접근
+let artist_name = artist.name;
 
+// `Artist` struct의 필드에 접근
+assert!(artist.name == b"The Beatles".to_string());
+
+// `Artist` struct의 `name` 필드를 변경
+artist.name = b"Led Zeppelin".to_string();
+
+// `name` 필드가 변경되었는지 확인
+assert!(artist.name == b"Led Zeppelin".to_string());
 ```
 
-Only the module defining the struct can access its fields (both mutably and immutably). So the above
-code should be in the same module as the `Artist` struct.
+Struct를 정의한 module만이 해당 필드에 접근할 수 있습니다(가변 및 불변 모두). 따라서 위 코드는 `Artist` struct와 동일한 module에 있어야 합니다.
 
-{/* ## Accessing Fields
+{/* ## 필드 접근
 
-Struct fields are private and can be accessed only by the module defining the struct. To access the fields of a struct, you can use the `.` operator followed by the field name.
+Struct 필드는 private이며 struct를 정의한 module에서만 접근할 수 있습니다. Struct의 필드에 접근하려면 `.` 연산자 다음에 필드 이름을 사용할 수 있습니다.
 
 ```move
 # anchor: access file=packages/samples/sources/move-basics/struct.move anchor=access
 ```
 */}
 
-## Unpacking a struct
+## Struct 언패킹
 
-Structs are non-discardable by default, meaning that the initialized struct value must be used,
-either by storing it or unpacking it. Unpacking a struct means deconstructing it into its fields.
-This is done using the `let` keyword followed by the struct name and the field names.
+Struct는 기본적으로 폐기할 수 없습니다. 즉, 초기화된 struct 값은 저장하거나 언패킹하여 사용해야 합니다. Struct를 언패킹한다는 것은 필드로 분해하는 것을 의미합니다. 이는 `let` 키워드 다음에 struct 이름과 필드 이름을 사용하여 수행됩니다.
 
-```move file=packages/samples/sources/move-basics/struct.move anchor=unpack
-
+```move
+// `Artist` struct를 언패킹하고 `name` 필드의 값으로
+// 새 변수 `name`을 생성
+let Artist { name } = artist;
 ```
 
-In the example above we unpack the `Artist` struct and create a new variable `name` with the value
-of the `name` field. Because the variable is not used, the compiler will raise a warning. To
-suppress the warning, you can use the underscore `_` to indicate that the variable is intentionally
-unused.
+위 예제에서는 `Artist` struct를 언패킹하고 `name` 필드의 값으로 새 변수 `name`을 생성합니다. 변수가 사용되지 않기 때문에 컴파일러가 경고를 발생시킵니다. 경고를 억제하려면 밑줄 `_`를 사용하여 변수가 의도적으로 사용되지 않음을 나타낼 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/struct.move anchor=unpack_ignore
-
+```move
+// `Artist` struct를 언패킹하고 `name` 필드를 무시
+let Artist { name: _ } = artist;
 ```
 
-## Further Reading
+## 추가 자료
 
-- [Structs](./../../reference/structs) in the Move Reference.
+- Move Reference의 [Structs](./../../reference/structs)

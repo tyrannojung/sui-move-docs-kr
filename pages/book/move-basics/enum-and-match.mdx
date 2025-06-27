@@ -1,164 +1,252 @@
-# Enums and Match
+# Enum과 Match
 
-An enum is a user-defined data structure that, unlike a [struct](./struct), can represent multiple
-variants. Each variant can contain primitive types, structs, or other enums. However, recursive enum
-definitions — similar to recursive struct definitions — are not allowed.
+enum은 [struct](./struct)와 달리 여러 변형(variant)을 나타낼 수 있는 사용자 정의 데이터 구조입니다. 각 변형은 원시 타입, struct, 또는 다른 enum을 포함할 수 있습니다. 하지만 재귀적인 struct 정의와 마찬가지로 재귀적인 enum 정의는 허용되지 않습니다.
 
-## Definition
+## 정의
 
-An enum is defined using the `enum` keyword, followed by optional abilities and a block of variant
-definitions. Each variant has a tag name and may optionally include either positional values or
-named fields. Enum must have at least one variant. The structure of each variant is not flexible,
-and the total number of variants can be relatively large - up to 100.
-
-```move file=packages/samples/sources/move-basics/enum-and-match.move anchor=definition
-
-```
-
-In the code sample above we defined a public `Segment` enum, which has the `drop` and `copy`
-abilities, and 3 variants:
-
-- `Empty`, which has no fields.
-- `String`, which contains a single positional field of type `String`.
-- `Special`, which uses named fields: `content` of type `vector<u8>` and `encoding` of type `u8`.
-
-## Instantiating
-
-Enums are _internal_ to the module in which they are defined. This means an enum can only be
-constructed, read, and unpacked within the same module.
-
-[Similar to structs](./struct#create-and-use-an-instance), enums are instantiated by specifying the
-type, the variant, and the values for any fields defined in that variant.
-
-```move file=packages/samples/sources/move-basics/enum-and-match.move anchor=constructors
-
-```
-
-Depending on the use case, you may want to provide public constructors, or instantiate enums
-internally as a part of application logic.
-
-## Using in Type Definitions
-
-The biggest benefit of using enums is the ability to represent varying data structures under a
-single type. To demonstrate this, let’s define a struct that contains a vector of `Segment` values:
-
-```move file=packages/samples/sources/move-basics/enum-and-match.move anchor=struct
-
-```
-
-All variants of the Segment enum share the same type – `Segment` – which allows us to create a
-homogeneous vector containing instances of different variants. This kind of flexibility is not
-achievable with structs, as each struct defines a single, fixed shape.
-
-## Pattern Matching
-
-Unlike structs, enums require special handling when it comes to accessing the inner value or
-checking the variant. We simply cannot read the inner fields of an enum using the `.` (dot) syntax,
-because we need to make sure that the value we are trying to access is the right one. For that Move
-offers _pattern matching_ syntax.
-
-> This chapter doesn't intend to cover all the features of pattern matching in Move. Refer to the
-> [Pattern Matching](./../../reference/control-flow/pattern-matching) section in the Move Reference.
-
-Pattern matching allows conditioning the logic based on the _pattern_ of the value. It is performed
-using the `match` expression, followed by the matched value in parenthesis and the block of _match
-arms_, defining the patten and expression to be performed if the pattern is right.
-
-Let's extend our example by adding a set of `is_variant`-like functions, so external packages can
-check the variant. Starting with `is_empty`.
-
-```move file=packages/samples/sources/move-basics/enum-and-match.move anchor=is_empty
-
-```
-
-The `match` keyword begins the expression, and `s` is the value being tested. Each match arm checks
-for a specific variant of the `Segment` enum. If `s` matches `Segment::Empty`, the function returns
-`true`; otherwise, it returns `false`.
-
-For variants with fields, we need to bind the inner structure to local variables (even if we don’t
-use them, marking unused values with `_` to avoid compiler warnings).
-
-### Trick #1 - _any_ Condition
-
-The Move compiler infers the type of the value used in a `match` expression and ensures that the
-_match arms_ are exhaustive – that is, all possible variants or values must be covered.
-
-However, in some cases, such as matching on a primitive value or a collection like a vector, it's
-not feasible to list every possible case. For these situations, match supports a wildcard pattern
-(`_`), which acts as a default arm. This arm is executed when no other patterns match.
-
-We can demonstrate this by simplifying our `is_empty` function and replacing the non-`Empty`
-variants with a wildcard:
+enum은 `enum` 키워드를 사용하여 정의하며, 그 뒤에 선택적 능력(ability)과 변형 정의 블록이 옵니다. 각 변형은 태그 이름을 가지며, 선택적으로 위치 값 또는 명명된 필드를 포함할 수 있습니다. enum은 최소한 하나의 변형을 가져야 합니다. 각 변형의 구조는 유연하지 않으며, 총 변형 수는 상대적으로 많을 수 있습니다 - 최대 100개까지 가능합니다.
 
 ```move
-public fun is_empty(s: &Segment): bool { file=packages/samples/sources/move-basics/enum-and anchor=matcmove:is_empty_2}}
+module book::segment;
+
+use std::string::String;
+
+/// `Segment` enum 정의.
+/// 다양한 문자열 세그먼트를 정의합니다.
+public enum Segment has copy, drop {
+    /// 빈 변형, 값 없음.
+    Empty,
+    /// 값을 가진 변형 (위치 스타일).
+    String(String),
+    /// 명명된 필드를 가진 변형.
+    Special {
+        content: vector<u8>,
+        encoding: u8, // 인코딩 태그.
+    },
+}
 ```
 
-Similarly, we can use the same approach to define `is_special` and `is_string`:
+위 코드 샘플에서 우리는 `drop`과 `copy` 능력을 가진 공개 `Segment` enum을 정의했으며, 3개의 변형을 가집니다:
 
-```move file=packages/samples/sources/move-basics/enum-and-match.move anchor=accessors
+- `Empty`: 필드가 없습니다.
+- `String`: `String` 타입의 단일 위치 필드를 포함합니다.
+- `Special`: 명명된 필드를 사용합니다: `vector<u8>` 타입의 `content`와 `u8` 타입의 `encoding`.
 
+## 인스턴스화
+
+enum은 정의된 module _내부_에서만 사용할 수 있습니다. 이는 enum이 같은 module 내에서만 생성, 읽기, 언팩할 수 있다는 의미입니다.
+
+[struct와 유사하게](./struct#create-and-use-an-instance), enum은 타입, 변형, 그리고 해당 변형에 정의된 필드의 값들을 지정하여 인스턴스화됩니다.
+
+```move
+/// 빈 `Empty` 세그먼트를 생성합니다.
+public fun new_empty(): Segment { Segment::Empty }
+
+/// `str` 값을 가진 `String` 세그먼트를 생성합니다.
+public fun new_string(str: String): Segment { Segment::String(str) }
+
+/// `content`와 `encoding` 값을 가진 `Special` 세그먼트를 생성합니다.
+public fun new_special(content: vector<u8>, encoding: u8): Segment {
+    Segment::Special {
+        content,
+        encoding,
+    }
+}
 ```
 
-### Trick #2 - `try_into` Helpers
+사용 사례에 따라 공개 생성자를 제공하거나 애플리케이션 로직의 일부로 내부적으로 enum을 인스턴스화할 수 있습니다.
 
-With the addition of `is_variant` functions, we enabled external modules to check which variant an
-enum instance represents. However, this is often not enough – external code still cannot access the
-inner value of a variant due to enums being internal to their module.
+## 타입 정의에서 사용하기
 
-A common pattern for addressing this is to define `try_into` functions. These functions match on the
-value and return an `Option` containing the inner contents if the `match` succeeds.
+enum을 사용하는 가장 큰 이점은 단일 타입으로 다양한 데이터 구조를 나타낼 수 있다는 것입니다. 이를 보여주기 위해 `Segment` 값들의 벡터를 포함하는 struct를 정의해 보겠습니다:
 
-```move file=packages/samples/sources/move-basics/enum-and-match.move anchor=try_into_inner_string
+```move
+/// enum 기능을 보여주기 위한 struct.
+public struct Segments(vector<Segment>) has copy, drop;
 
+#[test]
+fun test_segments() {
+    let _ = Segments(vector[
+        Segment::Empty,
+        Segment::String(b"hello".to_string()),
+        Segment::String(b" move".to_string()),
+        Segment::Special { content: b"21", encoding: 1 },
+    ]);
+}
 ```
 
-This pattern safely exposes internal data in a controlled way, avoiding abort.
+Segment enum의 모든 변형은 같은 타입 – `Segment` – 을 공유하므로, 서로 다른 변형의 인스턴스를 포함하는 동질적인 벡터를 만들 수 있습니다. 이런 종류의 유연성은 struct로는 달성할 수 없습니다. 각 struct는 단일하고 고정된 형태를 정의하기 때문입니다.
 
-### Trick #3 - Matching on Primitive Values
+## 패턴 매칭
 
-The `match` expression in Move can be used with values of any type – enums, structs, or primitives.
-To demonstrate this, let’s implement a `to_string` function that creates a new `String` from a
-`Segment`. In the case of the `Special` variant, we will match on the `encoding` field to determine
-how to decode the content.
+struct와 달리 enum은 내부 값에 접근하거나 변형을 확인할 때 특별한 처리가 필요합니다. 우리가 접근하려는 값이 올바른 것인지 확인해야 하기 때문에 `.` (점) 구문을 사용하여 enum의 내부 필드를 읽을 수 없습니다. 이를 위해 Move는 _패턴 매칭_ 구문을 제공합니다.
 
-```move file=packages/samples/sources/move-basics/enum-and-match.move anchor=to_string
+> 이 챕터는 Move의 패턴 매칭의 모든 기능을 다루지 않습니다. Move Reference의
+> [Pattern Matching](./../../reference/control-flow/pattern-matching) 섹션을 참조하세요.
 
+패턴 매칭은 값의 _패턴_에 기반하여 로직을 조건부로 실행할 수 있게 합니다. `match` 표현식을 사용하여 수행되며, 괄호 안의 매칭할 값과 패턴이 맞으면 수행할 표현식을 정의하는 _매치 암_ 블록이 뒤따릅니다.
+
+외부 패키지가 변형을 확인할 수 있도록 `is_variant` 같은 함수들을 추가하여 예제를 확장해 보겠습니다. `is_empty`부터 시작합니다.
+
+```move
+/// 이것이 `Empty` 세그먼트인지 확인합니다.
+public fun is_empty(s: &Segment): bool {
+    // Match는 표현식이므로 반환 값으로 사용할 수 있습니다.
+    match (s) {
+        Segment::Empty => true,
+        Segment::String(_str) => false,
+        Segment::Special { content: _, encoding: _ } => false,
+    }
+}
 ```
 
-This function demonstrates two key things:
+`match` 키워드가 표현식을 시작하고, `s`가 테스트되는 값입니다. 각 매치 암은 `Segment` enum의 특정 변형을 확인합니다. `s`가 `Segment::Empty`와 일치하면 함수는 `true`를 반환하고, 그렇지 않으면 `false`를 반환합니다.
 
-- Nested `match` expressions can be used for deeper logic branching.
-- Wildcards are essential for covering all possible values in primitive types like `u8`.
+필드가 있는 변형의 경우, 내부 구조를 로컬 변수에 바인딩해야 합니다 (사용하지 않더라도, 사용하지 않는 값은 컴파일러 경고를 피하기 위해 `_`로 표시).
 
-## The Final Test
+### 트릭 #1 - _any_ 조건
 
-Now we can finalize the test we started before using the features we have added. Let's create a
-scenario where we build enums into a vector.
+Move 컴파일러는 `match` 표현식에 사용된 값의 타입을 추론하고 _매치 암_이 모든 경우를 다루는지(exhaustive) 확인합니다 – 즉, 모든 가능한 변형이나 값이 다루어져야 합니다.
 
-```move file=packages/samples/sources/move-basics/enum-and-match-2.move anchor=enum_test
+하지만 원시 값이나 벡터 같은 컬렉션을 매칭할 때처럼, 모든 가능한 경우를 나열하는 것이 불가능한 경우가 있습니다. 이러한 상황을 위해 match는 와일드카드 패턴(`_`)을 지원하며, 이는 기본 암으로 작동합니다. 이 암은 다른 패턴이 일치하지 않을 때 실행됩니다.
 
+`is_empty` 함수를 단순화하고 `Empty`가 아닌 변형을 와일드카드로 대체하여 이를 보여줄 수 있습니다:
+
+```move
+public fun is_empty(s: &Segment): bool {
+    match (s) {
+        Segment::Empty => true,
+        _ => false, // 다른 모든 것은 `false`를 반환합니다.
+    }
+}
 ```
 
-This test demonstrates the full enum workflow: instantiating different variants, using public
-accessors, and performing logic with pattern matching. That should be enough to get you started!
+마찬가지로 같은 접근 방식을 사용하여 `is_special`과 `is_string`을 정의할 수 있습니다:
 
-To learn more about enums and pattern matching, refer to the resources listed in the
-[further reading](#further-reading) section.
+```move
+/// 이것이 `Special` 세그먼트인지 확인합니다.
+public fun is_special(s: &Segment): bool {
+    match (s) {
+        // 힌트: `..`는 내부 필드를 무시합니다
+        Segment::Special { .. } => true,
+        _ => false,
+    }
+}
 
-## Summary
+/// 이것이 `String` 세그먼트인지 확인합니다.
+public fun is_string(s: &Segment): bool {
+    match (s) {
+        Segment::String(_) => true,
+        _ => false,
+    }
+}
+```
 
-- Enums are user-defined types that can represent multiple variants under a single type.
-- Each variant can contain different types of data (primitives, structs, or other enums).
-- Enums are internal to their defining module and require pattern matching for access.
-- Pattern matching is done using the `match` expression, which:
-  - Works with enums, structs, and primitive values;
-  - Must handle all possible cases (be exhaustive);
-  - Supports the `_` wildcard pattern for remaining cases;
-  - Can return values and be used in expressions;
-- Common patterns for enums include `is_variant` checks and `try_into` helper functions.
+### 트릭 #2 - `try_into` 헬퍼
 
-## Further Reading
+`is_variant` 함수를 추가함으로써 외부 module이 enum 인스턴스가 어떤 변형을 나타내는지 확인할 수 있게 했습니다. 하지만 이것만으로는 충분하지 않은 경우가 많습니다 – enum이 module 내부에 있기 때문에 외부 코드는 여전히 변형의 내부 값에 접근할 수 없습니다.
 
-- [Enums](./../../reference/enums) in the Move Reference
-- [Pattern Matching](/reference/control-flow/pattern-matching) in the Move Reference
+이를 해결하는 일반적인 패턴은 `try_into` 함수를 정의하는 것입니다. 이 함수들은 값을 매칭하고 `match`가 성공하면 내부 내용을 포함하는 `Option`을 반환합니다.
+
+```move
+/// `Segment`가 `String`이면 `Some(String)`을 반환하고, 그렇지 않으면 `None`을 반환합니다.
+public fun try_into_inner_string(s: Segment): Option<String> {
+    match (s) {
+        Segment::String(str) => option::some(str),
+        _ => option::none(),
+    }
+}
+```
+
+이 패턴은 중단(abort)을 피하면서 제어된 방식으로 내부 데이터를 안전하게 노출합니다.
+
+### 트릭 #3 - 원시 값 매칭
+
+Move의 `match` 표현식은 모든 타입의 값 – enum, struct, 또는 원시 타입과 함께 사용할 수 있습니다.
+이를 보여주기 위해 `Segment`에서 새로운 `String`을 만드는 `to_string` 함수를 구현해 보겠습니다. `Special` 변형의 경우, 콘텐츠를 디코딩하는 방법을 결정하기 위해 `encoding` 필드를 매칭합니다.
+
+```move
+/// 세그먼트의 `String` 표현을 반환합니다.
+public fun to_string(s: &Segment): String {
+    match (*s) {
+        // 빈 문자열을 반환합니다.
+        Segment::Empty => b"".to_string(),
+        // 내부 문자열을 반환합니다.
+        Segment::String(str) => str,
+        // 인코딩에 따라 디코딩된 내용을 반환합니다.
+        Segment::Special { content, encoding } => {
+            // 인코딩에 대해 매칭을 수행합니다. 0 - utf8, 1 - hex만 지원합니다.
+            match (encoding) {
+                // 일반 인코딩, 내용을 반환합니다.
+                0 => content.to_string(),
+                // HEX 인코딩, 디코딩하고 반환합니다.
+                1 => sui::hex::decode(content).to_string(),
+                // `u8`의 값은 0-255이므로 와일드카드 패턴을 제공해야 합니다.
+                _ => abort,
+            }
+        },
+    }
+}
+```
+
+이 함수는 두 가지 주요 사항을 보여줍니다:
+
+- 중첩된 `match` 표현식을 사용하여 더 깊은 로직 분기를 할 수 있습니다.
+- 와일드카드는 `u8` 같은 원시 타입의 모든 가능한 값을 다루는 데 필수적입니다.
+
+## 최종 테스트
+
+이제 추가한 기능을 사용하여 이전에 시작한 테스트를 완성할 수 있습니다. enum을 벡터로 만드는 시나리오를 만들어 보겠습니다.
+
+```move
+// 참고, module이 변경되었습니다!
+module book::segment_tests;
+
+use book::segment;
+use std::unit_test::assert_eq;
+
+#[test]
+fun test_full_enum_cycle() {
+    // 다양한 Segment 변형의 벡터를 생성합니다.
+    let segments = vector[
+        segment::new_empty(),
+        segment::new_string(b"hello".to_string()),
+        segment::new_special(b" ", 0), // 평문
+        segment::new_string(b"move".to_string()),
+        segment::new_special(b"21", 1), // hex
+    ];
+
+    // `vector::fold!` 매크로를 사용하여 모든 세그먼트를 최종 문자열로 집계합니다.
+    let result = segments.fold!(b"".to_string(), |mut acc, segment| {
+        // 빈 것은 추가하지 않고, `Special`과 `String`만 추가합니다.
+        if (!segment.is_empty()) {
+            acc.append(segment.to_string());
+        };
+        acc
+    });
+
+    // 결과가 예상한 것과 같은지 확인합니다.
+    assert_eq!(result, b"hello move!".to_string());
+}
+```
+
+이 테스트는 전체 enum 워크플로우를 보여줍니다: 다양한 변형 인스턴스화, 공개 접근자 사용, 패턴 매칭으로 로직 수행. 이것으로 시작하기에 충분합니다!
+
+enum과 패턴 매칭에 대해 더 알아보려면 [추가 자료](#추가-자료) 섹션에 나열된 리소스를 참조하세요.
+
+## 요약
+
+- enum은 단일 타입으로 여러 변형을 나타낼 수 있는 사용자 정의 타입입니다.
+- 각 변형은 다른 타입의 데이터(원시 타입, struct, 또는 다른 enum)를 포함할 수 있습니다.
+- enum은 정의하는 module 내부에 있으며 접근을 위해 패턴 매칭이 필요합니다.
+- 패턴 매칭은 `match` 표현식을 사용하여 수행되며:
+  - enum, struct, 원시 값과 함께 작동합니다;
+  - 모든 가능한 경우를 처리해야 합니다(exhaustive);
+  - 나머지 경우를 위한 `_` 와일드카드 패턴을 지원합니다;
+  - 값을 반환할 수 있고 표현식에서 사용될 수 있습니다;
+- enum의 일반적인 패턴에는 `is_variant` 확인과 `try_into` 헬퍼 함수가 포함됩니다.
+
+## 추가 자료
+
+- Move Reference의 [Enums](./../../reference/enums)
+- Move Reference의 [Pattern Matching](./../../reference/control-flow/pattern-matching)

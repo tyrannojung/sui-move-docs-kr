@@ -1,73 +1,120 @@
-# Struct Methods
+# Struct 메서드
 
-Move Compiler supports _receiver syntax_ `e.f()`, which allows defining methods which can be called
-on instances of a struct. The term "receiver" specifically refers to the instance that receives the
-method call. This is like the method syntax in other programming languages. It is a convenient way
-to define functions that operate on the fields of a struct, providing direct access to the struct's
-fields and creating cleaner, more intuitive code than passing the struct as a parameter.
+Move 컴파일러는 _수신자 구문_ `e.f()`를 지원하며, 이를 통해 struct의 인스턴스에서 호출할 수 있는 메서드를 정의할 수 있습니다. "수신자(receiver)"라는 용어는 구체적으로 메서드 호출을 받는 인스턴스를 의미합니다. 이는 다른 프로그래밍 언어의 메서드 구문과 유사합니다. struct의 필드에서 작동하는 함수를 정의하는 편리한 방법으로, struct의 필드에 직접 접근할 수 있도록 하고 struct를 매개변수로 전달하는 것보다 더 깔끔하고 직관적인 코드를 만들어냅니다.
 
-## Method syntax
+## 메서드 구문
 
-If the first argument of a function is a struct internal to the module that defines the function,
-then the function can be called using the `.` operator. However, if the type of the first argument
-is defined in another module, then method won't be associated with the struct by default. In this
-case, the `.` operator syntax is not available, and the function must be called using standard
-function call syntax.
+함수의 첫 번째 인수가 함수를 정의하는 module 내부의 struct인 경우, 해당 함수는 `.` 연산자를 사용하여 호출할 수 있습니다. 하지만 첫 번째 인수의 타입이 다른 module에서 정의된 경우, 메서드는 기본적으로 struct와 연결되지 않습니다. 이 경우 `.` 연산자 구문을 사용할 수 없으며, 표준 함수 호출 구문을 사용하여 함수를 호출해야 합니다.
 
-When a module is imported, its methods are automatically associated with the struct.
-
-```move file=packages/samples/sources/move-basics/struct-methods.move anchor=hero
-
-```
-
-## Method Aliases
-
-Method aliases help avoid name conflicts when modules define multiple structs and their methods.
-They can also provide more descriptive method names for structs.
-
-Here's the syntax:
+module을 가져올 때 해당 메서드는 자동으로 struct와 연결됩니다.
 
 ```move
-// for local method association
+module book::hero;
+
+/// 영웅을 나타내는 struct.
+public struct Hero has drop {
+    health: u8,
+    mana: u8,
+}
+
+/// 새로운 Hero를 생성합니다.
+public fun new(): Hero { Hero { health: 100, mana: 100 } }
+
+/// 마나를 소비하여 주문을 시전하는 메서드.
+public fun heal_spell(hero: &mut Hero) {
+    hero.health = hero.health + 10;
+    hero.mana = hero.mana - 10;
+}
+
+/// 영웅의 체력을 반환하는 메서드.
+public fun health(hero: &Hero): u8 { hero.health }
+
+/// 영웅의 마나를 반환하는 메서드.
+public fun mana(hero: &Hero): u8 { hero.mana }
+
+#[test]
+// `Hero` struct의 메서드를 테스트합니다.
+fun test_methods() {
+    let mut hero = new();
+    hero.heal_spell();
+
+    assert!(hero.health() == 110);
+    assert!(hero.mana() == 90);
+}
+```
+
+## 메서드 별칭
+
+메서드 별칭은 module이 여러 struct와 그 메서드를 정의할 때 이름 충돌을 피하는 데 도움이 됩니다.
+또한 struct에 대해 더 설명적인 메서드 이름을 제공할 수 있습니다.
+
+구문은 다음과 같습니다:
+
+```move
+// 로컬 메서드 연결용
 use fun function_path as Type.method_name;
 
-// exported alias
+// 내보낸 별칭
 public use fun function_path as Type.method_name;
 ```
 
-> Public aliases are only allowed for structs defined in the same module. For structs defined in
-> other modules, aliases can still be created but cannot be made public.
+> 공개 별칭은 같은 module에서 정의된 struct에 대해서만 허용됩니다. 다른 module에서 정의된 struct의 경우 별칭을 만들 수는 있지만 공개할 수는 없습니다.
 
-In the example below, we changed the `hero` module and added another type - `Villain`. Both `Hero`
-and `Villain` have similar field names and methods. To avoid name conflicts, we prefixed methods
-with `hero_` and `villain_` respectively. However, using aliases allows these methods to be called
-on struct instances without the prefix:
+아래 예제에서는 `hero` module을 변경하고 다른 타입인 `Villain`을 추가했습니다. `Hero`와 `Villain` 모두 비슷한 필드 이름과 메서드를 가지고 있습니다. 이름 충돌을 피하기 위해 메서드에 각각 `hero_`와 `villain_` 접두사를 붙였습니다. 하지만 별칭을 사용하면 이러한 메서드를 접두사 없이 struct 인스턴스에서 호출할 수 있습니다:
 
-```move file=packages/samples/sources/move-basics/struct-methods-2.move anchor=hero_and_villain
+```move
+module book::hero_and_villain;
 
+/// 영웅을 나타내는 struct.
+public struct Hero has drop {
+    health: u8,
+}
+
+/// 악당을 나타내는 struct.
+public struct Villain has drop {
+    health: u8,
+}
+
+/// 새로운 Hero를 생성합니다.
+public fun new_hero(): Hero { Hero { health: 100 } }
+
+/// 새로운 Villain을 생성합니다.
+public fun new_villain(): Villain { Villain { health: 200 } }
+
+// `hero_health` 메서드의 별칭. module이 가져와질 때 자동으로
+// 가져와집니다.
+public use fun hero_health as Hero.health;
+
+public fun hero_health(hero: &Hero): u8 { hero.health }
+
+// `villain_health` 메서드의 별칭. module이 가져와질 때
+// 자동으로 가져와집니다.
+public use fun villain_health as Villain.health;
+
+public fun villain_health(villain: &Villain): u8 { villain.health }
+
+#[test]
+// `Hero`와 `Villain` struct의 메서드를 테스트합니다.
+fun test_associated_methods() {
+    let hero = new_hero();
+    assert!(hero.health() == 100);
+
+    let villain = new_villain();
+    assert!(villain.health() == 200);
+}
 ```
 
-In the test function, the `health` method is called directly on the `Hero` and `Villain` instances
-without the prefix, as the compiler automatically associates the methods with their respective
-structs.
+테스트 함수에서 `health` 메서드는 접두사 없이 `Hero`와 `Villain` 인스턴스에서 직접 호출됩니다. 컴파일러가 자동으로 메서드를 각각의 struct와 연결하기 때문입니다.
 
-> Note: In the test function, `hero.health()` is calling the aliased method, not directly accessing
-> the private `health` field. While the `Hero` and `Villain` structs are public, their fields remain
-> private to the module. The method call `hero.health()` uses the public alias defined by
-> `public use fun hero_health as Hero.health`, which provides controlled access to the private
-> field.
+> 참고: 테스트 함수에서 `hero.health()`는 별칭화된 메서드를 호출하는 것이지, 비공개 `health` 필드에 직접 접근하는 것이 아닙니다. `Hero`와 `Villain` struct는 공개이지만, 그들의 필드는 module에 비공개로 유지됩니다. 메서드 호출 `hero.health()`는 `public use fun hero_health as Hero.health`로 정의된 공개 별칭을 사용하여 비공개 필드에 대한 제어된 접근을 제공합니다.
 
-{/* ## Aliasing an external module's method
+{/* ## 외부 module의 메서드 별칭 지정
 
-It is also possible to associate a function defined in another module with a struct from the current
-module. Following the same approach, we can create an alias for the method defined in another
-module. Let's use the `bcs::to_bytes` method from the [Standard Library](./standard-library) and
-associate it with the `Hero` struct. It will allow serializing the `Hero` struct to a vector of
-bytes.
+현재 module의 struct와 다른 module에서 정의된 함수를 연결하는 것도 가능합니다. 같은 접근 방식을 따라 다른 module에서 정의된 메서드에 대한 별칭을 만들 수 있습니다. [표준 라이브러리](./standard-library)의 `bcs::to_bytes` 메서드를 사용하여 `Hero` struct와 연결해 보겠습니다. 이를 통해 `Hero` struct를 바이트 벡터로 직렬화할 수 있습니다.
 
 ```move file=packages/samples/sources/move-basics/struct-methods-3.move anchor=hero_to_bytes
 ``` */}
 
-## Further Reading
+## 추가 자료
 
-- [Method Syntax](./../../reference/method-syntax) in the Move Reference.
+- Move Reference의 [Method Syntax](./../../reference/method-syntax)

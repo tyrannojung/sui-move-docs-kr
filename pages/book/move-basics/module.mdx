@@ -12,48 +12,41 @@ Notes:
 
  */}
 
-A module is the base unit of code organization in Move. Modules are used to group and isolate code,
-and all members of the module are private to the module by default. In this section you will learn
-how to define a module, declare its members, and access it from other modules.
+module은 Move에서 코드 구성의 기본 단위입니다. module은 코드를 그룹화하고 격리하는 데 사용되며, module의 모든 멤버는 기본적으로 module에 대해 private입니다. 이 섹션에서는 module을 정의하고, 멤버를 선언하고, 다른 module에서 액세스하는 방법을 배웁니다.
 
-## Module Declaration
+## Module 선언
 
-Modules are declared using the `module` keyword followed by the package address, module name,
-semicolon, and the module body. The module name should be in `snake_case` - all lowercase letters
-with underscores between words. Modules names must be unique in the package.
+module은 `module` 키워드 뒤에 패키지 주소, module 이름, 세미콜론, module 본문을 사용하여 선언됩니다. module 이름은 `snake_case`여야 합니다 - 모든 소문자에 단어 사이에 밑줄이 있습니다. module 이름은 패키지에서 고유해야 합니다.
 
-Usually, a single file in the `sources/` folder contains a single module. The file name should match
-the module name - for example, a `donut_shop` module should be stored in the `donut_shop.move` file.
-You can read more about coding conventions in the
-[Coding Conventions](./../guides/code-quality-checklist) section.
+일반적으로 `sources/` 폴더의 단일 파일에는 단일 module이 포함됩니다. 파일 이름은 module 이름과 일치해야 합니다 - 예를 들어, `donut_shop` module은 `donut_shop.move` 파일에 저장되어야 합니다. [코딩 규칙](./../guides/code-quality-checklist) 섹션에서 코딩 규칙에 대해 더 읽을 수 있습니다.
 
-> If you need to declare more than one module in a file, you must use [Module Block](#module-block)
-> syntax.
+> 파일에 둘 이상의 module을 선언해야 하는 경우 [Module 블록](#module-블록) 구문을 사용해야 합니다.
 
-```move file=packages/samples/sources/move-basics/module-label.move anchor=module
+```move
+// Module label.
+module book::my_module;
 
+// module body
 ```
 
-Structs, functions, constants and imports all part of the module:
+구조체, 함수, 상수 및 import는 모두 module의 일부입니다:
 
-- [Structs](./struct)
-- [Functions](./function)
-- [Constants](./constants)
-- [Imports](./importing-modules)
-- [Struct Methods](./struct-methods)
+- [구조체](./struct)
+- [함수](./function)
+- [상수](./constants)
+- [Import](./importing-modules)
+- [구조체 메서드](./struct-methods)
 
-## Address and Named Address
+## 주소와 명명된 주소
 
-The module address can be specified as both: an address _literal_ (does not require the `@` prefix)
-or a named address specified in the [Package Manifest](./../concepts/manifest). In the example
-below, both are identical because there's a `book = "0x0"` record in the `[addresses]` section of
-the `Move.toml`.
+module 주소는 주소 _리터럴_ (`@` 접두사가 필요하지 않음) 또는 [패키지 매니페스트](./../concepts/manifest)에 지정된 명명된 주소로 지정할 수 있습니다. 아래 예에서 둘 다 동일한데, `Move.toml`의 `[addresses]` 섹션에 `book = "0x0"` 레코드가 있기 때문입니다.
 
-```move file=packages/samples/sources/move-basics/module.move anchor=address_literal
-
+```move
+module 0x0::address_literal { /* ... */ }
+module book::named_address { /* ... */ }
 ```
 
-Addresses section in the Move.toml:
+Move.toml의 주소 섹션:
 
 ```toml
 # Move.toml
@@ -61,26 +54,58 @@ Addresses section in the Move.toml:
 book = "0x0"
 ```
 
-## Module Members
+## Module 멤버
 
-Module members are declared inside the module body. To illustrate that, let's define a simple module
-with a struct, a function and a constant:
+module 멤버는 module 본문 내에서 선언됩니다. 이를 설명하기 위해 구조체, 함수 및 상수가 있는 간단한 module을 정의해 봅시다:
 
-```move file=packages/samples/sources/move-basics/module-members.move anchor=members
+```move
+module book::my_module_with_members {
+    // import
+    use book::my_module;
 
+    // 상수
+    const CONST: u8 = 0;
+
+    // 구조체
+    public struct Struct {}
+
+    // 메서드 별칭
+    public use fun function as Struct.struct_fun;
+
+    // 함수
+    fun function(_: &Struct) { /* 함수 본문 */ }
+}
 ```
 
-## Module Block
+## Module 블록
 
-The pre-2024 edition of Move required the body of the module to be a _module block_ - the contents
-of the module needed to be surrounded by curly braces `{}`. The main reason to use block syntax and
-not _label_ syntax is if you need to define more than one module in a file. However, using module
-blocks is not recommended practice.
+Move의 2024년 이전 에디션에서는 module의 본문이 _module 블록_이어야 했습니다 - module의 내용이 중괄호 `{}`로 둘러싸여 있어야 했습니다. 블록 구문을 사용하고 _레이블_ 구문을 사용하지 않는 주된 이유는 파일에 둘 이상의 module을 정의해야 하는 경우입니다. 그러나 module 블록을 사용하는 것은 권장되는 방법이 아닙니다.
 
-```move file=packages/samples/sources/move-basics/module.move anchor=members
+```move
+module book::my_block_module_with_members {
+    // import
+    use book::my_module;
 
+    // 상수
+    const CONST: u8 = 0;
+
+    // 구조체
+    public struct Struct {}
+
+    // 메서드 별칭
+    public use fun function as Struct.struct_fun;
+
+    // 함수
+    fun function(_: &Struct) { /* 함수 본문 */ }
+}
+
+// module 블록은 같은 파일에 여러 module 정의를 허용하지만
+// 이는 권장되는 방법이 아닙니다
+module book::another_module_in_the_file {
+    // ...
+}
 ```
 
-## Further Reading
+## 더 읽어보기
 
-- [Modules](./../../reference/modules) in the Move Reference.
+- Move 레퍼런스의 [Module](./../../reference/modules)

@@ -1,131 +1,196 @@
-# Generics
+# 제네릭
 
-Generics are a way to define a type or function that can work with any type. This is useful when you
-want to write a function which can be used with different types, or when you want to define a type
-that can hold any other type. Generics are the foundation of many advanced features in Move
-including collections, abstract implementations, and more.
+제네릭은 모든 타입과 함께 작동할 수 있는 타입이나 함수를 정의하는 방법입니다. 이는 다른 타입과 함께 사용할 수 있는 함수를 작성하거나, 다른 타입을 담을 수 있는 타입을 정의하고 싶을 때 유용합니다. 제네릭은 컬렉션, 추상 구현 등을 포함한 Move의 많은 고급 기능의 기초입니다.
 
-## In the Standard Library
+## 표준 라이브러리에서
 
-In this chapter we already mentioned the [vector](./vector) type, which is a generic type that can
-hold any other type. Another example of a generic type in the standard library is the
-[Option](./option) type, which is used to represent a value that may or may not be present.
+이 챕터에서 우리는 이미 [vector](./vector) 타입을 언급했는데, 이는 다른 타입을 담을 수 있는 제네릭 타입입니다. 표준 라이브러리의 또 다른 제네릭 타입 예는 [Option](./option) 타입으로, 값이 있을 수도 없을 수도 있는 경우를 나타내는 데 사용됩니다.
 
-## Generic Syntax
+## 제네릭 구문
 
-To define a generic type or function, a type signature needs to have a list of generic parameters
-enclosed in angle brackets (`<` and `>`). The generic parameters are separated by commas.
+제네릭 타입이나 함수를 정의하려면 타입 시그니처에 꺾쇠괄호(`<`와 `>`)로 둘러싸인 제네릭 매개변수 목록이 필요합니다. 제네릭 매개변수는 쉼표로 구분됩니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=container
+```move
+/// 모든 타입 `T`에 대한 컨테이너.
+public struct Container<T> has drop {
+    value: T,
+}
 
+/// 제네릭 값 `T`로 새로운 `Container`를 생성하는 함수.
+public fun new<T>(value: T): Container<T> {
+    Container { value }
+}
 ```
 
-In the example above, `Container` is a generic type with a single type parameter `T`, the `value`
-field of the container stores the `T`. The `new` function is a generic function with a single type
-parameter `T`, and it returns a `Container` with the given value. Generic types must be initialized
-with a concrete type, and generic functions must be called with a concrete type, although in some
-cases the Move compiler can infer the correct type.
+위 예제에서 `Container`는 단일 타입 매개변수 `T`를 가진 제네릭 타입이며, 컨테이너의 `value` 필드는 `T`를 저장합니다. `new` 함수는 단일 타입 매개변수 `T`를 가진 제네릭 함수이며, 주어진 값을 가진 `Container`를 반환합니다. 제네릭 타입은 구체적인 타입으로 초기화되어야 하고, 제네릭 함수는 구체적인 타입으로 호출되어야 하지만, 일부 경우 Move 컴파일러가 올바른 타입을 추론할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=test_container
+```move
+#[test]
+fun test_container() {
+    // 이 세 줄은 동일합니다
+    let container: Container<u8> = new(10); // 타입 추론
+    let container = new<u8>(10); // `u8` 값으로 새로운 `Container` 생성
+    let container = new(10u8);
 
+    assert!(container.value == 10, 0x0);
+
+    // 값은 `drop` ability가 있을 때만 무시될 수 있습니다.
+    let Container { value: _ } = container;
+}
 ```
 
-In the test function `test_container`, we demonstrate three equivalent ways to create a new
-`Container` with a `u8` value. Because numeric constants have ambiguous types, we must specify the
-type of the number literal somewhere (in the type of the container, the parameter to `new`, or the
-number literal itself); once we specify one of these the compiler can infer the others.
+테스트 함수 `test_container`에서는 `u8` 값을 가진 새로운 `Container`를 만드는 세 가지 동등한 방법을 보여줍니다. 숫자 상수는 모호한 타입을 가지므로, 우리는 숫자 리터럴의 타입을 어딘가에 지정해야 합니다 (컨테이너의 타입, `new`의 매개변수, 또는 숫자 리터럴 자체에); 이 중 하나를 지정하면 컴파일러가 나머지를 추론할 수 있습니다.
 
-## Multiple Type Parameters
+## 여러 타입 매개변수
 
-You can define a type or function with multiple type parameters. The type parameters are separated
-by commas.
+여러 타입 매개변수를 가진 타입이나 함수를 정의할 수 있습니다. 타입 매개변수는 쉼표로 구분됩니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=pair
+```move
+/// 모든 타입 `T`와 `U`의 값 쌍.
+public struct Pair<T, U> {
+    first: T,
+    second: U,
+}
 
+/// 두 개의 제네릭 값 `T`와 `U`로 새로운 `Pair`를 생성하는 함수.
+public fun new_pair<T, U>(first: T, second: U): Pair<T, U> {
+    Pair { first, second }
+}
 ```
 
-In the example above, `Pair` is a generic type with two type parameters `T` and `U`, and the
-`new_pair` function is a generic function with two type parameters `T` and `U`. The function returns
-a `Pair` with the given values. The order of the type parameters is important, and should match the
-order of the type parameters in the type signature.
+위 예제에서 `Pair`는 두 개의 타입 매개변수 `T`와 `U`를 가진 제네릭 타입이고, `new_pair` 함수는 두 개의 타입 매개변수 `T`와 `U`를 가진 제네릭 함수입니다. 함수는 주어진 값들을 가진 `Pair`를 반환합니다. 타입 매개변수의 순서는 중요하며, 타입 시그니처의 타입 매개변수 순서와 일치해야 합니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=test_pair
+```move
+#[test]
+fun test_generic() {
+    // 이 세 줄은 동일합니다
+    let pair_1: Pair<u8, bool> = new_pair(10, true); // 타입 추론
+    let pair_2 = new_pair<u8, bool>(10, true); // `u8`과 `bool` 값으로 새로운 `Pair` 생성
+    let pair_3 = new_pair(10u8, true);
 
+    assert!(pair_1.first == 10, 0x0);
+    assert!(pair_1.second, 0x0);
+
+    // 언팩은 동일합니다.
+    let Pair { first: _, second: _ } = pair_1;
+    let Pair { first: _, second: _ } = pair_2;
+    let Pair { first: _, second: _ } = pair_3;
+}
 ```
 
-If we added another instance where we swapped type parameters in the `new_pair` function, and tried
-to compare two types, we'd see that the type signatures are different, and cannot be compared.
+`new_pair` 함수에서 타입 매개변수를 바꾸고 두 타입을 비교하려고 하면, 타입 시그니처가 다르므로 비교할 수 없다는 것을 알 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=test_pair_swap
+```move
+#[test]
+fun test_swap_type_params() {
+    let pair1: Pair<u8, bool> = new_pair(10u8, true);
+    let pair2: Pair<bool, u8> = new_pair(true, 10u8);
 
+    // 이 줄은 컴파일되지 않습니다
+    // assert!(pair1 == pair2, 0x0);
+
+    let Pair { first: pf1, second: ps1 } = pair1; // first1: u8, second1: bool
+    let Pair { first: pf2, second: ps2 } = pair2; // first2: bool, second2: u8
+
+    assert!(pf1 == ps2); // 10 == 10
+    assert!(ps1 == pf2); // true == true
+}
 ```
 
-Since the types for `pair1` and `pair2` are different, the comparison `pair1 == pair2` will not
-compile.
+`pair1`과 `pair2`의 타입이 다르므로 비교 `pair1 == pair2`는 컴파일되지 않습니다.
 
-## Why Generics?
+## 왜 제네릭인가?
 
-In the examples above we focused on instantiating generic types and calling generic functions to
-create instances of these types. However, the real power of generics lies in their ability to define
-shared behavior for the base, generic type, and then use it independently of the concrete types.
-This is especially useful when working with collections, abstract implementations, and other
-advanced features in Move.
+위 예제에서는 제네릭 타입을 인스턴스화하고 제네릭 함수를 호출하여 이러한 타입의 인스턴스를 만드는 것에 초점을 맞췄습니다. 하지만 제네릭의 진정한 힘은 기본 제네릭 타입에 대한 공유 동작을 정의하고 구체적인 타입과 독립적으로 사용할 수 있다는 데 있습니다. 이는 특히 컬렉션, 추상 구현 및 Move의 기타 고급 기능을 사용할 때 유용합니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=user
-
+```move
+/// 이름, 나이, 그리고 일부 제네릭 메타데이터를 가진 사용자 레코드
+public struct User<T> {
+    name: String,
+    age: u8,
+    /// 애플리케이션에 따라 다릅니다.
+    metadata: T,
+}
 ```
 
-In the example above, `User` is a generic type with a single type parameter `T`, with shared fields
-`name`, `age`, and the generic `metadata` field, which can store any type. No matter what `metadata`
-is, all instances of `User` will contain the same fields and methods.
+위 예제에서 `User`는 단일 타입 매개변수 `T`를 가진 제네릭 타입으로, 공유 필드 `name`, `age`와 어떤 타입이든 저장할 수 있는 제네릭 `metadata` 필드를 가지고 있습니다. `metadata`가 무엇이든 간에, 모든 `User` 인스턴스는 같은 필드와 메서드를 포함합니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=update_user
+```move
+/// 사용자의 이름을 업데이트합니다.
+public fun update_name<T>(user: &mut User<T>, name: String) {
+    user.name = name;
+}
 
+/// 사용자의 나이를 업데이트합니다.
+public fun update_age<T>(user: &mut User<T>, age: u8) {
+    user.age = age;
+}
 ```
 
-## Phantom Type Parameters
+## 팬텀 타입 매개변수
 
-In some cases, you may want to define a generic type with a type parameter that is not used in the
-fields or methods of the type. This is called a _phantom type parameter_. Phantom type parameters
-are useful when you want to define a type that can hold any other type, but you want to enforce some
-constraints on the type parameter.
+경우에 따라 타입의 필드나 메서드에서 사용되지 않는 타입 매개변수를 가진 제네릭 타입을 정의하고 싶을 수 있습니다. 이를 _팬텀 타입 매개변수_ 라고 합니다. 팬텀 타입 매개변수는 다른 타입을 담을 수 있는 타입을 정의하면서도 타입 매개변수에 일부 제약을 적용하고 싶을 때 유용합니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=phantom
-
+```move
+/// 팬텀 타입 매개변수를 가진 제네릭 타입.
+public struct Coin<phantom T> {
+    value: u64
+}
 ```
 
-The `Coin` type here does not contain any fields or methods that use the type parameter `T`. It is
-used to differentiate between different types of coins, and to enforce some constraints on the type
-parameter `T`.
+여기서 `Coin` 타입은 타입 매개변수 `T`를 사용하는 필드나 메서드를 포함하지 않습니다. 이는 서로 다른 코인 타입을 구별하고 타입 매개변수 `T`에 일부 제약을 적용하는 데 사용됩니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=test_phantom
+```move
+public struct USD {}
+public struct EUR {}
 
+#[test]
+fun test_phantom_type() {
+    let coin1: Coin<USD> = Coin { value: 10 };
+    let coin2: Coin<EUR> = Coin { value: 20 };
+
+    // 팬텀 타입 매개변수가 사용되지 않으므로 언팩은 동일합니다.
+    let Coin { value: _ } = coin1;
+    let Coin { value: _ } = coin2;
+}
 ```
 
-In the example above, we demonstrate how to create two different instances of `Coin` with different
-phantom type parameters `USD` and `EUR`. The type parameter `T` is not used in the fields or methods
-of the `Coin` type, but it is used to differentiate between different types of coins. This helps
-ensure that the `USD` and `EUR` coins are not mistakenly mixed up.
+위 예제에서는 서로 다른 팬텀 타입 매개변수 `USD`와 `EUR`를 가진 두 개의 다른 `Coin` 인스턴스를 만드는 방법을 보여줍니다. 타입 매개변수 `T`는 `Coin` 타입의 필드나 메서드에서 사용되지 않지만, 서로 다른 코인 타입을 구별하는 데 사용됩니다. 이는 `USD`와 `EUR` 코인이 실수로 섞이지 않도록 보장하는 데 도움이 됩니다.
 
-## Constraints on Type Parameters
+## 타입 매개변수에 대한 제약
 
-Type parameters can be constrained to have certain abilities. This is useful when you need the inner
-type to allow certain behaviors, such as _copy_ or _drop_. The syntax for constraining a type
-parameter is `T: <ability> + <ability>`.
+타입 매개변수는 특정 ability를 가지도록 제약될 수 있습니다. 이는 내부 타입이 _copy_ 또는 _drop_ 과 같은 특정 동작을 허용해야 할 때 유용합니다. 타입 매개변수를 제약하는 구문은 `T: <ability> + <ability>`입니다.
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=constraints
+```move
+/// `drop` ability를 가진 타입 매개변수를 가진 제네릭 타입.
+public struct Droppable<T: drop> {
+    value: T,
+}
 
+/// `copy`와 `drop` ability를 가진 타입 매개변수를 가진 제네릭 struct.
+public struct CopyableDroppable<T: copy + drop> {
+    value: T, // T는 `copy`와 `drop` ability를 가져야 합니다
+}
 ```
 
-The Move Compiler will enforce that the type parameter `T` has the specified abilities. If the type
-parameter does not have the specified abilities, the code will not compile.
+Move 컴파일러는 타입 매개변수 `T`가 지정된 ability를 가지도록 강제합니다. 타입 매개변수가 지정된 ability를 가지지 않으면 코드는 컴파일되지 않습니다.
 
 {/* TODO: failure case */}
 
-```move file=packages/samples/sources/move-basics/generics.move anchor=test_constraints
+```move
+/// ability가 없는 타입.
+public struct NoAbilities {}
 
+#[test]
+fun test_constraints() {
+    // 실패 - `NoAbilities`는 `drop` ability가 없습니다
+    // let droppable = Droppable<NoAbilities> { value: 10 };
+
+    // 실패 - `NoAbilities`는 `copy`와 `drop` ability가 없습니다
+    // let copyable_droppable = CopyableDroppable<NoAbilities> { value: 10 };
+}
 ```
 
-## Further Reading
+## 추가 자료
 
-- [Generics](./../../reference/generics) in the Move Reference.
+- Move Reference의 [Generics](./../../reference/generics)

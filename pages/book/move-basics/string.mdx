@@ -1,131 +1,147 @@
 # String
 
-While Move does not have a built-in type to represent strings, it does have two standard
-implementations for strings in the [Standard Library](./standard-library). The `std::string` module
-defines a `String` type and methods for UTF-8 encoded strings, and the second module, `std::ascii`,
-provides an ASCII `String` type and its methods.
+Move에는 문자열을 나타내는 내장 타입이 없지만, [표준 라이브러리](./standard-library)에 문자열을 위한 두 가지 표준
+구현이 있습니다. `std::string` module은 UTF-8 인코딩된 문자열을 위한 `String` 타입과 메서드를 정의하고,
+두 번째 module인 `std::ascii`는 ASCII `String` 타입과 그 메서드를 제공합니다.
 
-> The Sui execution environment automatically converts bytevector into `String` in transaction
-> inputs. As a result, in many cases, constructing a String directly within the
-> [Transaction Block](./../concepts/what-is-a-transaction) is unnecessary.
+> Sui 실행 환경은 트랜잭션 입력에서 바이트 벡터를 자동으로 `String`으로 변환합니다.
+> 결과적으로 많은 경우 [트랜잭션 블록](./../concepts/what-is-a-transaction) 내에서
+> 직접 String을 생성하는 것은 불필요합니다.
 
-{/*
+## 문자열은 바이트입니다
 
-## Bytestring Literal
+어떤 타입의 문자열을 사용하든 문자열은 단지 바이트라는 것을 아는 것이 중요합니다.
+`string`과 `ascii` module이 제공하는 래퍼는 말 그대로 래퍼입니다. 안전성 검사와
+문자열 작업을 위한 메서드를 제공하지만, 결국 이들은 단지 바이트 벡터입니다.
 
-TODO:
+```move
+module book::custom_string;
 
-- reference vector
-- reference literals - [Expression](./expression#literals)
+/// 누구나 벡터를 감싸서 커스텀 문자열 같은 타입을 구현할 수 있습니다.
+public struct MyString {
+    bytes: vector<u8>,
+}
 
-*/}
+/// 바이트 벡터를 문자열로 변환하는 `from_bytes` 함수를 구현합니다.
+public fun from_bytes(bytes: vector<u8>): MyString {
+    MyString { bytes }
+}
 
-## Strings are bytes
-
-No matter which type of string you use, it is important to know that strings are just bytes. The
-wrappers provided by the `string` and `ascii` modules are just that: wrappers. They do provide
-safety checks and methods to work with strings, but at the end of the day, they are just vectors of
-bytes.
-
-```move file=packages/samples/sources/move-basics/string.move anchor=custom
-
+/// 문자열을 바이트 벡터로 변환하는 `bytes` 함수를 구현합니다.
+public fun bytes(self: &MyString): &vector<u8> {
+    &self.bytes
+}
 ```
 
-## Working with UTF-8 Strings
+## UTF-8 문자열 작업
 
-While there are two types of strings (`string` and `ascii`) in the standard library, the `string`
-module should be considered the default. It has native implementations of many common operations,
-leveraging low-level, optimized runtime code for superior performance. In contrast, the `ascii`
-module is fully implemented in Move, relying on higher-level abstractions and making it less
-suitable for performance-critical tasks.
+표준 라이브러리에는 두 가지 타입의 문자열(`string`과 `ascii`)이 있지만, `string`
+module을 기본으로 고려해야 합니다. 이는 많은 일반적인 연산의 네이티브 구현을 가지고 있으며,
+우수한 성능을 위해 저수준의 최적화된 런타임 코드를 활용합니다. 반면 `ascii`
+module은 Move로 완전히 구현되어 있어 더 높은 수준의 추상화에 의존하고 성능이 중요한
+작업에는 덜 적합합니다.
 
-### Definition
+### 정의
 
-The `String` type in the `std::string` module is defined as follows:
+`std::string` module의 `String` 타입은 다음과 같이 정의됩니다:
 
 ```move
 module std::string;
 
-/// A `String` holds a sequence of bytes which is guaranteed to be in utf8 format.
+/// `String`은 utf8 형식으로 보장되는 바이트 시퀀스를 보유합니다.
 public struct String has copy, drop, store {
     bytes: vector<u8>,
 }
 ```
 
-_See [full documentation for std::string][string-stdlib] module._
+_[std::string][string-stdlib] module의 전체 문서를 참조하세요._
 
-### Creating a String
+### String 생성하기
 
-To create a new UTF-8 `String` instance, you can use the `string::utf8` method. The
-[Standard Library](./standard-library) provides an alias `.to_string()` on the `vector<u8>` for
-convenience.
+새로운 UTF-8 `String` 인스턴스를 생성하려면 `string::utf8` 메서드를 사용할 수 있습니다.
+[표준 라이브러리](./standard-library)는 편의를 위해 `vector<u8>`에 `.to_string()` 별칭을 제공합니다.
 
-```move file=packages/samples/sources/move-basics/string.move anchor=utf8
+```move
+// module은 `std::string`이고 타입은 `String`입니다
+use std::string::{Self, String};
 
+// 문자열은 일반적으로 `utf8` 함수를 사용하여 생성됩니다
+// 타입 선언은 필요하지 않지만, 명확성을 위해 여기에 넣었습니다
+let hello: String = string::utf8(b"Hello");
+
+// `vector<u8>`의 `.to_string()` 별칭이 더 편리합니다
+let hello = b"Hello".to_string();
 ```
 
-### Common Operations
+### 일반적인 연산
 
-UTF8 String provides a number of methods to work with strings. The most common operations on strings
-are: concatenation, slicing, and getting the length. Additionally, for custom string operations, the
-`bytes()` method can be used to get the underlying byte vector.
+UTF8 String은 문자열 작업을 위한 여러 메서드를 제공합니다. 문자열에서 가장 일반적인 연산은
+연결, 슬라이싱, 길이 구하기입니다. 또한 커스텀 문자열 연산을 위해
+`bytes()` 메서드를 사용하여 기본 바이트 벡터를 얻을 수 있습니다.
 
 ```move
 let mut str = b"Hello,".to_string();
 let another = b" World!".to_string();
 
-// append(String) adds the content to the end of the string
+// append(String)은 문자열 끝에 내용을 추가합니다
 str.append(another);
 
-// `sub_string(start, end)` copies a slice of the string
+// `sub_string(start, end)`는 문자열의 슬라이스를 복사합니다
 str.sub_string(0, 5); // "Hello"
 
-// `length()` returns the number of bytes in the string
-str.length(); // 12 (bytes)
+// `length()`는 문자열의 바이트 수를 반환합니다
+str.length(); // 12 (바이트)
 
-// methods can also be chained! Get a length of a substring
-str.sub_string(0, 5).length(); // 5 (bytes)
+// 메서드는 체이닝할 수도 있습니다! 부분 문자열의 길이 구하기
+str.sub_string(0, 5).length(); // 5 (바이트)
 
-// whether the string is empty
+// 문자열이 비어있는지 여부
 str.is_empty(); // false
 
-// get the underlying byte vector for custom operations
+// 커스텀 연산을 위한 기본 바이트 벡터 얻기
 let bytes: &vector<u8> = str.bytes();
 ```
 
-### Safe UTF-8 Operations
+### 안전한 UTF-8 연산
 
-The default `utf8` method may abort if the bytes passed into it are not valid UTF-8. If you are not
-sure that the bytes you are passing are valid, you should use the `try_utf8` method instead. It
-returns an `Option<String>`, which contains no value if the bytes are not valid UTF-8, and a string
-otherwise.
+기본 `utf8` 메서드는 전달된 바이트가 유효한 UTF-8이 아니면 중단될 수 있습니다. 전달하는
+바이트가 유효한지 확실하지 않다면 대신 `try_utf8` 메서드를 사용해야 합니다. 이는
+`Option<String>`을 반환하며, 바이트가 유효한 UTF-8이 아니면 값이 없고, 그렇지 않으면
+문자열을 포함합니다.
 
-> Hint: Functions with names starting with `try_*` typically return an `Option`. If the operation
-> succeeds, the result is wrapped in `Some`. If it fails, the function returns `None`. This naming
-> convention, commonly used in Move, is inspired by Rust.
+> 힌트: `try_*`로 시작하는 이름의 함수는 일반적으로 `Option`을 반환합니다. 연산이
+> 성공하면 결과는 `Some`으로 감싸집니다. 실패하면 함수는 `None`을 반환합니다. Move에서
+> 일반적으로 사용되는 이 명명 규칙은 Rust에서 영감을 받았습니다.
 
-```move file=packages/samples/sources/move-basics/string.move anchor=safe_utf8
+```move
+// 이것은 유효한 UTF-8 문자열입니다
+let hello = b"Hello".try_to_string();
 
+assert!(hello.is_some()); // 값이 유효한 UTF-8이 아니면 중단
+
+// 이것은 유효한 UTF-8 문자열이 아닙니다
+let invalid = b"\xFF".try_to_string();
+
+assert!(invalid.is_none()); // 값이 유효한 UTF-8이면 중단
 ```
 
-### UTF-8 Limitations
+### UTF-8 제한사항
 
-The `string` module does not provide a way to access individual characters in a string. This is
-because UTF-8 is a variable-length encoding, and the length of a character can be anywhere from 1 to
-4 bytes. Similarly, the `length()` method returns the number of bytes in the string, not the number
-of characters.
+`string` module은 문자열에서 개별 문자에 접근하는 방법을 제공하지 않습니다. 이는
+UTF-8이 가변 길이 인코딩이고, 문자의 길이가 1에서 4바이트까지 될 수 있기 때문입니다.
+마찬가지로 `length()` 메서드는 문자 수가 아닌 문자열의 바이트 수를 반환합니다.
 
-However, methods like `sub_string` and `insert` validate character boundaries and abort if the
-specified index falls within the middle of a character.
+하지만 `sub_string`과 `insert` 같은 메서드는 문자 경계를 검증하고 지정된 인덱스가
+문자의 중간에 떨어지면 중단합니다.
 
-## ASCII Strings
+## ASCII 문자열
 
-This section is coming soon!
+이 섹션은 공사중입니다!
 
-## Further Reading
+## 추가 자료
 
-- [std::string][string-stdlib] module documentation.
-- [std::ascii][ascii-stdlib] module documentation.
+- [std::string][string-stdlib] module 문서
+- [std::ascii][ascii-stdlib] module 문서
 
 [enum-reference]: /reference/enums.html
 [string-stdlib]: https://docs.sui.io/references/framework/std/string

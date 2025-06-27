@@ -1,65 +1,94 @@
-# Expression
+# 표현식
 
-In programming languages, an expression is a unit of code that returns a value. In Move, almost
-everything is an expression, with the sole exception of the `let` statement, which is a declaration.
-In this section, we cover the types of expressions and introduce the concept of scope.
+프로그래밍 언어에서 표현식(expression)은 값을 반환하는 코드 단위입니다. Move에서는 `let` 문장(선언)을 제외한 거의 모든 것이 표현식입니다. 
+이 섹션에서는 표현식의 유형을 다루고 스코프(scope) 개념을 소개합니다.
 
-> Expressions are sequenced with semicolons `;`. If there's "no expression" after the semicolon, the
-> compiler will insert a `unit ()`, which represents an empty expression.
+> 표현식은 세미콜론 `;`으로 구분됩니다. 세미콜론 뒤에 "표현식이 없으면" 컴파일러는 빈 표현식을 나타내는 `unit ()`를 삽입합니다.
 
-## Literals
+## 리터럴
 
-In the [Primitive types](./primitive-types) section, we introduced the basic types of Move. And to
-illustrate them, we used literals. A literal is a notation for representing a fixed value in source
-code. Literals can be used to initialize variables or directly pass fixed values as arguments to
-functions. Move has the following literals:
+[기본 타입](./primitive-types) 섹션에서 Move의 기본 타입을 소개했습니다. 그리고 이를 설명하기 위해 리터럴을 사용했습니다. 리터럴(literal)은 소스 코드에서 고정 값을 표현하는 표기법입니다. 리터럴은 변수를 초기화하거나 함수에 고정 값을 인수로 직접 전달하는 데 사용할 수 있습니다. Move에는 다음과 같은 리터럴이 있습니다:
 
-- Boolean values: `true` and `false`
-- Integer values: `0`, `1`, `123123`
-- Hexadecimal values: Numbers prefixed with 0x to represent integers, such as `0x0`, `0x1`, `0x123`
-- Byte vector values: Prefixed with `b`, such as `b"bytes_vector"`
-- Byte values: Hexadecimal literals prefixed with `x`, such as `x"0A"`
+- 불린 값: `true`와 `false`
+- 정수 값: `0`, `1`, `123123`
+- 16진수 값: 정수를 나타내기 위해 0x로 시작하는 숫자, 예: `0x0`, `0x1`, `0x123`
+- 바이트 벡터 값: `b`로 시작, 예: `b"bytes_vector"`
+- 바이트 값: `x`로 시작하는 16진수 리터럴, 예: `x"0A"`
 
-```move file=packages/samples/sources/move-basics/expression.move anchor=literals
-
+```move
+let b = true;     // true는 리터럴
+let n = 1000;     // 1000은 리터럴
+let h = 0x0A;     // 0x0A는 리터럴
+let v = b"hello"; // b"hello"는 바이트 벡터 리터럴
+let x = x"0A";    // x"0A"는 바이트 벡터 리터럴
+let c = vector[1, 2, 3]; // vector[]는 벡터 리터럴
 ```
 
-## Operators
+## 연산자
 
-Arithmetic, logical, and bitwise operators are used to perform operations on values. Since these
-operations produce values, they are considered expressions.
+산술, 논리, 비트 연산자(operator)는 값에 대한 연산을 수행하는 데 사용됩니다. 이러한 연산은 값을 생성하므로 표현식으로 간주됩니다.
 
-```move file=packages/samples/sources/move-basics/expression.move anchor=operators
-
+```move
+let sum = 1 + 2;   // 1 + 2는 표현식
+let sum = (1 + 2); // 괄호가 있는 동일한 표현식
+let is_true = true && false; // true && false는 표현식
+let is_true = (true && false); // 괄호가 있는 동일한 표현식
 ```
 
-## Blocks
+## 블록
 
-A block is a sequence of statements and expressions enclosed in curly braces `{}`. It returns the
-value of the last expression in the block (note that this final expression must not have an ending
-semicolon). A block is an expression, so it can be used anywhere an expression is expected.
+블록(block)은 중괄호 `{}`로 둘러싸인 문장과 표현식의 시퀀스입니다. 블록은 블록 내 마지막 표현식의 값을 반환합니다(이 마지막 표현식은 세미콜론으로 끝나지 않아야 합니다). 블록은 표현식이므로 표현식이 필요한 모든 곳에서 사용할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/expression.move anchor=block
+```move
+// 빈 표현식이 있는 블록이지만, 컴파일러가
+// 자동으로 빈 표현식을 삽입합니다: `let none = { () }`
+// let none = {};
 
+// let 문장과 표현식이 있는 블록
+let sum = {
+    let a = 1;
+    let b = 2;
+    a + b // 마지막 표현식이 블록의 값입니다
+};
+
+// 블록은 표현식이므로 표현식에서 사용할 수 있고
+// 변수에 할당할 필요가 없습니다.
+{
+    let a = 1;
+    let b = 2;
+    a + b; // 반환되지 않음 - 세미콜론.
+    // 컴파일러가 자동으로 빈 표현식 `()`를 삽입합니다
+};
 ```
 
-## Function Calls
+## 함수 호출
 
-We go into detail about functions in the [Functions](./function) section. However, we have already
-used function calls in previous sections, so it's worth mentioning them here. A function call is an
-expression that calls a function and returns the value of the last expression in the function body,
-provided the last expression does not have a terminating semi-colon.
+[함수](./function) 섹션에서 함수에 대해 자세히 다룹니다. 하지만 이전 섹션에서 이미 함수 호출을 사용했으므로 여기서 언급할 가치가 있습니다. 함수 호출(function call)은 함수를 호출하고 함수 본문의 마지막 표현식 값을 반환하는 표현식입니다. 단, 마지막 표현식이 세미콜론으로 끝나지 않아야 합니다.
 
-```move file=packages/samples/sources/move-basics/expression.move anchor=fun_call
+```move
+fun add(a: u8, b: u8): u8 {
+    a + b
+}
 
+#[test]
+fun some_other() {
+    let sum = add(1, 2); // 세미콜론 때문에 반환되지 않음.
+    // 컴파일러가 블록의 반환값으로 빈 표현식 `()`를 자동으로 삽입합니다
+}
 ```
 
-## Control Flow Expressions
+## 제어 흐름 표현식
 
-Control flow expressions are used to control the flow of the program. They are also expressions, so
-they return a value. We cover control flow expressions in the [Control Flow](./control-flow)
-section. Here's a very brief overview:
+제어 흐름(control flow) 표현식은 프로그램의 흐름을 제어하는 데 사용됩니다. 이들도 표현식이므로 값을 반환합니다. [제어 흐름](./control-flow) 섹션에서 제어 흐름 표현식을 다룹니다. 여기서는 간단한 개요를 제공합니다:
 
-```move file=packages/samples/sources/move-basics/expression.move anchor=control_flow
+```move
+// if는 표현식이므로 값을 반환합니다; 2개의 분기가 있는 경우,
+// 분기의 타입이 일치해야 합니다.
+if (bool_expr) expr1 else expr2;
 
+// while은 표현식이지만 `()`를 반환합니다.
+while (bool_expr) { expr; };
+
+// loop도 표현식이지만 마찬가지로 `()`를 반환합니다.
+loop { expr; break };
 ```

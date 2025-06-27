@@ -1,144 +1,141 @@
-# Primitive Types
+# 기본 타입
 
 {/* TODO: Shall we split this into two pages? Maybe give an overview and focus more on specifics? */}
 
-For simple values, Move has a number of built-in primitive types. They're the foundation for all
-other types. The primitive types are:
+단순 값의 경우, Move는 여러 내장 기본 타입을 가지고 있습니다. 이들은 다른 모든 타입의 기초입니다. 기본 타입은 다음과 같습니다:
 
-- [Booleans](#booleans)
-- [Unsigned Integers](#integer-types)
-- [Addresses](./address) - covered in the next section
+- [불리언](#불리언)
+- [부호 없는 정수](#정수-타입)
+- [주소](./address) - 다음 섹션에서 다룹니다
 
-Before we get to the primitive types, let's first take a look at how to declare and assign variables
-in Move.
+기본 타입을 살펴보기 전에, 먼저 Move에서 변수를 선언하고 할당하는 방법을 알아봅시다.
 
-## Variables and Assignment
+## 변수와 할당
 
-Variables are declared using the `let` keyword. They are immutable by default, but can be made
-mutable by adding the `mut` keyword:
+변수는 `let` 키워드를 사용하여 선언됩니다. 기본적으로 불변이지만, `mut` 키워드를 추가하여 가변으로 만들 수 있습니다:
 
 ```
 let <variable_name>[: <type>]  = <expression>;
 let mut <variable_name>[: <type>] = <expression>;
 ```
 
-Where:
+여기서:
 
-- `<variable_name>` - the name of the variable
-- `<type>` - the type of the variable, optional
-- `<expression>` - the value to be assigned to the variable
+- `<variable_name>` - 변수의 이름
+- `<type>` - 변수의 타입, 선택사항
+- `<expression>` - 변수에 할당될 값
 
-```move file=packages/samples/sources/move-basics/primitive-types.move anchor=variables_and_assignment
-
+```move
+let x: bool = true;
+let mut y: u8 = 42;
 ```
 
-A mutable variable can be reassigned using the `=` operator.
+가변 변수는 `=` 연산자를 사용하여 재할당할 수 있습니다.
 
 ```move
 y = 43;
 ```
 
-Variables can also be shadowed by re-declaring them.
+변수는 재선언하여 섀도잉될 수도 있습니다.
 
-```move file=packages/samples/sources/move-basics/primitive-types.move anchor=shadowing
-
+```move
+let x: u8 = 42;
+let x: u16 = 42;
 ```
 
-## Booleans
+## 불리언
 
-The `bool` type represents a boolean value - yes or no, true or false. It has two possible values:
-`true` and `false`, which are keywords in Move. For booleans, the compiler can always infer the type
-from the value, so there is no need to explicitly specify it.
+`bool` 타입은 불리언 값을 나타냅니다 - 예 또는 아니오, 참 또는 거짓. 두 가지 가능한 값이 있습니다: `true`와 `false`, 이들은 Move의 키워드입니다. 불리언의 경우, 컴파일러는 항상 값에서 타입을 추론할 수 있으므로 명시적으로 지정할 필요가 없습니다.
 
-```move file=packages/samples/sources/move-basics/primitive-types.move anchor=boolean
-
+```move
+let x = true;
+let y = false;
 ```
 
-Booleans are often used to store flags and to control the flow of the program. Please refer to the
-[Control Flow](./control-flow) section for more information.
+불리언은 플래그를 저장하고 프로그램의 흐름을 제어하는 데 자주 사용됩니다. 자세한 내용은 [제어 흐름](./control-flow) 섹션을 참조하세요.
 
-## Integer Types
+## 정수 타입
 
-Move supports unsigned integers of various sizes, from 8-bit to 256-bit. The integer types are:
+Move는 8비트에서 256비트까지 다양한 크기의 부호 없는 정수를 지원합니다. 정수 타입은 다음과 같습니다:
 
-- `u8` - 8-bit
-- `u16` - 16-bit
-- `u32` - 32-bit
-- `u64` - 64-bit
-- `u128` - 128-bit
-- `u256` - 256-bit
+- `u8` - 8비트
+- `u16` - 16비트
+- `u32` - 32비트
+- `u64` - 64비트
+- `u128` - 128비트
+- `u256` - 256비트
 
-```move file=packages/samples/sources/move-basics/primitive-types.move anchor=integers
-
+```move
+let x: u8 = 42;
+let y: u16 = 42;
+// ...
+let z: u256 = 42;
 ```
 
-While boolean literals like `true` and `false` are clearly booleans, an integer literal like `42`
-could be any of the integer types. In most of the cases, the compiler will infer the type from the
-value, usually defaulting to `u64`. However, sometimes the compiler is unable to infer the type and
-will require an explicit type annotation. It can either be provided during assignment or by using a
-type suffix.
+`true`와 `false` 같은 불리언 리터럴은 명확히 불리언이지만, `42` 같은 정수 리터럴은 어떤 정수 타입이든 될 수 있습니다. 대부분의 경우 컴파일러는 값에서 타입을 추론하며, 일반적으로 `u64`가 기본값입니다. 그러나 때때로 컴파일러가 타입을 추론할 수 없어 명시적인 타입 주석이 필요합니다. 할당 중에 제공하거나 타입 접미사를 사용하여 제공할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/primitive-types.move anchor=integer_explicit_type
-
+```move
+// Both are equivalent
+let x: u8 = 42;
+let x = 42u8;
 ```
 
-### Operations
+### 연산
 
-Move supports the standard arithmetic operations for integers: addition, subtraction,
-multiplication, division, and modulus (remainder). The syntax for these operations is:
+Move는 정수에 대한 표준 산술 연산을 지원합니다: 덧셈, 뺄셈, 곱셈, 나눗셈, 나머지. 이러한 연산의 구문은 다음과 같습니다:
 
-| Syntax | Operation           | Aborts If                                |
-| ------ | ------------------- | ---------------------------------------- |
-| +      | addition            | Result is too large for the integer type |
-| -      | subtraction         | Result is less than zero                 |
-| \*     | multiplication      | Result is too large for the integer type |
-| %      | modulus (remainder) | The divisor is 0                         |
-| /      | truncating division | The divisor is 0                         |
+| 구문 | 연산         | 중단되는 경우                         |
+| ---- | ------------ | ------------------------------------- |
+| +    | 덧셈         | 결과가 정수 타입에 비해 너무 큰 경우 |
+| -    | 뺄셈         | 결과가 0보다 작은 경우                |
+| \*   | 곱셈         | 결과가 정수 타입에 비해 너무 큰 경우 |
+| %    | 나머지       | 제수가 0인 경우                       |
+| /    | 나눗셈(버림) | 제수가 0인 경우                       |
 
-> For more operations, including bitwise operations, please refer to the
-> [Move Reference](./../../reference/primitive-types/integers#bitwise).
+> 비트 연산을 포함한 더 많은 연산은 [Move 레퍼런스](./../../reference/primitive-types/integers#bitwise)를 참조하세요.
 
-The types of the operands _must match_, or the compiler will raise an error. The result of the
-operation will be of the same type as the operands. To perform operations on different types, the
-operands need to be cast to the same type.
+피연산자의 타입은 _반드시 일치해야_ 합니다. 그렇지 않으면 컴파일러가 오류를 발생시킵니다. 연산 결과는 피연산자와 동일한 타입이 됩니다. 다른 타입에 대해 연산을 수행하려면 피연산자를 동일한 타입으로 캐스팅해야 합니다.
 
 {/* TODO: add examples + parentheses for arithmetic operations */}
 {/* TODO: add bitwise operators */}
 
-### Casting with `as`
+### `as`를 사용한 캐스팅
 
-Move supports explicit casting between integer types. The syntax is as follows:
+Move는 정수 타입 간의 명시적 캐스팅을 지원합니다. 구문은 다음과 같습니다:
 
 ```move
 <expression> as <type>
 ```
 
-Note that parentheses around the expression may be required to prevent ambiguity:
+모호함을 방지하기 위해 표현식 주위에 괄호가 필요할 수 있습니다:
 
-```move file=packages/samples/sources/move-basics/primitive-types.move anchor=cast_as
-
+```move
+let x: u8 = 42;
+let y: u16 = x as u16;
+let z = 2 * (x as u16); // ambiguous, requires parentheses
 ```
 
-A more complex example, preventing overflow:
+오버플로우를 방지하는 더 복잡한 예:
 
-```move file=packages/samples/sources/move-basics/primitive-types.move anchor=overflow
-
+```move
+let x: u8 = 255;
+let y: u8 = 255;
+let z: u16 = (x as u16) + ((y as u16) * 2);
 ```
 
-### Overflow
+### 오버플로우
 
-Move does not support overflow / underflow; an operation that results in a value outside the range
-of the type will raise a runtime error. This is a safety feature to prevent unexpected behavior.
+Move는 오버플로우/언더플로우를 지원하지 않습니다. 타입 범위를 벗어난 값을 생성하는 연산은 런타임 오류를 발생시킵니다. 이는 예기치 않은 동작을 방지하기 위한 안전 기능입니다.
 
 ```move
 let x = 255u8;
 let y = 1u8;
 
-// This will raise an error
+// 이것은 오류를 발생시킵니다
 let z = x + y;
 ```
 
-## Further Reading
+## 더 읽어보기
 
-- [Bool](./../../reference/primitive-types/bool) in the Move Reference.
-- [Integer](./../../reference/primitive-types/integers) in the Move Reference.
+- Move 레퍼런스의 [Bool](./../../reference/primitive-types/bool)
+- Move 레퍼런스의 [정수](./../../reference/primitive-types/integers)

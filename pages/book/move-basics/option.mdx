@@ -1,70 +1,102 @@
 # Option
 
-`Option` is a type that represents an optional value which may or may not exist. The concept of
-`Option` in Move is borrowed from Rust, and it is a very useful primitive in Move. `Option` is
-defined in the [Standard Library](./standard-library), and is defined as follows:
+`Option`은 존재하거나 존재하지 않을 수 있는 선택적 값을 나타내는 타입입니다. Move의
+`Option` 개념은 Rust에서 차용했으며, Move에서 매우 유용한 기본 타입입니다. `Option`은
+[표준 라이브러리](./standard-library)에 정의되어 있으며, 다음과 같이 정의됩니다:
 
 ```move
 module std::option;
 
-/// Abstraction of a value that may or may not be present.
+/// 존재하거나 존재하지 않을 수 있는 값의 추상화
 public struct Option<Element> has copy, drop, store {
     vec: vector<Element>
 }
 ```
 
-_See [full documentation for std::option][option-stdlib] module._
+_[std::option][option-stdlib] module의 전체 문서를 참조하세요._
 
-> The 'std::option' module is implicitly imported in every module, so you don't need to add an
-> explicit import.
+> 'std::option' module은 모든 module에 암시적으로 가져와지므로, 명시적인
+> import를 추가할 필요가 없습니다.
 
-The `Option` type is a generic type with an `Element` type parameter. It contains a single field,
-`vec`, which is a `vector` of `Element`. The vector can have a length of 0 or 1, representing the
-absence or presence of a value, respectively.
+`Option` 타입은 `Element` 타입 매개변수를 가진 제네릭 타입입니다. 단일 필드인
+`vec`를 포함하며, 이는 `Element`의 `vector`입니다. 벡터는 0 또는 1의 길이를 가질 수 있으며,
+각각 값의 부재 또는 존재를 나타냅니다.
 
-> Note: You might be surprised that `Option` is a `struct` containing a `vector` instead of an
-> [enum][enum-reference]. This is for historical reasons: `Option` was added to Move before it had
-> support for enums.
+> 참고: `Option`이 [enum][enum-reference] 대신 `vector`를 포함하는 `struct`라는 것이 놀라울 수 있습니다.
+> 이는 역사적인 이유 때문입니다: `Option`은 Move가 enum을 지원하기 전에 추가되었습니다.
 
-The `Option` type has two variants: `Some` and `None`. The `Some` variant contains a value, while
-the `None` variant represents the absence of a value. The `Option` type is used to represent the
-absence of a value in a type-safe way, avoiding the need for empty or `undefined` values.
+`Option` 타입은 두 가지 변형을 가집니다: `Some`과 `None`. `Some` 변형은 값을 포함하고,
+`None` 변형은 값의 부재를 나타냅니다. `Option` 타입은 빈 값이나 `undefined` 값의 필요성을 피하면서
+타입 안전한 방식으로 값의 부재를 나타내는 데 사용됩니다.
 
-## In Practice
+## 실제 사용
 
-To showcase why the `Option` type is necessary, let's look at an example. Consider an application
-which takes a user input and stores it in a variable. Some fields are required, and some are
-optional. For example, a user's middle name is optional. While we could use an empty string to
-represent the absence of a middle name, it would require extra checks to differentiate between an
-empty string and a missing middle name. Instead, we can use the `Option` type to represent the
-middle name.
+`Option` 타입이 필요한 이유를 보여주기 위해 예제를 살펴보겠습니다. 사용자 입력을 받아
+변수에 저장하는 애플리케이션을 고려해보세요. 일부 필드는 필수이고 일부는
+선택사항입니다. 예를 들어, 사용자의 중간 이름은 선택사항입니다. 빈 문자열로
+중간 이름의 부재를 나타낼 수도 있지만, 빈 문자열과 누락된 중간 이름을
+구분하기 위해 추가 검사가 필요합니다. 대신 `Option` 타입을 사용하여
+중간 이름을 나타낼 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/option.move anchor=registry
+```move
+module book::user_registry;
 
+use std::string::String;
+
+/// 사용자 레코드를 나타내는 struct
+public struct User has drop {
+    first_name: String,
+    middle_name: Option<String>,
+    last_name: String,
+}
+
+/// 주어진 필드로 새로운 `User` struct를 생성합니다.
+public fun register(
+    first_name: String,
+    middle_name: Option<String>,
+    last_name: String,
+): User {
+    User { first_name, middle_name, last_name }
+}
 ```
 
-In the previous example, the `middle_name` field is of type `Option<String>`. This means that the
-`middle_name` field can either contain a String value, wrapped in Some, or be explicitly empty,
-represented by None. Using the `Option` type makes the optional nature of the field clear, avoiding
-ambiguity and the need for extra checks to differentiate between an empty string and a missing
-middle name.
+이전 예제에서 `middle_name` 필드는 `Option<String>` 타입입니다. 이는
+`middle_name` 필드가 Some으로 감싸진 String 값을 포함하거나, None으로 표현되는 명시적으로 비어있을 수 있음을 의미합니다. `Option` 타입을 사용하면 필드의 선택적 특성을 명확히 하여
+모호성을 피하고 빈 문자열과 누락된 중간 이름을 구분하기 위한 추가 검사의 필요성을 없앵니다.
 
-## Creating and Using Option values
+## Option 값 생성 및 사용
 
-The `Option` type, along with the `std::option` module, is implicitly imported in Move. This means
-you can use the `Option` type directly without needing a `use` statement.
+`Option` 타입은 `std::option` module과 함께 Move에 암시적으로 가져와집니다. 이는
+`use` 문 없이 `Option` 타입을 직접 사용할 수 있음을 의미합니다.
 
-To create a value of the `Option` type, you can use the `option::some` or `option::none` methods.
-`Option` values also support several operations (borrowing will be discussed in the
-[references](references#references-1) chapter):
+`Option` 타입의 값을 생성하려면 `option::some` 또는 `option::none` 메서드를 사용할 수 있습니다.
+`Option` 값은 여러 연산을 지원합니다 (차용은 [참조](references#references-1) 챕터에서 다룹니다):
 
-```move file=packages/samples/sources/move-basics/option.move anchor=usage
+```move
+// `option::some`은 값을 가진 `Option` 값을 생성합니다.
+let mut opt = option::some(b"Alice");
 
+// `option::none`은 값이 없는 `Option`을 생성합니다. 컨텍스트에서 추론할 수 없으므로
+// 타입을 명시해야 합니다.
+let empty : Option<u64> = option::none();
+
+// `option.is_some()`은 option이 값을 포함하면 true를 반환합니다.
+assert!(opt.is_some());
+assert!(empty.is_none());
+
+// 내부 값은 `borrow`와 `borrow_mut`로 참조할 수 있습니다.
+assert!(opt.borrow() == &b"Alice");
+
+// `option.extract`는 option에서 값을 꺼내고, option을 비웁니다.
+let inner = opt.extract();
+
+// `option.is_none()`은 option이 None이면 true를 반환합니다.
+assert!(opt.is_none());
 ```
 
-## Further Reading
+## 추가 자료
 
-- [std::option][option-stdlib] in the standard library
+- 표준 라이브러리의 [std::option][option-stdlib]
 
 [enum-reference]: ./../../reference/enums
 [option-stdlib]: https://docs.sui.io/references/framework/std/option

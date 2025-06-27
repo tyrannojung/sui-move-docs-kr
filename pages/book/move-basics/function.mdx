@@ -1,77 +1,87 @@
-# Functions
+# 함수
 
-Functions are the building blocks of Move programs. They are called from
-[user transactions](./../concepts/what-is-a-transaction) and from other functions and group
-executable code into reusable units. Functions can take arguments and return a value. They are
-declared with the `fun` keyword at the module level. Just like any other module member, by default
-they're private and can only be accessed from within the module.
+함수는 Move 프로그램의 구성 요소입니다. 함수는 [사용자 트랜잭션](./../concepts/what-is-a-transaction)과 다른 함수에서 호출되며, 실행 가능한 코드를 재사용 가능한 단위로 그룹화합니다. 함수는 인수를 받고 값을 반환할 수 있습니다. module 수준에서 `fun` 키워드로 선언됩니다. 다른 module 멤버와 마찬가지로 기본적으로 비공개이며 module 내에서만 접근할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/function.move anchor=math
+```move
+module book::math;
 
+/// 함수는 `u64` 타입의 두 인수를 받아 합을 반환합니다.
+/// `public` 가시성 수정자는 함수를 module 외부에서
+/// 접근 가능하게 만듭니다.
+public fun add(a: u64, b: u64): u64 {
+    a + b
+}
+
+#[test]
+fun test_add() {
+    let sum = add(1, 2);
+    assert!(sum == 3);
+}
 ```
 
-In this example, we define a function `add` that takes two arguments of type `u64` and returns their
-sum. The `test_add` function, located in the same module, is a test function that calls `add`. The
-test uses the `assert!` macro to compare the result of `add` with the expected value. If the
-condition inside `assert!` evaluates to false, the execution is aborted automatically.
+이 예제에서는 `u64` 타입의 두 인수를 받아 합을 반환하는 `add` 함수를 정의합니다. 같은 module에 있는 `test_add` 함수는 `add`를 호출하는 테스트 함수입니다. 테스트는 `assert!` 매크로를 사용하여 `add`의 결과를 예상 값과 비교합니다. `assert!` 내부의 조건이 거짓으로 평가되면 실행이 자동으로 중단됩니다.
 
-## Function declaration
+## 함수 선언
 
-> In Move, functions are typically named using the `snake_case` convention. This means function
-> names should be all lowercase, with words separated by underscores. Examples include
-> `do_something`, `add`, `get_balance`, `is_authorized`, and so on.
+> Move에서 함수는 일반적으로 `snake_case` 규칙을 사용하여 명명됩니다. 이는 함수 이름이 모두 소문자여야 하며 단어가 밑줄로 구분되어야 함을 의미합니다. 예를 들어 `do_something`, `add`, `get_balance`, `is_authorized` 등이 있습니다.
 
-A function is declared with the `fun` keyword followed by the function name (a valid Move
-identifier), a list of arguments in parentheses, and a return type. The function body is a block of
-code that contains a sequence of statements and expressions. The last expression the function body
-is the return value of the function.
+함수는 `fun` 키워드 다음에 함수 이름(유효한 Move 식별자), 괄호 안의 인수 목록, 반환 타입으로 선언됩니다. 함수 본문은 일련의 문과 표현식을 포함하는 코드 블록입니다. 함수 본문의 마지막 표현식이 함수의 반환 값입니다.
 
-```move file=packages/samples/sources/move-basics/function.move anchor=return_nothing
-
+```move
+fun return_nothing() {
+    // 빈 표현식, 함수는 `()`를 반환합니다
+}
 ```
 
-## Accessing functions
+## 함수 접근하기
 
-Just like other module members, functions can be imported and accessed using a path. The path
-consists of the module path and the function name, separated by ::. For example, if you have a
-function named `add` in the `math` module within the `book` package, its full path would be
-`book::math::add`. If the module has already been imported, you can access it directly as
-`math::add` as in the following example:
+다른 module 멤버와 마찬가지로 함수는 경로를 사용하여 가져오고 접근할 수 있습니다. 경로는 module 경로와 함수 이름으로 구성되며 ::로 구분됩니다. 예를 들어, `book` 패키지 내의 `math` module에 `add`라는 함수가 있다면 전체 경로는 `book::math::add`가 됩니다. module이 이미 가져와진 경우 다음 예제와 같이 `math::add`로 직접 접근할 수 있습니다:
 
-```move file=packages/samples/sources/move-basics/function_use.move anchor=use_math
+```move
+module book::use_math;
 
+use book::math;
+
+fun call_add() {
+    // 함수는 경로를 통해 호출됩니다
+    let sum = math::add(1, 2);
+}
 ```
 
-## Multiple return values
+## 여러 개의 반환 값
 
-Move functions can return multiple values, which is particularly useful when you need to return more
-than one piece of data from a function. The return type is specified as a tuple of types, and the
-return value is provided as a tuple of expressions:
+Move 함수는 여러 값을 반환할 수 있으며, 이는 함수에서 두 개 이상의 데이터를 반환해야 할 때 특히 유용합니다. 반환 타입은 타입의 튜플로 지정되고, 반환 값은 표현식의 튜플로 제공됩니다:
 
-```move file=packages/samples/sources/move-basics/function.move anchor=tuple_return
-
+```move
+fun get_name_and_age(): (vector<u8>, u8) {
+    (b"John", 25)
+}
 ```
 
-The result of a function call with a tuple return has to be unpacked into variables via the
-`let (tuple)` syntax:
+튜플 반환이 있는 함수 호출의 결과는 `let (tuple)` 구문을 통해 변수로 언팩되어야 합니다:
 
-```move file=packages/samples/sources/move-basics/function.move anchor=tuple_return_imm
-
+```move
+// 튜플은 요소에 접근하기 위해 분해되어야 합니다.
+// name과 age는 불변 변수로 선언됩니다.
+let (name, age) = get_name_and_age();
+assert!(name == b"John");
+assert!(age == 25);
 ```
 
-If any of the declared values need to be declared as mutable, the `mut` keyword is placed before the
-variable name:
+선언된 값 중 일부를 가변으로 선언해야 하는 경우 `mut` 키워드를 변수 이름 앞에 배치합니다:
 
-```move file=packages/samples/sources/move-basics/function.move anchor=tuple_return_mut
-
+```move
+// name은 가변으로, age는 불변으로 선언
+let (mut name, age) = get_name_and_age();
 ```
 
-If some of the arguments are not used, they can be ignored with the `_` symbol:
+일부 인수가 사용되지 않는 경우 `_` 기호로 무시할 수 있습니다:
 
-```move file=packages/samples/sources/move-basics/function.move anchor=tuple_return_ignore
-
+```move
+// name은 무시하고 age만 사용
+let (_, age) = get_name_and_age();
 ```
 
-## Further Reading
+## 추가 자료
 
-- [Functions](./../../reference/functions) in the Move Reference.
+- Move Reference의 [Functions](./../../reference/functions)

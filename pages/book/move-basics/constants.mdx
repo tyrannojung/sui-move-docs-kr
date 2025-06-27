@@ -1,4 +1,4 @@
-# Constants
+# 상수
 
 {/*
 
@@ -18,57 +18,80 @@ Links:
 
  */}
 
-Constants are immutable values that are defined at the module level. They often serve as a way to
-give names to static values that are used throughout a module. For example, if there's a default
-price for a product, you might define a constant for it. Constants are stored in the module's
-bytecode, and each time they are used, the value is copied.
+상수는 module 수준에서 정의되는 불변 값입니다. 이들은 module 전체에서 사용되는 정적 값에 이름을 부여하는 방법으로 자주 사용됩니다. 예를 들어, 제품의 기본 가격이 있다면 이를 위한 상수를 정의할 수 있습니다. 상수는 module의 바이트코드에 저장되며, 사용될 때마다 값이 복사됩니다.
 
-```move file=packages/samples/sources/move-basics/constants-shop-price.move anchor=shop_price
+```move
+module book::shop_price;
 
+use sui::{coin::Coin, sui::SUI};
+
+/// 상점 아이템의 가격.
+const ITEM_PRICE: u64 = 100;
+/// 상점 소유자의 주소.
+const SHOP_OWNER: address = @0xa11ce;
+
+/// 상점에서 판매하는 아이템.
+public struct Item {}
+
+/// 상점에서 아이템을 구매합니다.
+public fun purchase(coin: Coin<SUI>): Item {
+    assert!(coin.value() == ITEM_PRICE);
+
+    transfer::public_transfer(coin, SHOP_OWNER);
+
+    Item {}
+}
 ```
 
-## Naming Convention
+## 명명 규칙
 
-Constants must start with a capital letter - this is enforced at the compiler level. For constants
-used as a value, the convention is to use all uppercase letters and underscores between words, which
-makes constants stand out from other identifiers in the code. An exception is made for
-[error constants](./assert-and-abort#error-constants), which are written in ECamelCase.
+상수는 대문자로 시작해야 합니다 - 이는 컴파일러 수준에서 강제됩니다. 값으로 사용되는 상수의 경우, 모든 대문자와 단어 사이에 밑줄을 사용하는 것이 관례입니다. 이렇게 하면 코드의 다른 식별자들 사이에서 상수가 눈에 띕니다. [오류 상수](./assert-and-abort#error-constants)는 예외로, ECamelCase로 작성됩니다.
 
-```move file=packages/samples/sources/move-basics/constants-naming.move anchor=naming
+```move
+/// 상점에서 사용하는 아이템의 가격.
+const ITEM_PRICE: u64 = 100;
 
+/// 오류 상수.
+const EItemNotFound: u64 = 1;
 ```
 
-## Constants are Immutable
+## 상수는 불변입니다
 
-Constants can't be changed and assigned new values. As part of the package bytecode, they are
-inherently immutable.
+상수는 변경할 수 없으며 새로운 값을 할당할 수 없습니다. 패키지 바이트코드의 일부로서 본질적으로 불변입니다.
 
 ```move
 module book::immutable_constants;
 
 const ITEM_PRICE: u64 = 100;
 
-// emits an error
+// 오류를 발생시킵니다
 fun change_price() {
     ITEM_PRICE = 200;
 }
 ```
 
-## Using Config Pattern
+## Config 패턴 사용하기
 
-A common use case for an application is to define a set of constants that are used throughout the
-codebase. But due to constants being private to the module, they can't be accessed from other
-modules. One way to solve this is to define a "config" module that exports the constants.
+애플리케이션의 일반적인 사용 사례는 코드베이스 전체에서 사용되는 상수 집합을 정의하는 것입니다. 하지만 상수가 module에 비공개이기 때문에 다른 module에서 접근할 수 없습니다. 이를 해결하는 한 가지 방법은 상수를 내보내는 "config" module을 정의하는 것입니다.
 
-```move file=packages/samples/sources/move-basics/constants-config.move anchor=config
+```move
+module book::config;
 
+const ITEM_PRICE: u64 = 100;
+const TAX_RATE: u64 = 10;
+const SHIPPING_COST: u64 = 5;
+
+/// 아이템의 가격을 반환합니다.
+public fun item_price(): u64 { ITEM_PRICE }
+/// 세율을 반환합니다.
+public fun tax_rate(): u64 { TAX_RATE }
+/// 배송비를 반환합니다.
+public fun shipping_cost(): u64 { SHIPPING_COST }
 ```
 
-This way other modules can import and read the constants, and the update process is simplified. If
-the constants need to be changed, only the config module needs to be updated during the package
-upgrade.
+이렇게 하면 다른 module들이 상수를 가져와서 읽을 수 있고, 업데이트 프로세스가 단순해집니다. 상수를 변경해야 하는 경우, 패키지 업그레이드 중에 config module만 업데이트하면 됩니다.
 
-## Links
+## 링크
 
-- [Constants](./../../reference/constants) in the Move Reference
-- [Coding conventions for constants](./../guides/code-quality-checklist#regular-constant-are-all_caps)
+- Move Reference의 [Constants](./../../reference/constants)
+- [상수를 위한 코딩 규칙](./../guides/code-quality-checklist#regular-constant-are-all_caps)

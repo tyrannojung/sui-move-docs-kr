@@ -1,9 +1,6 @@
-# Ownership and Scope
+# 소유권과 스코프
 
-Every variable in Move has a scope and an owner. The scope is the range of code where the variable
-is valid, and the owner is the scope that this variable belongs to. Once the owner scope ends, the
-variable is dropped. This is a fundamental concept in Move, and it is important to understand how it
-works.
+Move의 모든 변수는 스코프와 소유자를 가지고 있습니다. 스코프는 변수가 유효한 코드 범위이고, 소유자는 이 변수가 속한 스코프입니다. 소유자 스코프가 끝나면 변수는 삭제(drop)됩니다. 이것은 Move의 기본 개념이며, 어떻게 작동하는지 이해하는 것이 중요합니다.
 
 {/*
 
@@ -13,60 +10,53 @@ works.
 
 */}
 
-## Ownership
+## 소유권
 
-A variable defined in a function scope is owned by this scope. The runtime goes through the function
-scope and executes every expression and statement. After the function scope ends, the variables
-defined in it are dropped or deallocated.
+함수 스코프에 정의된 변수는 이 스코프가 소유합니다. 런타임은 함수 스코프를 거치며 모든 표현식과 문을 실행합니다. 함수 스코프가 끝나면 그 안에 정의된 변수들은 삭제되거나 할당 해제됩니다.
 
 ```move
 module book::ownership;
 
 public fun owner() {
-    let a = 1; // a is owned by the `owner` function
-} // a is dropped here
+    let a = 1; // a는 `owner` 함수가 소유합니다
+} // a는 여기서 삭제됩니다
 
 public fun other() {
-    let b = 2; // b is owned by the `other` function
-} // b is dropped here
+    let b = 2; // b는 `other` 함수가 소유합니다
+} // b는 여기서 삭제됩니다
 
 #[test]
 fun test_owner() {
     owner();
     other();
-    // a & b are not valid here
+    // a & b는 여기서 유효하지 않습니다
 }
 ```
 
-In the example above, the variable `a` is owned by the `owner` function, and the variable `b` is
-owned by the `other` function. When each of these functions are called, the variables are defined,
-and when the function ends, the variables are discarded.
+위 예제에서 변수 `a`는 `owner` 함수가 소유하고, 변수 `b`는 `other` 함수가 소유합니다. 각 함수가 호출되면 변수가 정의되고, 함수가 끝나면 변수는 폐기됩니다.
 
-## Returning a Value
+## 값 반환하기
 
-If we changed the `owner` function to return the variable `a`, then the ownership of `a` would be
-transferred to the caller of the function.
+`owner` 함수를 변경하여 변수 `a`를 반환하도록 하면, `a`의 소유권이 함수의 호출자에게 이전됩니다.
 
 ```move
 module book::ownership;
 
 public fun owner(): u8 {
-    let a = 1; // a defined here
-    a // scope ends, a is returned
+    let a = 1; // a가 여기서 정의됩니다
+    a // 스코프가 끝나고 a가 반환됩니다
 }
 
 #[test]
 fun test_owner() {
     let a = owner();
-    // a is valid here
-} // a is dropped here
+    // a는 여기서 유효합니다
+} // a는 여기서 삭제됩니다
 ```
 
-## Passing by Value
+## 값으로 전달하기
 
-Additionally, if we passed the variable `a` to another function, the ownership of `a` would be
-transferred to this function. When performing this operation, we _move_ the value from one scope to
-another. This is also called _move semantics_.
+추가로, 변수 `a`를 다른 함수에 전달하면 `a`의 소유권이 해당 함수로 이전됩니다. 이 작업을 수행할 때 우리는 한 스코프에서 다른 스코프로 값을 _이동(move)_ 합니다. 이를 _이동 의미론(move semantics)_ 이라고도 합니다.
 
 ```move
 module book::ownership;
@@ -74,65 +64,59 @@ module book::ownership;
 public fun owner(): u8 {
     let a = 10;
     a
-} // a is returned
+} // a가 반환됩니다
 
 public fun take_ownership(v: u8) {
-    // v is owned by `take_ownership`
-} // v is dropped here
+    // v는 `take_ownership`가 소유합니다
+} // v는 여기서 삭제됩니다
 
 #[test]
 fun test_owner() {
     let a = owner();
     take_ownership(a);
-    // a is not valid here
+    // a는 여기서 유효하지 않습니다
 }
 ```
 
-## Scopes with Blocks
+## 블록을 사용한 스코프
 
-Each function has a main scope, and it can also have sub-scopes via the use of blocks. A block is a
-sequence of statements and expressions, and it has its own scope. Variables defined in a block are
-owned by this block, and when the block ends, the variables are dropped.
+각 함수는 메인 스코프를 가지며, 블록을 사용하여 서브 스코프를 가질 수도 있습니다. 블록은 문과 표현식의 시퀀스이며 자체 스코프를 가집니다. 블록에 정의된 변수는 이 블록이 소유하며, 블록이 끝나면 변수가 삭제됩니다.
 
 ```move
 module book::ownership;
 
 public fun owner() {
-    let a = 1; // a is owned by the `owner` function's scope
+    let a = 1; // a는 `owner` 함수의 스코프가 소유합니다
     {
-        let b = 2; // the block that declares b owns it
+        let b = 2; // b를 선언한 블록이 소유합니다
         {
-            let c = 3; // the block that declares c owns it
-        }; // c is dropped here
-    }; // b is dropped here
-    // a = b; // error: b is not valid here
-    // a = c; // error: c is not valid here
-} // a is dropped here
+            let c = 3; // c를 선언한 블록이 소유합니다
+        }; // c는 여기서 삭제됩니다
+    }; // b는 여기서 삭제됩니다
+    // a = b; // 오류: b는 여기서 유효하지 않습니다
+    // a = c; // 오류: c는 여기서 유효하지 않습니다
+} // a는 여기서 삭제됩니다
 ```
 
-However, if we return a value from a block, the ownership of the variable is transferred to the
-caller of the block.
+하지만 블록에서 값을 반환하면 변수의 소유권이 블록의 호출자에게 이전됩니다.
 
 ```move
 module book::ownership;
 
 public fun owner(): u8 {
-    let a = 1; // a is owned by the `owner` function's scope
+    let a = 1; // a는 `owner` 함수의 스코프가 소유합니다
     let b = {
-        let c = 2; // the block that declares c owns it
-        c // c is returned from the block and transferred to b
+        let c = 2; // c를 선언한 블록이 소유합니다
+        c // c는 블록에서 반환되어 b로 이전됩니다
     };
-    a + b // both a and b are valid here
+    a + b // a와 b 모두 여기서 유효합니다
 }
 ```
 
-## Copyable Types
+## 복사 가능한 타입
 
-Some types in Move are _copyable_, which means that they can be copied without transferring
-ownership. This is useful for types that are small and cheap to copy, such as integers and booleans.
-The Move compiler will automatically copy these types when they are passed to or returned from a
-function, or when they're _moved_ to another scope and then accessed in their original scope.
+Move의 일부 타입은 _복사 가능(copyable)_ 하며, 이는 소유권을 이전하지 않고 복사할 수 있다는 의미입니다. 이는 정수나 불리언 같이 작고 복사 비용이 적은 타입에 유용합니다. Move 컴파일러는 이러한 타입이 함수에 전달되거나 반환될 때, 또는 다른 스코프로 _이동_ 된 후 원래 스코프에서 접근될 때 자동으로 복사합니다.
 
-## Further Reading
+## 추가 자료
 
-- [Local Variables and Scopes](./../../reference/variables) in the Move Reference.
+- Move Reference의 [Local Variables and Scopes](./../../reference/variables)

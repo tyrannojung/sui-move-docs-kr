@@ -1,61 +1,54 @@
-# Abilities: Copy
+# Ability: Copy
 
-In Move, the _copy_ ability on a type indicates that the instance or the value of the type can be
-copied, or duplicated. While this behavior is provided by default when working with numbers or other
-primitive types, it is not the default for custom types. Move is designed to express digital assets
-and resources, and controlling the ability to duplicate resources is a key principle of the resource
-model. However, the Move type system allows you to add the _copy_ ability to custom types:
+Move에서 타입의 _copy_ ability는 해당 타입의 인스턴스나 값을 복사하거나 복제할 수 있음을 나타냅니다. 숫자나 다른 원시 타입으로 작업할 때는 이 동작이 기본적으로 제공되지만, 커스텀 타입에서는 기본값이 아닙니다. Move는 디지털 자산과 리소스를 표현하도록 설계되었으며, 리소스 복제 능력을 제어하는 것은 리소스 모델의 핵심 원칙입니다. 하지만 Move 타입 시스템은 커스텀 타입에 _copy_ ability를 추가할 수 있도록 허용합니다:
 
-```move file=packages/samples/sources/move-basics/copy-ability.move anchor=copyable
-
+```move
+public struct Copyable has copy {}
 ```
 
-In the example above, we define a custom type `Copyable` with the _copy_ ability. This means that
-instances of `Copyable` can be copied, both implicitly and explicitly.
+위 예제에서는 _copy_ ability를 가진 커스텀 타입 `Copyable`을 정의합니다. 이는 `Copyable`의 인스턴스가 암시적으로나 명시적으로 복사될 수 있음을 의미합니다.
 
-```move file=packages/samples/sources/move-basics/copy-ability.move anchor=copyable_test
+```move
+let a = Copyable {}; // Copyable struct가 `copy` ability를 가지므로 허용됩니다
+let b = a;   // `a`가 `b`로 복사됩니다
+let c = *&b; // 역참조 연산자를 통한 명시적 복사
 
+// Copyable은 `drop` ability가 없으므로, 모든 인스턴스(a, b, c)는
+// 사용되거나 명시적으로 분해되어야 합니다. `drop` ability는 아래에서 설명합니다.
+let Copyable {} = a;
+let Copyable {} = b;
+let Copyable {} = c;
 ```
 
-In the example above, `a` is copied to `b` implicitly, and then explicitly copied to `c` using the
-dereference operator. If `Copyable` did not have the _copy_ ability, the code would not compile, and
-the Move compiler would raise an error.
+위 예제에서 `a`는 암시적으로 `b`에 복사되고, 역참조 연산자를 사용하여 명시적으로 `c`에 복사됩니다. `Copyable`이 _copy_ ability를 가지지 않았다면, 코드는 컴파일되지 않고 Move 컴파일러가 오류를 발생시킬 것입니다.
 
-> Note: In Move, destructuring with empty brackets is often used to consume unused variables,
-> especially for types without the drop ability. This prevents compiler errors from values going out
-> of scope without explicit use. Also, Move requires the type name in destructuring (e.g.,
-> `Copyable` in `let Copyable {} = a;`) because it enforces strict typing and ownership rules.
+> 참고: Move에서 빈 괄호를 사용한 분해는 특히 drop ability가 없는 타입의 경우 사용되지 않은 변수를 소비하는 데 자주 사용됩니다. 이는 값이 명시적으로 사용되지 않고 스코프를 벗어나는 컴파일러 오류를 방지합니다. 또한 Move는 엄격한 타이핑과 소유권 규칙을 적용하기 때문에 분해에서 타입 이름(예: `let Copyable {} = a;`에서 `Copyable`)을 요구합니다.
 
-## Copying and Drop
+## Copy와 Drop
 
-The `copy` ability is closely related to the [`drop` ability](./drop-ability). If a type has the
-_copy_ ability, it is very likely that it should have `drop` too. This is because the _drop_ ability
-is required to clean up resources when the instance is no longer needed. If a type only has _copy_,
-managing its instances gets more complicated, as the instances must be explicitly used or consumed.
+`copy` ability는 [`drop` ability](./drop-ability)와 밀접한 관련이 있습니다. 타입이 _copy_ ability를 가진다면, `drop`도 가져야 할 가능성이 매우 높습니다. 이는 인스턴스가 더 이상 필요하지 않을 때 리소스를 정리하기 위해 _drop_ ability가 필요하기 때문입니다. 타입이 _copy_만 가진다면, 인스턴스가 명시적으로 사용되거나 소비되어야 하므로 인스턴스 관리가 더 복잡해집니다.
 
-```move file=packages/samples/sources/move-basics/copy-ability.move anchor=copy_drop
-
+```move
+public struct Value has copy, drop {}
 ```
 
-All of the primitive types in Move behave as if they have the _copy_ and _drop_ abilities. This
-means that they can be copied and dropped, and the Move compiler will handle the memory management
-for them.
+Move의 모든 원시 타입은 _copy_와 _drop_ ability를 가진 것처럼 동작합니다. 이는 복사되고 삭제될 수 있으며, Move 컴파일러가 메모리 관리를 처리한다는 의미입니다.
 
-## Types with the `copy` Ability
+## `copy` Ability를 가진 타입
 
-All native types in Move have the `copy` ability. This includes:
+Move의 모든 네이티브 타입은 `copy` ability를 가집니다. 여기에는 다음이 포함됩니다:
 
-- [bool](./../move-basics/primitive-types#booleans)
-- [unsigned integers](./../move-basics/primitive-types#integer-types)
-- [vector](./../move-basics/vector)
-- [address](./../move-basics/address)
+- [bool](./primitive-types#booleans)
+- [부호 없는 정수](./primitive-types#integer-types)
+- [vector](./vector)
+- [address](./address)
 
-All of the types defined in the standard library have the `copy` ability as well. This includes:
+표준 라이브러리에 정의된 모든 타입도 `copy` ability를 가집니다. 여기에는 다음이 포함됩니다:
 
-- [Option](./../move-basics/option)
-- [String](./../move-basics/string)
-- [TypeName](./../move-basics/type-reflection)
+- [Option](./option)
+- [String](./string)
+- [TypeName](./type-reflection)
 
-## Further Reading
+## 추가 자료
 
-- [Type Abilities](./../../reference/abilities) in the Move Reference.
+- Move Reference의 [Type Abilities](./../../reference/abilities)

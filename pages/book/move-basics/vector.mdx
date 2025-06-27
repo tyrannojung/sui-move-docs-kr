@@ -1,53 +1,82 @@
 # Vector
 
-Vectors are a native way to store collections of elements in Move. They are similar to arrays in
-other programming languages, but with a few differences. In this section, we introduce the `vector`
-type and its operations.
+벡터는 Move에서 요소 컬렉션을 저장하는 네이티브 방법입니다. 다른
+프로그래밍 언어의 배열과 유사하지만 몇 가지 차이점이 있습니다. 이 섹션에서는 `vector`
+타입과 그 연산을 소개합니다.
 
-## Vector syntax
+## Vector 문법
 
-The `vector` type is written using the `vector` keyword followed by the type of the elements in
-angle brackets. The type of the elements can be any valid Move type, including other vectors.
+`vector` 타입은 `vector` 키워드 다음에 꺾쇠 괄호 안에
+요소의 타입을 작성합니다. 요소의 타입은 다른 벡터를 포함한 모든 유효한 Move 타입이 될 수 있습니다.
 
-Move has a vector literal syntax that allows you to create vectors using the `vector` keyword
-followed by square brackets containing the elements (or no elements for an empty vector).
+Move는 `vector` 키워드 다음에
+요소를 포함하는 대괄호를 사용하여 벡터를 생성할 수 있는 벡터 리터럴 문법을 제공합니다(빈 벡터의 경우 요소 없음).
 
-```move file=packages/samples/sources/move-basics/vector.move anchor=literal
+```move
+// bool 요소의 빈 벡터
+let empty: vector<bool> = vector[];
 
+// u8 요소의 벡터
+let v: vector<u8> = vector[10, 20, 30];
+
+// vector<u8> 요소의 벡터
+let vv: vector<vector<u8>> = vector[
+    vector[10, 20],
+    vector[30, 40]
+];
 ```
 
-The `vector` type is a built-in type in Move, and does not need to be imported from a module.
-However, vector operations are defined in the `std::vector` module, and you need to import the
-module to use them.
+`vector` 타입은 Move의 내장 타입이며, module에서 가져올 필요가 없습니다.
+하지만 벡터 연산은 `std::vector` module에 정의되어 있으며, 사용하려면
+module을 가져와야 합니다.
 
-## Vector operations
+## Vector 연산
 
-The standard library provides methods to manipulate vectors. The following are some of the most
-commonly used operations:
+표준 라이브러리는 벡터를 조작하는 메서드를 제공합니다. 다음은 가장 자주
+사용되는 연산들입니다:
 
-- `push_back`: Adds an element to the end of the vector.
-- `pop_back`: Removes the last element from the vector.
-- `length`: Returns the number of elements in the vector.
-- `is_empty`: Returns true if the vector is empty.
-- `remove`: Removes an element at a given index.
+- `push_back`: 벡터의 끝에 요소를 추가합니다.
+- `pop_back`: 벡터에서 마지막 요소를 제거합니다.
+- `length`: 벡터의 요소 수를 반환합니다.
+- `is_empty`: 벡터가 비어있으면 true를 반환합니다.
+- `remove`: 주어진 인덱스의 요소를 제거합니다.
 
-```move file=packages/samples/sources/move-basics/vector.move anchor=methods
+```move
+let mut v = vector[10u8, 20, 30];
 
+assert!(v.length() == 3);
+assert!(!v.is_empty());
+
+v.push_back(40);
+let last_value = v.pop_back();
+
+assert!(last_value == 40);
 ```
 
-## Destroying a Vector of non-droppable types
+## drop이 불가능한 타입의 Vector 폐기
 
-A vector of non-droppable types cannot be discarded. If you define a vector of types without the
-`drop` ability, the vector value cannot be ignored. If the vector is empty, the compiler requires an
-explicit call to the `destroy_empty` function.
+drop이 불가능한 타입의 벡터는 폐기할 수 없습니다. `drop` ability가 없는 타입의
+벡터를 정의하면, 벡터 값을 무시할 수 없습니다. 벡터가 비어있는 경우, 컴파일러는
+`destroy_empty` 함수에 대한 명시적인 호출을 요구합니다.
 
-```move file=packages/samples/sources/move-basics/vector.move anchor=no_drop
+```move
+/// `drop` ability가 없는 struct
+public struct NoDrop {}
 
+#[test]
+fun test_destroy_empty() {
+    // `NoDrop` 요소의 벡터를 초기화합니다.
+    let v = vector<NoDrop>[];
+
+    // `v`가 비어있다는 것을 알고 있지만, 여전히
+    // 벡터를 폐기하기 위해 명시적인 `destroy_empty` 함수를 호출해야 합니다.
+    v.destroy_empty();
+}
 ```
 
-The `destroy_empty` function will fail at runtime if you call it on a non-empty vector.
+`destroy_empty` 함수는 비어있지 않은 벡터에 호출하면 런타임에 실패합니다.
 
-## Further Reading
+## 추가 자료
 
-- [Vector](./../../reference/primitive-types/vector) in the Move Reference.
-- [std::vector](https://docs.sui.io/references/framework/std/vector) module documentation.
+- Move Reference의 [Vector](./../../reference/primitive-types/vector)
+- [std::vector](https://docs.sui.io/references/framework/std/vector) module 문서

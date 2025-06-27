@@ -1,133 +1,166 @@
-# Importing Modules
+# Module 가져오기
 
-{/*
-    TODO: create a better example for:
-        1. Importing a module in general
-        2. Importing a member
-        3. Importing multiple members
-        4. Grouping imports
-        5. Self keyword for groups
-*/}
+Move는 module 가져오기를 통해 높은 모듈성과 코드 재사용을 달성합니다. 동일한
+패키지 내의 module들은 서로를 가져올 수 있으며, 새 패키지는 이미 존재하는 패키지에 의존하여
+그들의 module도 사용할 수 있습니다. 이 섹션에서는 module 가져오기의 기본 사항과 코드에서
+사용하는 방법을 다룹니다.
 
-{/*
+## Module 가져오기
 
-Goals:
-    - Show the import syntax
-    - Local dependencies
-    - External dependencies
-    - Importing modules from other packages
+동일한 패키지에 정의된 module들은 서로를 가져올 수 있습니다. `use` 키워드 다음에는
+패키지 주소(또는 별칭)와 module 이름이 `::`로 구분된 module 경로가 따라옵니다.
 
- */}
+**File: sources/module_one.move**
+```move
+module book::module_one;
 
-Move achieves high modularity and code reuse by allowing module imports. Modules within the same
-package can import each other, and a new package can depend on already existing packages and use
-their modules too. This section will cover the basics of importing modules and how to use them in
-your own code.
+public struct Character has drop {}
 
-## Importing a Module
-
-Modules defined in the same package can import each other. The `use` keyword is followed by the
-module path, which consists of the package address (or alias) and the module name separated by `::`.
-
-```move title="File: sources/module_one.move" file=packages/samples/sources/move-basics/importing-modules.move anchor=module_one
-
+public fun new(): Character {
+    Character {}
+}
 ```
 
-Another module defined in the same package can import the first module using the `use` keyword.
+동일한 패키지에 정의된 다른 module은 `use` 키워드를 사용하여 첫 번째 module을 가져올 수 있습니다.
 
-```move title="File: sources/module_two.move" file=packages/samples/sources/move-basics/importing-modules-two.move anchor=module_two
+**File: sources/module_two.move**
+```move
+module book::module_two;
 
+use book::module_one; // `module_one` 가져오기
+
+public fun create_and_ignore() {
+    let _ = module_one::new();
+}
 ```
 
-> Note: Any item (struct, function, constant, etc.) that you want to import from another module must
-> be marked with the `public` (or `public(package)` - see [visibility modifiers](./visibility))
-> keyword to make it accessible outside its defining module. For example, the `Character` struct and
-> the `new` function in `module_one` are marked public so they can be used in `module_two`.
+> 참고: 다른 module에서 가져오고자 하는 모든 항목(struct, 함수, 상수 등)은
+> 정의된 module 외부에서 접근 가능하도록 `public` (또는 `public(package)` - [가시성 수정자](./visibility) 참조)
+> 키워드로 표시되어야 합니다. 예를 들어, `module_one`의 `Character` struct와
+> `new` 함수는 `module_two`에서 사용할 수 있도록 public으로 표시되어 있습니다.
 
-## Importing Members
+## 멤버 가져오기
 
-You can also import specific members from a module. This is useful when you only need a single
-function or a single type from a module. The syntax is the same as for importing a module, but you
-add the member name after the module path.
+module에서 특정 멤버만 가져올 수도 있습니다. 이는 module에서 단일
+함수나 단일 타입만 필요할 때 유용합니다. 문법은 module을 가져오는 것과 동일하지만
+module 경로 뒤에 멤버 이름을 추가합니다.
 
-```move file=packages/samples/sources/move-basics/importing-modules-members.move anchor=members
+```move
+module book::module_three;
 
+// 특정 함수 가져오기
+use book::module_one::new;
+// 특정 struct 가져오기  
+use book::module_one::Character;
+
+public fun create_character(): Character {
+    new()
+}
 ```
 
-## Grouping Imports
+## Import 그룹화
 
-Imports can be grouped into a single `use` statement using curly braces `{}`. This allows for
-cleaner and more organized code when importing multiple members from the same module or package.
+Import는 중괄호 `{}`를 사용하여 단일 `use` 문으로 그룹화할 수 있습니다. 이를 통해
+동일한 module이나 패키지에서 여러 멤버를 가져올 때 더 깔끔하고 체계적인 코드를 작성할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/importing-modules-grouped.move anchor=grouped
+```move
+module book::module_four;
 
+// 함수와 struct를 함께 가져오기
+use book::module_one::{new, Character};
+
+public fun create_character(): Character {
+    new()
+}
 ```
 
-Importing function names is less common in Move, since the function names can overlap and cause
-confusion. A recommended practice is to import the entire module and use the module path to access
-the function. Types have unique names and should be imported individually.
+Move에서는 함수 이름을 가져오는 것이 덜 일반적입니다. 함수 이름이 중복될 수 있고 혼란을 야기할 수 있기 때문입니다. 권장되는 방법은 전체 module을 가져와서 module 경로를 사용하여
+함수에 접근하는 것입니다. 타입은 고유한 이름을 가지므로 개별적으로 가져와야 합니다.
 
-To import members and the module itself in the group import, you can use the `Self` keyword. The
-`Self` keyword refers to the module itself and can be used to import the module and its members.
+그룹 import에서 멤버와 module 자체를 함께 가져오려면 `Self` 키워드를 사용할 수 있습니다.
+`Self` 키워드는 module 자체를 참조하며 module과 그 멤버를 가져오는 데 사용할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/importing-modules-self.move anchor=self
+```move
+module book::module_five;
 
+// module과 Character를 함께 가져오기
+use book::module_one::{Self, Character};
+
+public fun create_character(): Character {
+    module_one::new()
+}
 ```
 
-## Resolving Name Conflicts
+## 이름 충돌 해결
 
-When importing multiple members from different modules, it is possible to have name conflicts. For
-example, if you import two modules that both have a function with the same name, you will need to
-use the module path to access the function. It is also possible to have modules with the same name
-in different packages. To resolve the conflict and avoid ambiguity, Move offers the `as` keyword to
-rename the imported member.
+서로 다른 module에서 여러 멤버를 가져올 때 이름 충돌이 발생할 수 있습니다. 예를
+들어, 동일한 이름의 함수를 가진 두 module을 가져오면
+module 경로를 사용하여 함수에 접근해야 합니다. 또한 서로 다른 패키지에 동일한 이름의 module이
+있을 수도 있습니다. 충돌을 해결하고 모호성을 피하기 위해 Move는 `as` 키워드를 제공하여
+가져온 멤버의 이름을 변경할 수 있습니다.
 
-```move file=packages/samples/sources/move-basics/importing-modules-conflict-resolution.move anchor=conflict
+```move
+module book::module_six;
 
+// 별칭을 사용하여 이름 충돌 해결
+use book::module_one::{Self as mod, Character as Char};
+
+public fun create(): Char {
+    mod::new()
+}
 ```
 
-## Adding an External Dependency
+## 외부 의존성 추가
 
-Move packages can depend on other packages; the dependencies are listed in the
-[Package Manifest](./../concepts/manifest) file called `Move.toml`.
+Move 패키지는 다른 패키지에 의존할 수 있습니다. 의존성은
+`Move.toml`이라는 [패키지 매니페스트](./../concepts/manifest) 파일에 나열됩니다.
 
-Package dependencies are defined in the [Package Manifest](./../concepts/manifest) as follows:
+패키지 의존성은 [패키지 매니페스트](./../concepts/manifest)에 다음과 같이 정의됩니다:
 
-```ini title="Move.toml"
+**Move.toml**
+```ini
 [dependencies]
 Example = { git = "https://github.com/Example/example.git", subdir = "path/to/package", rev = "v1.2.3" }
 Local = { local = "../my_other_package" }
 ```
 
-The `dependencies` section contains an entry for each package dependency. The key of the entry is
-the name of the package (`Example` or `Local` in the example), and the value is either a git import
-table or a local path. The git import contains the URL of the package, the subdirectory where the
-package is located, and the revision of the package. The local path is a relative path to the qa
-package directory.
+`dependencies` 섹션은 각 패키지 의존성에 대한 항목을 포함합니다. 항목의 키는
+패키지 이름(예제에서는 `Example` 또는 `Local`)이고, 값은 git import
+테이블 또는 로컬 경로입니다. git import는 패키지의 URL, 패키지가 위치한 하위 디렉토리,
+그리고 패키지의 리비전을 포함합니다. 로컬 경로는 패키지 디렉토리에 대한 상대 경로입니다.
 
-If you add a dependency, all of its dependencies also become available to your package.
+의존성을 추가하면 해당 의존성의 모든 의존성도 패키지에서 사용할 수 있게 됩니다.
 
-If a dependency is added to the `Move.toml` file, the compiler will automatically fetch (and later
-refetch) the dependencies when building the package.
+`Move.toml` 파일에 의존성이 추가되면, 컴파일러는 패키지를 빌드할 때 자동으로
+의존성을 가져옵니다(그리고 나중에 다시 가져옵니다).
 
-> Starting with version 1.45 of the sui CLI, the system packages are automatically included as
-> dependencies for all packages if they are not present in `Move.toml`. Therefore, `MoveStdlib`,
-> `Sui`, `System`, `Bridge`, and `Deepbook` are all available without an explicit import.
+> sui CLI 버전 1.45부터 `Move.toml`에 없는 경우 시스템 패키지가 자동으로
+> 모든 패키지의 의존성으로 포함됩니다. 따라서 `MoveStdlib`,
+> `Sui`, `System`, `Bridge`, `Deepbook`은 명시적인 import 없이 모두 사용할 수 있습니다.
 
-## Importing a Module from Another Package
+## 다른 패키지에서 Module 가져오기
 
-Normally, packages define their addresses in the `[addresses]` section. You can use aliases instead
-of full addresses. For example, instead of using `0x2::coin` to reference the Sui `coin` module, you
-can use `sui::coin`. The `sui` alias is defined in the Sui Framework package's manifest. Similarly,
-the `std` alias is defined in the Standard Library package and can be used instead of `0x1` to
-access standard library modules.
+일반적으로 패키지는 `[addresses]` 섹션에서 주소를 정의합니다. 전체 주소 대신 별칭을 사용할 수 있습니다.
+예를 들어, Sui `coin` module을 참조하기 위해 `0x2::coin`을 사용하는 대신
+`sui::coin`을 사용할 수 있습니다. `sui` 별칭은 Sui Framework 패키지의 매니페스트에 정의되어 있습니다. 마찬가지로
+`std` 별칭은 표준 라이브러리 패키지에 정의되어 있으며 `0x1` 대신 사용하여
+표준 라이브러리 module에 접근할 수 있습니다.
 
-To import a module from another package, use the `use` keyword followed by the module path. The
-module path consists of the package address (or alias) and the module name, separated by `::`.
+다른 패키지에서 module을 가져오려면 `use` 키워드 다음에 module 경로를 사용합니다.
+module 경로는 패키지 주소(또는 별칭)와 module 이름으로 구성되며, `::`로 구분됩니다.
 
-```move file=packages/samples/sources/move-basics/importing-modules-external.move anchor=external
+```move
+module book::module_seven;
 
+use std::string; // std = 0x1
+use sui::coin;   // sui = 0x2
+
+// 이제 가져온 module을 사용할 수 있습니다
+public fun use_imported() {
+    let _ = string::utf8(b"Hello");
+    // coin module의 타입과 함수 사용...
+}
 ```
 
-> Note: Module address names come from the `[addresses]` section of the manifest file (`Move.toml`),
-> not the names used in the `[dependencies]` section.
+> 참고: Module 주소 이름은 매니페스트 파일(`Move.toml`)의 `[addresses]` 섹션에서 가져오며,
+> `[dependencies]` 섹션에서 사용되는 이름과는 다릅니다.

@@ -1,40 +1,33 @@
-# Testing
+# 테스팅
 
-Testing is a crucial aspect of software development, especially in blockchain applications where
-security and correctness are paramount. In this section, we will cover the fundamentals of testing
-in Move, including how to write and organize tests effectively.
+테스팅은 소프트웨어 개발의 중요한 측면이며, 특히 보안과 정확성이 매우 중요한 블록체인 애플리케이션에서는 더욱 그렇습니다. 이 섹션에서는 효과적으로 테스트를 작성하고 구성하는 방법을 포함하여 Move에서의 테스팅 기초를 다룹니다.
 
-## The `#[test]` Attribute
+## `#[test]` 속성
 
-Tests in Move are functions marked with the `#[test]` attribute. This attribute tells the compiler
-that the function is a test function and should be run when tests are executed. Test functions are
-regular functions, but they must take no arguments and have no return value. They are excluded from
-the bytecode and are never published.
+Move의 테스트는 `#[test]` 속성으로 표시된 함수입니다. 이 속성은 컴파일러에게 해당 함수가 테스트 함수이며 테스트가 실행될 때 실행되어야 함을 알려줍니다. 테스트 함수는 일반 함수이지만, 인수를 받지 않고 반환 값이 없어야 합니다. 테스트 함수는 바이트코드에서 제외되며 절대 퍼블리시되지 않습니다.
 
 ```move
 module book::testing;
 
-// The test attribute is placed before the `fun` keyword (can be both above or
-// right before the `fun` keyword, as in `#[test] fun my_test() { ... }`)
-// The name of the test in this case would be `book::testing::simple_test`.
+// test 속성은 `fun` 키워드 앞에 배치됩니다 (위에 있거나
+// `#[test] fun my_test() { ... }`처럼 `fun` 키워드 바로 앞에 올 수 있습니다)
+// 이 경우 테스트 이름은 `book::testing::simple_test`가 됩니다.
 #[test]
 fun simple_test() {
     let sum = 2 + 2;
     assert!(sum == 4);
 }
 
-// The name of this test would be `book::testing::more_advanced_test`.
+// 이 테스트의 이름은 `book::testing::more_advanced_test`가 됩니다.
 #[test] fun more_advanced_test() {
     let sum = 2 + 2 + 2;
     assert!(sum == 4);
 }
 ```
 
-## Running Tests
+## 테스트 실행하기
 
-To run tests, you can use the `sui move test` command. This command will first build the package in
-_test mode_ and then run all tests found in the package. In test mode, modules from both `sources/`
-and `tests/` directories are processed and their tests executed.
+테스트를 실행하려면 `sui move test` 명령을 사용할 수 있습니다. 이 명령은 먼저 패키지를 _테스트 모드_ 로 빌드한 다음 패키지에서 발견된 모든 테스트를 실행합니다. 테스트 모드에서는 `sources/`와 `tests/` 디렉토리의 module들이 처리되고 테스트가 실행됩니다.
 
 ```bash
 $ sui move test
@@ -51,17 +44,13 @@ $ sui move test
 
 {/* TODO: fill output */}
 
-## Test Fail Cases with `#[expected_failure]`
+## `#[expected_failure]`로 실패 케이스 테스트하기
 
-Tests for fail cases can be marked with `#[expected_failure]`. This attribute, when added to a
-`#[test]` function, tells the compiler that the test is expected to fail. This is useful when you
-want to test that a function fails when a certain condition is met.
+실패 케이스를 위한 테스트는 `#[expected_failure]`로 표시할 수 있습니다. 이 속성을 `#[test]` 함수에 추가하면 컴파일러에게 테스트가 실패할 것으로 예상된다고 알려줍니다. 이는 특정 조건이 충족될 때 함수가 실패하는지 테스트하고 싶을 때 유용합니다.
 
-> Note: This attribute can only be added to a `#[test]` function.
+> 참고: 이 속성은 `#[test]` 함수에만 추가할 수 있습니다.
 
-The attribute can take an argument specifying the expected abort code that should be returned if the
-test fails. If the test returns an abort code different from the one specified in the argument, it
-will fail. Likewise, if execution does not result in an abort, the test will also fail.
+이 속성은 테스트가 실패할 경우 반환되어야 하는 예상 중단 코드를 지정하는 인수를 받을 수 있습니다. 테스트가 인수에 지정된 것과 다른 중단 코드를 반환하면 실패합니다. 마찬가지로 실행이 중단되지 않으면 테스트도 실패합니다.
 
 ```move
 module book::testing_failure;
@@ -71,56 +60,51 @@ const EInvalidArgument: u64 = 1;
 #[test]
 #[expected_failure(abort_code = 0)]
 fun test_fail() {
-    abort 0 // aborts with 0
+    abort 0 // 0으로 중단
 }
 
-// attributes can be grouped together
+// 속성들은 함께 그룹화할 수 있습니다
 #[test, expected_failure(abort_code = EInvalidArgument)]
 fun test_fail_1() {
-    abort 1 // aborts with 1
+    abort 1 // 1로 중단
 }
 ```
 
-The `abort_code` argument can use constants defined in the tests module as well as imported from
-other modules. This is the only case where constants can be used and "accessed" in other modules.
+`abort_code` 인수는 테스트 module에 정의된 상수뿐만 아니라 다른 module에서 가져온 상수도 사용할 수 있습니다. 이는 상수가 다른 module에서 사용되고 "접근"될 수 있는 유일한 경우입니다.
 
-## Utilities with `#[test_only]`
+## `#[test_only]`를 사용한 유틸리티
 
-In some cases, it is helpful to give the test environment access to some internal functions or
-features. This simplifies the testing process and allows for more thorough testing. However, it is
-important to remember that these functions should not be included in the final package. This is
-where the `#[test_only]` attribute comes in handy.
+경우에 따라 테스트 환경에 일부 내부 함수나 기능에 대한 접근 권한을 부여하는 것이 도움이 됩니다. 이는 테스트 프로세스를 단순화하고 더 철저한 테스트를 가능하게 합니다. 하지만 이러한 함수가 최종 패키지에 포함되지 않아야 한다는 것을 기억하는 것이 중요합니다. 여기서 `#[test_only]` 속성이 유용합니다.
 
 ```move
 module book::testing;
 
-// Public function which uses the `secret` function.
+// `secret` 함수를 사용하는 public 함수.
 public fun multiply_by_secret(x: u64): u64 {
     x * secret()
 }
 
-/// Private function which is not available to the public.
+/// public에게 공개되지 않는 private 함수.
 fun secret(): u64 { 100 }
 
 #[test_only]
-/// This function is only available for testing purposes in tests and other
-/// test-only functions. Mind the visibility - for `#[test_only]` it is
-/// common to use `public` visibility.
+/// 이 함수는 테스트와 다른 test-only 함수에서만
+/// 테스트 목적으로 사용할 수 있습니다. 가시성에 유의하세요 - 
+/// `#[test_only]`의 경우 `public` 가시성을 사용하는 것이 일반적입니다.
 public fun secret_for_testing(): u64 {
     secret()
 }
 
 #[test]
-// In the test environment we have access to the `secret_for_testing` function.
+// 테스트 환경에서는 `secret_for_testing` 함수에 접근할 수 있습니다.
 fun test_multiply_by_secret() {
     let expected = secret_for_testing() * 2;
     assert!(multiply_by_secret(2) == expected);
 }
 ```
 
-Functions marked with the `#[test_only]` will be available to the test environment, and to the other
-modules if their visibility is set to `public`.
+`#[test_only]`로 표시된 함수는 테스트 환경에서 사용할 수 있으며, 가시성이 `public`으로 설정된 경우 다른 module에서도 사용할 수 있습니다.
 
-## Further Reading
+## 추가 자료
 
-- [Unit Testing](https://move-book.com/reference/unit-testing.html) in the Move Reference.
+- Move Reference의 [Unit Testing](https://move-book.com/reference/unit-testing.html)

@@ -1,4 +1,4 @@
-# Address Type
+# 주소 타입
 
 {/*
 
@@ -18,44 +18,51 @@ Links:
 
  */}
 
-Move uses a special type called [address](./../concepts/address) to represent addresses. It is a
-32-byte value that can represent any address on the blockchain. Addresses can be written in two
-forms: hexadecimal addresses prefixed with 0x and named addresses.
+Move는 주소를 나타내기 위해 [address](./../concepts/address)라는 특별한 타입을 사용합니다. 이는 블록체인의 모든 주소를 나타낼 수 있는 32바이트 값입니다. 주소는 두 가지 형식으로 작성할 수 있습니다: 0x로 시작하는 16진수 주소와 명명된 주소.
 
-```move file=packages/samples/sources/move-basics/address.move anchor=address_literal
+```move
+// 주소 리터럴
+let value: address = @0x1;
 
+// Move.toml에 등록된 명명된 주소
+let value = @std;
+let other = @sui;
 ```
 
-An address literal starts with the `@` symbol followed by a hexadecimal number or an identifier. The
-hexadecimal number is interpreted as a 32 byte value. The identifier is looked up in the
-[Move.toml](./../concepts/manifest) file and replaced with the corresponding address by the
-compiler. If the identifier is not found in the Move.toml file, the compiler will throw an error.
+주소 리터럴은 `@` 기호로 시작하며 16진수 또는 식별자가 뒤따릅니다. 16진수는 32바이트 값으로 해석됩니다. 식별자는 [Move.toml](./../concepts/manifest) 파일에서 조회되고 컴파일러에 의해 해당 주소로 대체됩니다. Move.toml 파일에서 식별자를 찾을 수 없으면 컴파일러가 오류를 발생시킵니다.
 
-## Conversion
+## 변환
 
-Sui Framework offers a set of helper functions to work with addresses. Given that the address type
-is a 32 byte value, it can be converted to a `u256` type and vice versa. It can also be converted to
-and from a `vector<u8>` type.
+Sui 프레임워크는 주소 작업을 위한 헬퍼 함수 세트를 제공합니다. 주소 타입이 32바이트 값이므로 `u256` 타입으로 변환할 수 있고 그 반대도 가능합니다. 또한 `vector<u8>` 타입으로 변환하거나 그 반대로 변환할 수도 있습니다.
 
-Example: Convert an address to a `u256` type and back.
+예제: 주소를 `u256` 타입으로 변환하고 다시 되돌리기.
 
-```move file=packages/samples/sources/move-basics/address.move anchor=to_u256
+```move
+use sui::address;
 
+let addr_as_u256: u256 = address::to_u256(@0x1);
+let addr = address::from_u256(addr_as_u256);
 ```
 
-Example: Convert an address to a `vector<u8>` type and back.
+예제: 주소를 `vector<u8>` 타입으로 변환하고 다시 되돌리기.
 
-```move file=packages/samples/sources/move-basics/address.move anchor=to_bytes
+```move
+use sui::address;
 
+let addr_as_u8: vector<u8> = address::to_bytes(@0x1);
+let addr = address::from_bytes(addr_as_u8);
 ```
 
-Example: Convert an address into a string.
+예제: 주소를 문자열로 변환하기.
 
-```move file=packages/samples/sources/move-basics/address.move anchor=to_string
+```move
+use sui::address;
+use std::string::String;
 
+let addr_as_string: String = address::to_string(@0x1);
 ```
 
-## Further Reading
+## 더 읽어보기
 
-- [Address](./../../reference/primitive-types/address) in the Move Reference.
-- [sui::address](https://docs.sui.io/references/framework/sui/address) module documentation.
+- Move 레퍼런스의 [주소](./../../reference/primitive-types/address)
+- [sui::address](https://docs.sui.io/references/framework/sui/address) module 문서
