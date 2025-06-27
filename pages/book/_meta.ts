@@ -1,21 +1,21 @@
 export default {
-  index: 'Introduction',
-  foreword: 'Foreword',
-  'before-we-begin': 'Before we begin',
-  'your-first-move': 'Your First Move',
-  concepts: 'Concepts',
-  'move-basics': 'Move Basics',
-  object: 'Object Model',
-  storage: 'Using Objects',
-  programmability: 'Advanced Programmability',
+  index: '1. Introduction',
+  foreword: '2. Foreword',
+  'before-we-begin': '3. 시작하기 전에',
+  'your-first-move': '4. Your First Move',
+  concepts: '5. 개념',
+  'move-basics': '6. Move Basics',
+  object: '7. Object Model',
+  storage: '8. Using Objects',
+  programmability: '9. Advanced Programmability',
   '-- Guides': {
     type: 'separator',
     title: 'Guides'
   },
-  guides: 'Guides',
+  guides: '10. 가이드',
   '-- Appendix': {
     type: 'separator',
     title: 'Appendix'
   },
-  appendix: 'Appendix'
+  appendix: '11. 부록'
 }

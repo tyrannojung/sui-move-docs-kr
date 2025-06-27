@@ -1,3 +1,3 @@
 export default {
-  "clever-errors": "Clever Errors"
+  "clever-errors": "9.1 Clever Errors"
 }
