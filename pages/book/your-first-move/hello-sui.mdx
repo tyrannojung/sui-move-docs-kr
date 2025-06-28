@@ -17,7 +17,47 @@ $ sui move new todo_list
 > 참고: 내용이 처음에는 압도적으로 보일 수 있지만, 다음 섹션에서 분해하여 설명하겠습니다. 지금은 당면한 작업에 집중하려고 노력하세요.
 
 ```move file=packages/todo_list/sources/todo_list.move anchor=all
+/// 모듈: todo_list
+module todo_list::todo_list;
 
+use std::string::String;
+
+/// 할 일 목록. 소유자가 관리할 수 있고 다른 사람과 공유할 수 있습니다.
+public struct TodoList has key, store {
+    id: UID,
+    items: vector<String>
+}
+
+/// 새로운 할 일 목록을 생성합니다.
+public fun new(ctx: &mut TxContext): TodoList {
+    let list = TodoList {
+        id: object::new(ctx),
+        items: vector[]
+    };
+
+    (list)
+}
+
+/// 목록에 새로운 할 일 항목을 추가합니다.
+public fun add(list: &mut TodoList, item: String) {
+    list.items.push_back(item);
+}
+
+/// 인덱스로 목록에서 할 일 항목을 제거합니다.
+public fun remove(list: &mut TodoList, index: u64): String {
+    list.items.remove(index)
+}
+
+/// 목록과 그것을 관리하는 capability를 삭제합니다.
+public fun delete(list: TodoList) {
+    let TodoList { id, items: _ } = list;
+    id.delete();
+}
+
+/// 목록의 항목 수를 가져옵니다.
+public fun length(list: &TodoList): u64 {
+    list.items.length()
+}
 ```
 
 ## 패키지 빌드하기
