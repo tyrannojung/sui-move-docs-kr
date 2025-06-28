@@ -30,7 +30,7 @@ const config: DocsThemeConfig = {
   project: {
     link: "https://github.com/tyrannojung/sui-move-docs-kr",
   },
-  docsRepositoryBase: "https://github.com/tyrannojung/sui-move-docs-kr",
+  docsRepositoryBase: "https://github.com/tyrannojung/sui-move-docs-kr/tree/main",
   footer: {
     content: (
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
